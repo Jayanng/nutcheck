@@ -1,5 +1,5 @@
 // License rules test: the allowlist and SPDX expression check that the
-// license gate runs on every dependency. If any of these fail, the gate
+// license check runs on every dependency. If any of these fail, the check
 // itself is wrong.
 import { describe, expect, it } from 'vitest';
 import { isAllowed, licenseOf } from '../scripts/license-rules.mjs';

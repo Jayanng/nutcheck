@@ -61,7 +61,7 @@ if (!existsSync(dir)) {
 const packageJsons = [];
 walkNodeModules(dir, packageJsons, new Set());
 
-// A gate that finds nothing has proved nothing: an empty node_modules (or
+// A check that finds nothing has proved nothing: an empty node_modules (or
 // a tree the walk could not read) must fail, not print a pass for zero
 // dependencies.
 if (packageJsons.length === 0) {
