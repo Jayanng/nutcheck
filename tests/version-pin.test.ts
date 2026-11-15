@@ -36,7 +36,7 @@ describe('version pins', () => {
 
   it('the installed cashu-ts reproduces the NUT-02 vector keyset IDs', async () => {
     const cashu = await import('@cashu/cashu-ts');
-    const vectors = readJson(path.join(root, 'probes/nut02-vectors.json'));
+    const vectors = readJson(path.join(root, 'tests', 'fixtures', 'nut02-vectors.json'));
     // Expected IDs are hard-coded here from the official NUT-02 vectors, so
     // the test does not just trust the fixture file: a wrong fixture fails.
     const v1 = cashu.deriveKeysetId(vectors.v1.keys, { versionByte: 0 });
