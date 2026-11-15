@@ -39,6 +39,11 @@ describe('classifyKeysetVersion', () => {
     expect(classifyKeysetVersion('00' + '00'.repeat(32))).toBe('unknown');
   });
 
+  it('classifies any 66-character hex id by its first byte, V2 or V3', () => {
+    expect(classifyKeysetVersion('01' + 'ab'.repeat(32))).toBe('v2');
+    expect(classifyKeysetVersion('02' + 'ab'.repeat(32))).toBe('v3');
+  });
+
   it('is case-insensitive', () => {
     expect(classifyKeysetVersion('009A1F293253E41E')).toBe('v1');
     expect(classifyKeysetVersion('015BA18A8ADCD02E715A58358EB618DA4A4B3791151A4BEE5E968BB88406CCF76A')).toBe(

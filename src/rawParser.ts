@@ -1,11 +1,10 @@
-// Raw token parser. Reads the token bytes directly, without the library, so
-// NutCheck can see what the library hides and can tell when a token names
-// more than one mint. The library drops an incomplete DLEQ block on decode
-// without an error, so the raw bytes are the only place that fact is visible.
-// It also decodes tokens the library refuses, such as one carrying a V3
-// keyset, so the report can still show the facts and mark the signatures as
-// not checked instead of failing outright.
+// Raw token parser. Reads the token bytes directly, so NutCheck can see
+// an incomplete DLEQ block and can tell when a token names more than one
+// mint. It also reads tokens carrying a V3 keyset, so the report can still
+// show the facts and mark the signatures as not checked instead of failing
+// outright.
 import cbor from 'cbor';
+import { classifyKeysetVersion } from './keysetVersion.js';
 
 export interface RawDleq {
   present: boolean;
@@ -15,6 +14,7 @@ export interface RawDleq {
   eHex: string | undefined;
   sHex: string | undefined;
   rHex: string | undefined;
+  malformed: boolean;
 }
 
 export interface RawProof {
@@ -52,33 +52,28 @@ function toHex(value: unknown): string {
   if (value instanceof Uint8Array) {
     return Buffer.from(value).toString('hex');
   }
-  if (typeof value === 'string') {
-    return value;
-  }
-  throw new TokenParseError('expected a hex string or bytes');
+  throw new TokenParseError('expected bytes');
 }
 
-function isNonEmpty(value: unknown, bytesOnly = false): boolean {
+function dleqMemberHex(value: unknown, bytesOnly: boolean): string | undefined {
   if (value === undefined || value === null) {
-    return false;
-  }
-  if (bytesOnly) {
-    return (Buffer.isBuffer(value) || value instanceof Uint8Array) && value.length > 0;
-  }
-  if (typeof value === 'string') {
-    return value.length > 0;
-  }
-  if (Buffer.isBuffer(value) || value instanceof Uint8Array) {
-    return value.length > 0;
-  }
-  return true;
-}
-
-function toHexOrUndefined(value: unknown, bytesOnly = false): string | undefined {
-  if (!isNonEmpty(value, bytesOnly)) {
     return undefined;
   }
-  return toHex(value);
+  if (bytesOnly) {
+    // A DLEQ scalar is 32 bytes per NUT-12. Any other length is malformed.
+    if (
+      (Buffer.isBuffer(value) || value instanceof Uint8Array) &&
+      value.length === 32
+    ) {
+      return Buffer.from(value).toString('hex');
+    }
+    return undefined;
+  }
+  // A DLEQ scalar is 64 hex chars (32 bytes) per NUT-12.
+  if (typeof value === 'string' && /^[0-9a-fA-F]{64}$/.test(value)) {
+    return value.toLowerCase();
+  }
+  return undefined;
 }
 
 function dleqPresence(value: unknown, bytesOnly = false): RawDleq {
@@ -90,6 +85,7 @@ function dleqPresence(value: unknown, bytesOnly = false): RawDleq {
     eHex: undefined,
     sHex: undefined,
     rHex: undefined,
+    malformed: false,
   };
   if (value === undefined || value === null) {
     return none;
@@ -98,16 +94,24 @@ function dleqPresence(value: unknown, bytesOnly = false): RawDleq {
     // The DLEQ field is present but malformed (a scalar or an array, not a
     // map). It counts as present so the report flags it as incomplete
     // instead of silently treating it as absent.
-    return { present: true, e: false, s: false, r: false, eHex: undefined, sHex: undefined, rHex: undefined };
+    return { present: true, e: false, s: false, r: false, eHex: undefined, sHex: undefined, rHex: undefined, malformed: true };
   }
+  const eHex = dleqMemberHex(value.e, bytesOnly);
+  const sHex = dleqMemberHex(value.s, bytesOnly);
+  const rHex = dleqMemberHex(value.r, bytesOnly);
+  const malformed =
+    (value.e !== undefined && eHex === undefined) ||
+    (value.s !== undefined && sHex === undefined) ||
+    (value.r !== undefined && rHex === undefined);
   return {
     present: true,
-    e: isNonEmpty(value.e, bytesOnly),
-    s: isNonEmpty(value.s, bytesOnly),
-    r: isNonEmpty(value.r, bytesOnly),
-    eHex: toHexOrUndefined(value.e, bytesOnly),
-    sHex: toHexOrUndefined(value.s, bytesOnly),
-    rHex: toHexOrUndefined(value.r, bytesOnly),
+    e: eHex !== undefined,
+    s: sHex !== undefined,
+    r: rHex !== undefined,
+    eHex,
+    sHex,
+    rHex,
+    malformed,
   };
 }
 
@@ -133,6 +137,13 @@ function requireBytes(value: unknown, field: string): void {
   if (!Buffer.isBuffer(value) && !(value instanceof Uint8Array)) {
     throw new TokenParseError(`cashuB field ${field} must be bytes, not a string or number`);
   }
+}
+
+function requireString(value: unknown, field: string): string {
+  if (typeof value !== 'string') {
+    throw new TokenParseError(`${field} must be a string`);
+  }
+  return value;
 }
 
 export function stripUriPrefix(token: string): string {
@@ -171,7 +182,7 @@ function parseV3(payload: string): RawToken {
   } catch {
     throw new TokenParseError('cashuA payload is not valid base64url JSON');
   }
-  if (!isRecord(json) || !Array.isArray(json.token)) {
+  if (!isRecord(json) || !Array.isArray(json.token) || json.token.length === 0) {
     throw new TokenParseError('cashuA payload has no token list');
   }
   const mints: string[] = [];
@@ -182,7 +193,8 @@ function parseV3(payload: string): RawToken {
       !isRecord(entry) ||
       typeof entry.mint !== 'string' ||
       entry.mint.trim() === '' ||
-      !Array.isArray(entry.proofs)
+      !Array.isArray(entry.proofs) ||
+      entry.proofs.length === 0
     ) {
       throw new TokenParseError('cashuA token entry has no mint or proofs');
     }
@@ -195,17 +207,23 @@ function parseV3(payload: string): RawToken {
       }
       if (
         typeof proof.id !== 'string' ||
+        proof.id === '' ||
+        !/^[0-9a-fA-F]+$/.test(proof.id) ||
+        (proof.id.length !== 16 && proof.id.length !== 66) ||
         typeof proof.amount !== 'number' ||
         typeof proof.secret !== 'string' ||
-        typeof proof.C !== 'string'
+        proof.secret === '' ||
+        typeof proof.C !== 'string' ||
+        proof.C === ''
       ) {
         throw new TokenParseError('cashuA proof is missing id, amount, secret or C');
       }
-      if (proof.id !== '' && !keysetIds.includes(proof.id)) {
-        keysetIds.push(proof.id);
+      const proofId = proof.id;
+      if (!keysetIds.some((existing) => existing.toLowerCase() === proofId.toLowerCase())) {
+        keysetIds.push(proofId);
       }
       proofs.push({
-        id: proof.id,
+        id: proofId,
         amount: requireValidAmount(proof.amount, 'cashuA proof amount'),
         secret: proof.secret,
         C: proof.C,
@@ -216,8 +234,14 @@ function parseV3(payload: string): RawToken {
   return {
     format: 'cashuA',
     mints,
-    unit: typeof json.unit === 'string' ? json.unit : undefined,
-    memo: typeof json.memo === 'string' ? json.memo : undefined,
+    unit:
+      json.unit === undefined || json.unit === null
+        ? undefined
+        : requireString(json.unit, 'cashuA unit'),
+    memo:
+      json.memo === undefined || json.memo === null
+        ? undefined
+        : requireString(json.memo, 'cashuA memo'),
     proofs,
     keysetIds,
   };
@@ -235,22 +259,32 @@ async function parseV4(payload: string): Promise<RawToken> {
     throw new TokenParseError('cashuB payload must hold exactly one CBOR item');
   }
   const decoded = items[0];
-  if (!isRecord(decoded) || !Array.isArray(decoded.t)) {
+  if (!isRecord(decoded) || !Array.isArray(decoded.t) || decoded.t.length === 0) {
     throw new TokenParseError('cashuB payload has no token list');
   }
-  if (typeof decoded.m !== 'string' || decoded.m === '') {
+  if (typeof decoded.m !== 'string' || decoded.m.trim() === '') {
     throw new TokenParseError('cashuB token has no mint');
   }
   const mints: string[] = [decoded.m];
   const proofs: RawProof[] = [];
   const keysetIds: string[] = [];
   for (const entry of decoded.t) {
-    if (!isRecord(entry) || !Array.isArray(entry.p)) {
+    if (!isRecord(entry) || !Array.isArray(entry.p) || entry.p.length === 0) {
       throw new TokenParseError('cashuB token entry has no proofs');
     }
     requireBytes(entry.i, 'keyset id');
     const keysetId = toHex(entry.i);
-    if (keysetId !== '' && !keysetIds.includes(keysetId)) {
+    // NUT-00 stores the short 8-byte id in a cashuB token, but the
+    // library also accepts a full 33-byte V2 or V3 id in the same field.
+    // Accept both, so a token the library decodes is not rejected here.
+    // A full id must be a valid V2 or V3 id; anything else is malformed.
+    if (keysetId === '' || (keysetId.length !== 16 && keysetId.length !== 66)) {
+      throw new TokenParseError('cashuB token entry has an empty or malformed keyset id');
+    }
+    if (keysetId.length === 66 && classifyKeysetVersion(keysetId) === 'unknown') {
+      throw new TokenParseError('cashuB token entry has an empty or malformed keyset id');
+    }
+    if (!keysetIds.includes(keysetId)) {
       keysetIds.push(keysetId);
     }
     for (const proof of entry.p) {
@@ -260,12 +294,16 @@ async function parseV4(payload: string): Promise<RawToken> {
       if (
         typeof proof.a !== 'number' ||
         typeof proof.s !== 'string' ||
+        proof.s === '' ||
         proof.c === undefined ||
         proof.c === null
       ) {
         throw new TokenParseError('cashuB proof is missing amount, secret or C');
       }
       requireBytes(proof.c, 'commitment C');
+      if ((Buffer.isBuffer(proof.c) || proof.c instanceof Uint8Array) && proof.c.length === 0) {
+        throw new TokenParseError('cashuB proof has an empty commitment C');
+      }
       proofs.push({
         id: keysetId,
         amount: requireValidAmount(proof.a, 'cashuB proof amount'),
@@ -278,8 +316,14 @@ async function parseV4(payload: string): Promise<RawToken> {
   return {
     format: 'cashuB',
     mints,
-    unit: typeof decoded.u === 'string' ? decoded.u : undefined,
-    memo: typeof decoded.d === 'string' ? decoded.d : undefined,
+    unit:
+      decoded.u === undefined || decoded.u === null
+        ? undefined
+        : requireString(decoded.u, 'cashuB unit'),
+    memo:
+      decoded.d === undefined || decoded.d === null
+        ? undefined
+        : requireString(decoded.d, 'cashuB memo'),
     proofs,
     keysetIds,
   };

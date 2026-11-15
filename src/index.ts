@@ -1,5 +1,5 @@
-// NutCheck core: token decoding, raw parsing, keyset version classification,
-// and the reconciliation that catches an incomplete DLEQ the library drops.
+// NutCheck core: token decoding, raw parsing, and keyset version
+// classification.
 export {
   decodeAndReconcile,
   decodeToken,
