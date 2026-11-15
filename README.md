@@ -18,7 +18,7 @@ That the mint is honest, that the mint is solvent, that the proofs stay unspent 
 
 ## Status
 
-Early build. The library is `@nutcheck/core`, the web report is a single static page, and the adversarial suite runs against official NUT test vectors and a local mock mint.
+Early build. What is here now: the project tooling, pinned dependency versions with tests that enforce them, a license check on every dependency, and live verification probes that record what the pinned library does with Cashu tokens (residue derivation, partial DLEQ handling, keyset ID derivation). The library, the web report, and the adversarial suite are still to come.
 
 ## AI assistance
 

@@ -1,1 +1,25 @@
-{"dependencies":{"@cashu/cashu-ts":"4.13.1","cbor":"10.0.3"},"description":"Diagnostics for Cashu tokens you have just received.","devDependencies":{"@types/node":"26.6.6","typescript":"7.0.2","vitest":"5.1.0"},"license":"MIT","name":"@nutcheck/core","scripts":{"licenses":"node scripts/check-licenses.mjs","test":"vitest run","typecheck":"tsc --noEmit"},"type":"module","version":"0.1.0"}
+{
+  "dependencies": {
+    "@cashu/cashu-ts": "4.13.1",
+    "cbor": "10.0.3"
+  },
+  "description": "Diagnostics for Cashu tokens you have just received.",
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "license": "MIT",
+  "name": "@nutcheck/core",
+  "scripts": {
+    "licenses": "node scripts/check-licenses.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "version": "0.1.0",
+  "engines": {
+    "node": "24.22.1",
+    "npm": "10.9.4"
+  }
+}
