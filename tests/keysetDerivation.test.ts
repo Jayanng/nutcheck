@@ -166,6 +166,45 @@ describe('keyset-ID derivation', () => {
     expect(checks[0].detail).toContain('disagree on the unit');
   });
 
+  it('a keyset listed twice with different keys is unknown, whichever entry comes first', async () => {
+    // A mint that answers with two entries for one ID, one matching and
+    // one mismatching, must not let the second silently overwrite the
+    // first and hide the mismatch. The result is unknown in both orders.
+    const tampered = { ...nut02.v1.keys };
+    const firstAmount = Object.keys(tampered)[0];
+    const k = tampered[firstAmount];
+    tampered[firstAmount] = k.slice(0, -1) + (k.endsWith('0') ? '1' : '0');
+    for (const order of [
+      [{ id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }, { id: nut02.v1.id, unit: 'sat', keys: tampered }],
+      [{ id: nut02.v1.id, unit: 'sat', keys: tampered }, { id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }],
+    ]) {
+      const fetchFn = stubFetch({
+        '/v1/keys': { keysets: order },
+        '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true }] },
+      });
+      const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+      expect(checks).toHaveLength(1);
+      expect(checks[0].result).toBe('unknown');
+      expect(checks[0].detail).toContain('listed this keyset ID more than once');
+    }
+  });
+
+  it('a keyset listed twice with different units in the listing is unknown', async () => {
+    const fetchFn = stubFetch({
+      '/v1/keys': { keysets: [{ id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }] },
+      '/v1/keysets': {
+        keysets: [
+          { id: nut02.v1.id, unit: 'sat', active: true },
+          { id: nut02.v1.id, unit: 'usd', active: true },
+        ],
+      },
+    });
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+    expect(checks).toHaveLength(1);
+    expect(checks[0].result).toBe('unknown');
+    expect(checks[0].detail).toContain('listed this keyset ID more than once');
+  });
+
   it('conflicting fees in the two responses are unknown, never a guess', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys }] },

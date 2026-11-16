@@ -79,6 +79,11 @@ export async function checkKeysetDerivation(
     return checks;
   }
   const metaById = new Map<string, Record<string, unknown>>();
+  // A mint that lists one keyset ID twice, with different entries, is
+  // ambiguous: the second entry must not silently overwrite the first
+  // and hide a mismatch. Conflicting duplicates are recorded and
+  // reported as unknown below, never resolved by picking one.
+  const conflictingIds = new Set<string>();
   // A malformed entry (not an object, or no string ID) is not a keyset
   // fact. It is counted and reported at the end instead of being
   // silently skipped, so a mint that answers with broken shapes does
@@ -89,7 +94,16 @@ export async function checkKeysetDerivation(
       // Map keys are normalized to lowercase so a token-supplied
       // uppercase ID and a mint-listed lowercase ID are the same keyset.
       // The advertised spelling is kept in the entry itself for display.
-      metaById.set(entry.id.toLowerCase(), entry);
+      const lower = entry.id.toLowerCase();
+      if (metaById.has(lower)) {
+        const prev = metaById.get(lower) as Record<string, unknown>;
+        if (prev.unit !== entry.unit || prev.active !== entry.active || prev.input_fee_ppk !== entry.input_fee_ppk || prev.final_expiry !== entry.final_expiry) {
+          conflictingIds.add(lower);
+        }
+        // Keep the first entry; do not let a later one overwrite it.
+        continue;
+      }
+      metaById.set(lower, entry);
     } else {
       malformedMeta += 1;
     }
@@ -107,7 +121,16 @@ export async function checkKeysetDerivation(
   let malformedKeys = 0;
   for (const entry of keysRaw.keysets as unknown[]) {
     if (isRecord(entry) && typeof entry.id === 'string' && isRecord(entry.keys)) {
-      keysById.set(entry.id.toLowerCase(), entry);
+      const lower = entry.id.toLowerCase();
+      if (keysById.has(lower)) {
+        const prev = keysById.get(lower) as Record<string, unknown>;
+        if (prev.unit !== entry.unit || JSON.stringify(prev.keys) !== JSON.stringify(entry.keys)) {
+          conflictingIds.add(lower);
+        }
+        // Keep the first entry; do not let a later one overwrite it.
+        continue;
+      }
+      keysById.set(lower, entry);
     } else {
       malformedKeys += 1;
     }
@@ -206,6 +229,20 @@ export async function checkKeysetDerivation(
     // a /v1/keys/{id} response may spell the same ID in a different
     // case than the mint's listing.
     const advertisedId = advertisedById.get(key) ?? key;
+    // A keyset the mint listed twice with different entries is
+    // ambiguous: neither entry can be trusted to derive the ID, so the
+    // check reports unknown instead of picking one and hiding the
+    // conflict.
+    if (conflictingIds.has(key)) {
+      checks.push({
+        advertisedId,
+        derivedId: undefined,
+        unit: typeof entry.unit === 'string' ? entry.unit : '',
+        result: 'unknown',
+        detail: 'the mint listed this keyset ID more than once with different entries, so the ID cannot be established',
+      });
+      continue;
+    }
     if (!isRecord(entry.keys)) {
       checks.push({
         advertisedId,

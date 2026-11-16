@@ -73,8 +73,8 @@ describe('fetchMintJson', () => {
   it('a mint absent from the decoded token gets zero fetches', async () => {
     // The allowed mint base comes from the token itself: decode a real
     // token, take its mint, and prove a different mint is refused
-    // before any request is sent. This is the plan step 3.1 rule, that
-    // only mint URLs named in the token are ever contacted.
+    // before any request is sent. Only mint URLs named in the token
+    // are ever contacted.
     const bytes32Hex = (ch: string): string => ch.repeat(32);
     const token = getEncodedToken({
       mint: 'https://testnut.cashu.space',
