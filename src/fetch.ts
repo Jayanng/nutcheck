@@ -2,10 +2,15 @@
 // timeout, size cap, and shape checks are the same everywhere. The
 // helper only contacts HTTP or HTTPS URLs, applies a 4 second timeout
 // and a 1 MB response cap, rejects redirects, and parses the body as
-// JSON. It never executes or follows anything the mint supplies. Callers
-// must only pass mint URLs named in the token, and only the read-only
-// endpoints this tool uses; that boundary lives with the callers, not
-// with this helper.
+// JSON. It never executes or follows anything the mint supplies.
+//
+// The mint boundary is enforced here, not left to caller discipline.
+// Every call names the one origin it is allowed to contact, and the
+// helper refuses any URL outside that origin without sending a request.
+// The modules pass the origin of the mint URL they were configured
+// with; the integration that configures them passes the mint named in
+// the token, so only that mint is ever contacted. A caller that tries
+// to fetch a different mint gets a MintFetchError and zero requests.
 
 // The response size cap, in bytes. A mint info, keysets, or keys response
 // is a few kilobytes at most; 1 MB leaves wide headroom for a mint with
@@ -40,6 +45,23 @@ export function mintEndpointUrl(base: string, path: string): string {
   parsed.search = '';
   parsed.hash = '';
   return parsed.toString();
+}
+
+// The origin of a mint base URL, for the allowed-origin check in
+// fetchMintJson. An invalid base throws the same MintFetchError as
+// mintEndpointUrl, so callers get one consistent error for a bad mint
+// URL instead of a raw URL parse error.
+export function mintOrigin(base: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(base);
+  } catch {
+    throw new MintFetchError(`not a valid mint URL: ${base}`);
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new MintFetchError(`not an HTTP mint URL: ${base}`);
+  }
+  return parsed.origin;
 }
 
 export class MintFetchError extends Error {
@@ -146,9 +168,27 @@ export async function fetchMintJson(
   url: string,
   init: { method?: 'GET' | 'POST'; body?: string } = {},
   fetchFn: FetchFn = fetch,
+  allowedOrigin?: string,
 ): Promise<unknown> {
   if (!isHttpUrl(url)) {
     throw new MintFetchError(`refusing to contact a non-HTTP mint URL: ${url}`);
+  }
+  // The mint boundary: only the one allowed origin is contacted. A URL
+  // outside it is refused before any request is sent, so an unlisted
+  // mint causes zero fetches. The check runs before the fetch, not
+  // after, so a refused URL never reaches the network.
+  if (allowedOrigin !== undefined) {
+    let origin: string;
+    try {
+      origin = new URL(url).origin;
+    } catch {
+      throw new MintFetchError(`not a valid mint URL: ${url}`);
+    }
+    if (origin !== allowedOrigin) {
+      throw new MintFetchError(
+        `refusing to contact a mint outside the allowed origin ${allowedOrigin}: ${url}`,
+      );
+    }
   }
   let response: Response;
   const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);

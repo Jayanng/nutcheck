@@ -290,6 +290,23 @@ describe('keyset-ID derivation', () => {
     expect(checks[0].detail).toContain('malformed');
   });
 
+  it('a V1 keyset with malformed fee and expiry still checks its ID, and notes the bad metadata', async () => {
+    // V1 derives its ID from the public keys alone, so V2 inputs must
+    // not block the comparison. The malformed metadata is noted in the
+    // detail instead of being silently dropped.
+    const fetchFn = stubFetch({
+      '/v1/keys': { keysets: [{ id: nut02.v1.id, unit: 'sat', input_fee_ppk: 100.5, final_expiry: -1, keys: nut02.v1.keys }] },
+      '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true, input_fee_ppk: 100.5, final_expiry: -1 }] },
+    });
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    expect(checks).toHaveLength(1);
+    expect(checks[0].result).toBe('match');
+    expect(checks[0].derivedId).toBe('00456a94ab4e1c46');
+    expect(checks[0].detail).toContain('matches the advertised ID');
+    expect(checks[0].detail).toContain('malformed input_fee_ppk');
+    expect(checks[0].detail).toContain('malformed final_expiry');
+  });
+
   it('a token keyset whose keys cannot be fetched is unknown, never skipped', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', keys: nut02.v2.keys }] },

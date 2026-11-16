@@ -12,7 +12,7 @@
 //   report left intact.
 // No code path sends checkstate without the consent flag set.
 import { hashToCurve } from '@cashu/cashu-ts';
-import { fetchMintJson, mintEndpointUrl, MintFetchError, isRecord, type FetchFn } from './fetch.js';
+import { fetchMintJson, mintEndpointUrl, mintOrigin, MintFetchError, isRecord, type FetchFn } from './fetch.js';
 
 export const CHECKSTATE_PRIVACY_COPY =
   'Before checkstate runs: the mint learns which proofs you hold, it can correlate sender and receiver, and its answer is its own word at one moment. Checkstate is opt-in and only runs after you consent.';
@@ -59,6 +59,7 @@ export async function checkProofState(
       mintEndpointUrl(mintUrl, '/v1/checkstate'),
       { method: 'POST', body: JSON.stringify({ Ys: [y] }) },
       fetchFn,
+      mintOrigin(mintUrl),
     );
   } catch (err) {
     // Distinguish the failure: a mint that was never reached is not the

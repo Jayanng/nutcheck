@@ -16,10 +16,30 @@ describe('fetchMintJson', () => {
     expect(FETCH_TIMEOUT_MS).toBe(4000);
   });
 
-  it('returns parsed JSON for a good response', async () => {
+  it('refuses a mint outside the allowed origin without sending a request', async () => {
+    let called = false;
+    const stub = async (): Promise<Response> => {
+      called = true;
+      return new Response(JSON.stringify({}), { status: 200 });
+    };
+    await expect(
+      fetchMintJson('https://other-mint.example/v1/info', {}, stub, 'https://testnut.cashu.space'),
+    ).rejects.toThrow(MintFetchError);
+    await expect(
+      fetchMintJson('https://other-mint.example/v1/info', {}, stub, 'https://testnut.cashu.space'),
+    ).rejects.toThrow(/outside the allowed origin/);
+    expect(called).toBe(false);
+  });
+
+  it('contacts the allowed origin normally', async () => {
     const stub = async (): Promise<Response> =>
       new Response(JSON.stringify({ name: 'Testnut mint' }), { status: 200 });
-    const result = await fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub);
+    const result = await fetchMintJson(
+      'https://testnut.cashu.space/v1/info',
+      {},
+      stub,
+      'https://testnut.cashu.space',
+    );
     expect(result).toEqual({ name: 'Testnut mint' });
   });
 

@@ -3,7 +3,7 @@
 // IDs, the active flag, input_fee_ppk as given, final_expiry, and keyset
 // age. Keyset age is a trust signal, not a cryptographic fact, and the
 // copy says so. A fetch failure is reported as unknown, never as fail.
-import { fetchMintJson, mintEndpointUrl, isRecord, type FetchFn } from './fetch.js';
+import { fetchMintJson, mintEndpointUrl, mintOrigin, isRecord, type FetchFn } from './fetch.js';
 
 export interface KeysetFact {
   id: string;
@@ -48,11 +48,14 @@ export async function getMintFacts(
   let keysetsRaw: Record<string, unknown> | undefined;
   let error: string | undefined;
   try {
-    info = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/info'), {}, fetchFn)) as Record<string, unknown>;
+    // The one origin this call is allowed to contact: the mint it was
+    // configured with. The fetch helper refuses any other origin.
+    const allowedOrigin = mintOrigin(mintUrl);
+    info = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/info'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
     if (!isRecord(info)) {
       throw new Error('the /v1/info response is not an object');
     }
-    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn)) as Record<string, unknown>;
+    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
       throw new Error('the /v1/keysets response has no keysets list');
     }

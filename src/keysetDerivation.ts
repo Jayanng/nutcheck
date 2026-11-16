@@ -5,7 +5,7 @@
 // NUT-13 secret derivation, so the two are not mixed up here. A mismatch
 // is a finding. A fetch failure is "unknown", never "fail".
 import { deriveKeysetId } from '@cashu/cashu-ts';
-import { fetchMintJson, mintEndpointUrl, isRecord, type FetchFn } from './fetch.js';
+import { fetchMintJson, mintEndpointUrl, mintOrigin, isRecord, type FetchFn } from './fetch.js';
 import { classifyKeysetVersion } from './keysetVersion.js';
 
 export interface KeysetDerivationCheck {
@@ -37,11 +37,14 @@ export async function checkKeysetDerivation(
   let keysRaw: Record<string, unknown> | undefined;
   let keysetsRaw: Record<string, unknown> | undefined;
   try {
-    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), {}, fetchFn)) as Record<string, unknown>;
+    // The one origin this call is allowed to contact: the mint it was
+    // configured with. The fetch helper refuses any other origin.
+    const allowedOrigin = mintOrigin(mintUrl);
+    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
     if (!isRecord(keysRaw) || !Array.isArray(keysRaw.keysets)) {
       throw new Error('the /v1/keys response has no keysets list');
     }
-    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn)) as Record<string, unknown>;
+    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
       throw new Error('the /v1/keysets response has no keysets list');
     }
@@ -136,6 +139,7 @@ export async function checkKeysetDerivation(
         mintEndpointUrl(mintUrl, `/v1/keys/${id}`),
         {},
         fetchFn,
+        mintOrigin(mintUrl),
       )) as Record<string, unknown>;
       if (isRecord(single) && Array.isArray(single.keysets) && single.keysets.length > 0) {
         // Select ONLY an entry whose ID matches the requested ID
@@ -252,6 +256,9 @@ export async function checkKeysetDerivation(
     // malformed fee (not a number, or negative) is not the same as an
     // absent fee: it means the inputs were not established, so the
     // check reports unknown instead of deriving with the default of 0.
+    // That only applies to V2. V1 derives its ID from the public keys
+    // alone, so a malformed or conflicting fee does not block a V1
+    // comparison; it is noted in the result detail instead.
     const keysFeeRaw = entry.input_fee_ppk;
     const metaFeeRaw = meta?.input_fee_ppk;
     const keysFeeMalformed =
@@ -260,7 +267,11 @@ export async function checkKeysetDerivation(
     const metaFeeMalformed =
       metaFeeRaw !== undefined &&
       (typeof metaFeeRaw !== 'number' || !Number.isSafeInteger(metaFeeRaw) || metaFeeRaw < 0);
-    if (keysFeeMalformed || metaFeeMalformed) {
+    const keysFee = typeof keysFeeRaw === 'number' ? keysFeeRaw : undefined;
+    const metaFee = typeof metaFeeRaw === 'number' ? metaFeeRaw : undefined;
+    const feeConflict = keysFee !== undefined && metaFee !== undefined && keysFee !== metaFee;
+    const v1Notes: string[] = [];
+    if (versionByte === 1 && (keysFeeMalformed || metaFeeMalformed)) {
       checks.push({
         advertisedId,
         derivedId: undefined,
@@ -270,9 +281,7 @@ export async function checkKeysetDerivation(
       });
       continue;
     }
-    const keysFee = typeof keysFeeRaw === 'number' ? keysFeeRaw : undefined;
-    const metaFee = typeof metaFeeRaw === 'number' ? metaFeeRaw : undefined;
-    if (keysFee !== undefined && metaFee !== undefined && keysFee !== metaFee) {
+    if (versionByte === 1 && feeConflict) {
       checks.push({
         advertisedId,
         derivedId: undefined,
@@ -282,12 +291,20 @@ export async function checkKeysetDerivation(
       });
       continue;
     }
-    const inputFeePpk = keysFee ?? metaFee;
+    if (versionByte === 0) {
+      if (keysFeeMalformed || metaFeeMalformed) {
+        v1Notes.push('the mint advertises a malformed input_fee_ppk, which V1 derivation does not use');
+      } else if (feeConflict) {
+        v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the input fee, which V1 derivation does not use');
+      }
+    }
+    const inputFeePpk = versionByte === 1 ? keysFee ?? metaFee : undefined;
     // The expiry comes from /v1/keysets when present, and falls back to
     // the /v1/keys entry (which is the only source for a token-referenced
     // keyset the mint no longer lists). If both carry a number and they
     // disagree, the V2 inputs cannot be established. A present but
-    // malformed expiry is unknown, not absent.
+    // malformed expiry is unknown, not absent. As with the fee, that
+    // only blocks V2; a V1 comparison proceeds and notes it instead.
     const keysExpiryRaw = entry.final_expiry;
     const metaExpiryRaw = meta?.final_expiry;
     const keysExpiryMalformed =
@@ -296,7 +313,10 @@ export async function checkKeysetDerivation(
     const metaExpiryMalformed =
       metaExpiryRaw !== undefined &&
       (typeof metaExpiryRaw !== 'number' || !Number.isSafeInteger(metaExpiryRaw) || metaExpiryRaw < 0);
-    if (keysExpiryMalformed || metaExpiryMalformed) {
+    const keysExpiry = typeof keysExpiryRaw === 'number' ? keysExpiryRaw : undefined;
+    const metaExpiry = typeof metaExpiryRaw === 'number' ? metaExpiryRaw : undefined;
+    const expiryConflict = keysExpiry !== undefined && metaExpiry !== undefined && keysExpiry !== metaExpiry;
+    if (versionByte === 1 && (keysExpiryMalformed || metaExpiryMalformed)) {
       checks.push({
         advertisedId,
         derivedId: undefined,
@@ -306,9 +326,7 @@ export async function checkKeysetDerivation(
       });
       continue;
     }
-    const keysExpiry = typeof keysExpiryRaw === 'number' ? keysExpiryRaw : undefined;
-    const metaExpiry = typeof metaExpiryRaw === 'number' ? metaExpiryRaw : undefined;
-    if (keysExpiry !== undefined && metaExpiry !== undefined && keysExpiry !== metaExpiry) {
+    if (versionByte === 1 && expiryConflict) {
       checks.push({
         advertisedId,
         derivedId: undefined,
@@ -318,7 +336,14 @@ export async function checkKeysetDerivation(
       });
       continue;
     }
-    const expiry = metaExpiry ?? keysExpiry;
+    if (versionByte === 0) {
+      if (keysExpiryMalformed || metaExpiryMalformed) {
+        v1Notes.push('the mint advertises a malformed final_expiry, which V1 derivation does not use');
+      } else if (expiryConflict) {
+        v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the expiry, which V1 derivation does not use');
+      }
+    }
+    const expiry = versionByte === 1 ? metaExpiry ?? keysExpiry : undefined;
     // The fee: NUT-02 says input_fee_ppk defaults to 0 when absent, and
     // deriveKeysetId treats an omitted fee the same as 0 (proven live:
     // the V2 vector with fee undefined and fee 0 give the same ID). An
@@ -369,15 +394,15 @@ export async function checkKeysetDerivation(
     // Compare case-insensitively so an uppercase advertisement is not a
     // false mismatch.
     const idsMatch = derivedId.toLowerCase() === advertisedId.toLowerCase();
+    const baseDetail = idsMatch
+      ? 'the recomputed ID matches the advertised ID'
+      : `the recomputed ID ${derivedId} does not match the advertised ID ${advertisedId}`;
     checks.push({
       advertisedId,
       derivedId,
       unit: effectiveUnit,
       result: idsMatch ? 'match' : 'mismatch',
-      detail:
-        idsMatch
-          ? 'the recomputed ID matches the advertised ID'
-          : `the recomputed ID ${derivedId} does not match the advertised ID ${advertisedId}`,
+      detail: v1Notes.length > 0 ? `${baseDetail}; note: ${v1Notes.join('; ')}` : baseDetail,
     });
   }
   return checks;
