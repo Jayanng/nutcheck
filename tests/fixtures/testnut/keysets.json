@@ -1,0 +1,16 @@
+{
+  "keysets": [
+    {
+      "id": "017bc604aaa08e9b58804bdd552286f15d75ebdaa3d1bccc2a52fc7406b4040fda",
+      "unit": "sat",
+      "active": true,
+      "input_fee_ppk": 100
+    },
+    {
+      "id": "010eca897fd3b9d496c4ef28de870727ef616cb0a05404035c65cf5cc6fa879504",
+      "unit": "usd",
+      "active": true,
+      "input_fee_ppk": 100
+    }
+  ]
+}

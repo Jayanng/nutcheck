@@ -1,0 +1,260 @@
+{
+  "name": "Testnut mint",
+  "pubkey": "03b570f51ec78cc4c0843517d2ed16258ba5ee4d9d624bd097faad874db7ba0d0a",
+  "version": "cdk-mintd/0.18.1",
+  "description": "Mint for testing Cashu wallets",
+  "description_long": "This mint uses a FakeWallet. All your Lightning invoices will always be marked paid so that you can test minting and melting ecash via Lightning. On-chain payments are also simulated; no real funds are moved.",
+  "nuts": {
+    "4": {
+      "methods": [
+        {
+          "method": "bolt11",
+          "unit": "sat",
+          "method_name": "Bolt11",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "description": true
+          }
+        },
+        {
+          "method": "bolt12",
+          "unit": "sat",
+          "method_name": "Bolt12",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "description": true
+          }
+        },
+        {
+          "method": "onchain",
+          "unit": "sat",
+          "method_name": "Onchain",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "confirmations": 1
+          }
+        },
+        {
+          "method": "bolt11",
+          "unit": "usd",
+          "method_name": "Bolt11",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "description": true
+          }
+        },
+        {
+          "method": "bolt12",
+          "unit": "usd",
+          "method_name": "Bolt12",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "description": true
+          }
+        },
+        {
+          "method": "onchain",
+          "unit": "usd",
+          "method_name": "Onchain",
+          "min_amount": 1,
+          "max_amount": 500000,
+          "options": {
+            "confirmations": 1
+          }
+        }
+      ],
+      "disabled": false
+    },
+    "5": {
+      "methods": [
+        {
+          "method": "bolt11",
+          "unit": "sat",
+          "method_name": "Bolt11",
+          "min_amount": 1,
+          "max_amount": 500000
+        },
+        {
+          "method": "bolt12",
+          "unit": "sat",
+          "method_name": "Bolt12",
+          "min_amount": 1,
+          "max_amount": 500000
+        },
+        {
+          "method": "onchain",
+          "unit": "sat",
+          "method_name": "Onchain",
+          "min_amount": 1,
+          "max_amount": 500000
+        },
+        {
+          "method": "bolt11",
+          "unit": "usd",
+          "method_name": "Bolt11",
+          "min_amount": 1,
+          "max_amount": 500000
+        },
+        {
+          "method": "bolt12",
+          "unit": "usd",
+          "method_name": "Bolt12",
+          "min_amount": 1,
+          "max_amount": 500000
+        },
+        {
+          "method": "onchain",
+          "unit": "usd",
+          "method_name": "Onchain",
+          "min_amount": 1,
+          "max_amount": 500000
+        }
+      ],
+      "disabled": false
+    },
+    "7": {
+      "supported": true
+    },
+    "8": {
+      "supported": true
+    },
+    "9": {
+      "supported": true
+    },
+    "10": {
+      "supported": true
+    },
+    "11": {
+      "supported": true
+    },
+    "12": {
+      "supported": true
+    },
+    "14": {
+      "supported": true
+    },
+    "15": {
+      "methods": [
+        {
+          "method": "bolt11",
+          "unit": "sat"
+        },
+        {
+          "method": "bolt11",
+          "unit": "usd"
+        }
+      ]
+    },
+    "17": {
+      "supported": [
+        {
+          "method": "bolt11",
+          "unit": "sat",
+          "commands": [
+            "bolt11_mint_quote",
+            "bolt11_melt_quote",
+            "proof_state"
+          ]
+        },
+        {
+          "method": "bolt12",
+          "unit": "sat",
+          "commands": [
+            "bolt12_mint_quote",
+            "bolt12_melt_quote",
+            "proof_state"
+          ]
+        },
+        {
+          "method": "onchain",
+          "unit": "sat",
+          "commands": [
+            "onchain_mint_quote",
+            "onchain_melt_quote",
+            "proof_state"
+          ]
+        },
+        {
+          "method": "bolt11",
+          "unit": "usd",
+          "commands": [
+            "bolt11_mint_quote",
+            "bolt11_melt_quote",
+            "proof_state"
+          ]
+        },
+        {
+          "method": "bolt12",
+          "unit": "usd",
+          "commands": [
+            "bolt12_mint_quote",
+            "bolt12_melt_quote",
+            "proof_state"
+          ]
+        },
+        {
+          "method": "onchain",
+          "unit": "usd",
+          "commands": [
+            "onchain_mint_quote",
+            "onchain_melt_quote",
+            "proof_state"
+          ]
+        }
+      ]
+    },
+    "19": {
+      "ttl": 60,
+      "cached_endpoints": [
+        {
+          "method": "POST",
+          "path": "/v1/swap"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/mint/bolt11"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/melt/bolt11"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/mint/bolt12"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/melt/bolt12"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/mint/onchain"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/melt/onchain"
+        }
+      ]
+    },
+    "20": {
+      "supported": true
+    },
+    "29": {
+      "max_batch_size": 100,
+      "methods": [
+        "bolt11",
+        "bolt12",
+        "onchain"
+      ]
+    }
+  },
+  "icon_url": "https://image.nostr.build/46ee47763c345d2cfa3317f042d332003f498ee281fb42808d47a7d3b9585911.png",
+  "motd": "This test mint has been reset. Old tokens and quotes are no longer valid. Fake payments only; do not send real funds.",
+  "time": 1794820948,
+  "max_array_length": 1000
+}
