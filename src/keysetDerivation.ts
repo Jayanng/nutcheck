@@ -31,20 +31,27 @@ function versionByteFor(id: string): number | undefined {
 
 export async function checkKeysetDerivation(
   mintUrl: string,
+  // Required. The mint named in the decoded token. This is the one
+  // origin the call is allowed to contact. The URL to check (mintUrl)
+  // is fetched only when its origin matches this token mint; a URL
+  // outside it is refused before any request is sent, so a mint absent
+  // from the token causes zero fetches. The integration passes the
+  // token's mint for both.
+  tokenMintUrl: string,
   fetchFn: FetchFn = fetch,
   tokenKeysetIds: string[] = [],
 ): Promise<KeysetDerivationCheck[]> {
   let keysRaw: Record<string, unknown> | undefined;
   let keysetsRaw: Record<string, unknown> | undefined;
   try {
-    // The one origin this call is allowed to contact: the mint it was
-    // configured with. The fetch helper refuses any other origin.
-    const allowedOrigin = mintOrigin(mintUrl);
-    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
+    // The one origin this call is allowed to contact: the mint named in
+    // the decoded token. The fetch helper refuses any other origin.
+    const allowedOrigin = mintOrigin(tokenMintUrl);
+    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysRaw) || !Array.isArray(keysRaw.keysets)) {
       throw new Error('the /v1/keys response has no keysets list');
     }
-    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
+    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
       throw new Error('the /v1/keysets response has no keysets list');
     }
@@ -72,12 +79,19 @@ export async function checkKeysetDerivation(
     return checks;
   }
   const metaById = new Map<string, Record<string, unknown>>();
+  // A malformed entry (not an object, or no string ID) is not a keyset
+  // fact. It is counted and reported at the end instead of being
+  // silently skipped, so a mint that answers with broken shapes does
+  // not look clean.
+  let malformedMeta = 0;
   for (const entry of keysetsRaw.keysets as unknown[]) {
     if (isRecord(entry) && typeof entry.id === 'string') {
       // Map keys are normalized to lowercase so a token-supplied
       // uppercase ID and a mint-listed lowercase ID are the same keyset.
       // The advertised spelling is kept in the entry itself for display.
       metaById.set(entry.id.toLowerCase(), entry);
+    } else {
+      malformedMeta += 1;
     }
   }
   // GET /v1/keys returns only the active keysets (NUT-01). A token can
@@ -90,9 +104,12 @@ export async function checkKeysetDerivation(
   // fetched is reported as unknown, never silently skipped.
   const keysById = new Map<string, Record<string, unknown>>();
   const checks: KeysetDerivationCheck[] = [];
+  let malformedKeys = 0;
   for (const entry of keysRaw.keysets as unknown[]) {
     if (isRecord(entry) && typeof entry.id === 'string' && isRecord(entry.keys)) {
       keysById.set(entry.id.toLowerCase(), entry);
+    } else {
+      malformedKeys += 1;
     }
   }
   // The advertised spelling of each ID, for display. The mint-listed
@@ -137,9 +154,9 @@ export async function checkKeysetDerivation(
     try {
       const single = (await fetchMintJson(
         mintEndpointUrl(mintUrl, `/v1/keys/${id}`),
+        mintOrigin(tokenMintUrl),
         {},
         fetchFn,
-        mintOrigin(mintUrl),
       )) as Record<string, unknown>;
       if (isRecord(single) && Array.isArray(single.keysets) && single.keysets.length > 0) {
         // Select ONLY an entry whose ID matches the requested ID
@@ -403,6 +420,25 @@ export async function checkKeysetDerivation(
       unit: effectiveUnit,
       result: idsMatch ? 'match' : 'mismatch',
       detail: v1Notes.length > 0 ? `${baseDetail}; note: ${v1Notes.join('; ')}` : baseDetail,
+    });
+  }
+  // A malformed entry in either list is reported as an unknown check so
+  // it is visible instead of silently dropped. It carries no keyset ID,
+  // because the entry had none usable.
+  if (malformedMeta > 0 || malformedKeys > 0) {
+    const parts: string[] = [];
+    if (malformedMeta > 0) {
+      parts.push(`${malformedMeta} malformed ${malformedMeta === 1 ? 'entry' : 'entries'} in the /v1/keysets response`);
+    }
+    if (malformedKeys > 0) {
+      parts.push(`${malformedKeys} malformed ${malformedKeys === 1 ? 'entry' : 'entries'} in the /v1/keys response`);
+    }
+    checks.push({
+      advertisedId: '',
+      derivedId: undefined,
+      unit: '',
+      result: 'unknown',
+      detail: `the mint response has ${parts.join(' and ')} that were skipped`,
     });
   }
   return checks;

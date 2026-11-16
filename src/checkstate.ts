@@ -43,6 +43,13 @@ function secretToBytes(secret: string): Uint8Array {
 
 export async function checkProofState(
   mintUrl: string,
+  // Required. The mint named in the decoded token. This is the one
+  // origin the call is allowed to contact. The URL to check (mintUrl)
+  // is fetched only when its origin matches this token mint; a URL
+  // outside it is refused before any request is sent, so a mint absent
+  // from the token causes zero fetches. The integration passes the
+  // token's mint for both.
+  tokenMintUrl: string,
   secret: string,
   consent: boolean,
   fetchFn: FetchFn = fetch,
@@ -60,9 +67,9 @@ export async function checkProofState(
   try {
     raw = await fetchMintJson(
       mintEndpointUrl(mintUrl, '/v1/checkstate'),
+      mintOrigin(tokenMintUrl),
       { method: 'POST', body: JSON.stringify({ Ys: [y] }) },
       fetchFn,
-      mintOrigin(mintUrl),
     );
   } catch (err) {
     // Distinguish the failure: a mint that was never reached is not the
@@ -114,6 +121,17 @@ export async function checkProofState(
         state: undefined,
         severity: 'amber',
         message: 'mint unreachable, verify manually',
+      };
+    }
+    // A mint outside the one named in the token is refused before any
+    // request is sent. The mint was never contacted, so this is not a
+    // mint that answered badly; it is a URL the tool will not use.
+    if (err instanceof MintFetchError && /outside the allowed origin/.test(err.message)) {
+      return {
+        status: 'not-checked',
+        state: undefined,
+        severity: 'amber',
+        message: 'the mint is not the one named in the token, verify manually',
       };
     }
     return {

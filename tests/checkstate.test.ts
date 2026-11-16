@@ -29,15 +29,29 @@ function stubFetchFor(body: unknown, status = 200) {
 describe('checkstate', () => {
   it('no code path sends checkstate without consent, and a test proves it', async () => {
     const fetchFn = stubFetchFor(unspentFixture);
-    const result = await checkProofState('https://testnut.cashu.space', secret, false, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, false, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.message).toContain('consent was not given');
     expect(fetchFn).not.toHaveBeenCalled();
   });
 
+  it('a mint absent from the decoded token gets zero fetches through the public check', async () => {
+    const fetchFn = stubFetchFor(unspentFixture);
+    const result = await checkProofState(
+      'https://other-mint.example',
+      'https://testnut.cashu.space',
+      secret,
+      true,
+      fetchFn,
+    );
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(result.status).toBe('not-checked');
+    expect(result.message).toMatch(/not the one named in the token/);
+  });
+
   it('the live testnut fixture maps to unspent', async () => {
     const fetchFn = stubFetchFor(unspentFixture);
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('checked');
     expect(result.state).toBe('unspent');
     expect(result.severity).toBe('none');
@@ -51,7 +65,7 @@ describe('checkstate', () => {
     expect(spentFixture.states).toHaveLength(2);
     expect(spentFixture.states.every((s) => s.state === 'SPENT')).toBe(true);
     const fetchFn = stubFetchFor(spentFixture);
-    const result = await checkProofState('https://testnut.cashu.space', spentSecret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', spentSecret, true, fetchFn);
     expect(result.status).toBe('checked');
     expect(result.state).toBe('spent');
     expect(result.severity).toBe('red');
@@ -61,7 +75,7 @@ describe('checkstate', () => {
 
   it('spent maps to RED', async () => {
     const fetchFn = stubFetchFor({ states: [{ Y: '024369d2d22a80ecf78f3937da9d5f30c1b9f74f0c32684d583cca0fa6a61cdcfc', state: 'SPENT', witness: null }] });
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.state).toBe('spent');
     expect(result.severity).toBe('red');
     expect(result.message).toBe('the mint reports this proof as spent');
@@ -69,7 +83,7 @@ describe('checkstate', () => {
 
   it('pending maps to AMBER, the mint reports the proof as pending', async () => {
     const fetchFn = stubFetchFor({ states: [{ Y: '024369d2d22a80ecf78f3937da9d5f30c1b9f74f0c32684d583cca0fa6a61cdcfc', state: 'PENDING', witness: null }] });
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.state).toBe('pending');
     expect(result.severity).toBe('amber');
     expect(result.message).toBe('the mint reports this proof as pending');
@@ -79,7 +93,7 @@ describe('checkstate', () => {
     // A real stubbed Response with status 500, so the test exercises the
     // same !response.ok path a live mint takes.
     const fetchFn = vi.fn(async (): Promise<Response> => new Response('server error', { status: 500 }));
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.severity).toBe('amber');
     expect(result.message).toBe('the mint answered with an error (status 500), verify manually');
@@ -100,7 +114,7 @@ describe('checkstate', () => {
           });
         }),
       );
-      const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+      const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
       expect(result.status).toBe('not-checked');
       expect(result.severity).toBe('amber');
       expect(result.message).toBe('mint unreachable, verify manually');
@@ -112,7 +126,7 @@ describe('checkstate', () => {
     const fetchFn = vi.fn(async (): Promise<Response> => {
       throw new MintFetchError('mint request timed out while reading the response body');
     });
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.severity).toBe('amber');
     expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
@@ -120,7 +134,7 @@ describe('checkstate', () => {
 
   it('401 maps to not checked (auth required)', async () => {
     const fetchFn = stubFetchFor(null, 401);
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.message).toBe('not checked (auth required)');
     expect(result.severity).toBe('none');
@@ -128,7 +142,7 @@ describe('checkstate', () => {
 
   it('403 maps to not checked (auth required)', async () => {
     const fetchFn = stubFetchFor(null, 403);
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.message).toBe('not checked (auth required)');
     expect(result.severity).toBe('none');
@@ -138,7 +152,7 @@ describe('checkstate', () => {
     const fetchFn = stubFetchFor({
       states: [{ Y: '02' + '00'.repeat(32), state: 'SPENT', witness: null }],
     });
-    const result = await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.state).toBeUndefined();
     expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
@@ -159,7 +173,7 @@ describe('checkstate', () => {
       sentBody = typeof init?.body === 'string' ? init.body : '';
       return new Response(JSON.stringify(unspentFixture), { status: 200 });
     });
-    await checkProofState('https://testnut.cashu.space', secret, true, fetchFn);
+    await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     const parsed = JSON.parse(sentBody) as { Ys: string[] };
     expect(parsed.Ys).toHaveLength(1);
     expect(parsed.Ys[0]).toBe(

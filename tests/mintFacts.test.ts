@@ -21,12 +21,28 @@ function stubFetch(map: Record<string, unknown>) {
 }
 
 describe('getMintFacts', () => {
+  it('a mint absent from the decoded token gets zero fetches through the public check', async () => {
+    let calls = 0;
+    const fetchFn = async (): Promise<Response> => {
+      calls += 1;
+      return new Response('{}', { status: 200 });
+    };
+    const facts = await getMintFacts(
+      'https://other-mint.example',
+      'https://testnut.cashu.space',
+      fetchFn,
+    );
+    expect(calls).toBe(0);
+    expect(facts.status).toBe('unknown');
+    expect(facts.error).toMatch(/outside the allowed origin/);
+  });
+
   it('surfaces version, nuts, keysets, fees, and active flags from the testnut fixtures', async () => {
     const fetchFn = stubFetch({
       '/v1/info': infoFixture,
       '/v1/keysets': keysetsFixture,
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('ok');
     expect(facts.name).toBe('Testnut mint');
     expect(facts.version).toBe('cdk-mintd/0.18.1');
@@ -44,7 +60,7 @@ describe('getMintFacts', () => {
       '/v1/info': infoFixture,
       '/v1/keysets': keysetsFixture,
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.keysets[0].age).toContain('unknown');
     expect(facts.keysets[0].age).toContain('trust signal only');
   });
@@ -53,7 +69,7 @@ describe('getMintFacts', () => {
     const fetchFn = async (): Promise<Response> => {
       throw new Error('network down');
     };
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('unknown');
     expect(facts.keysets).toEqual([]);
     expect(facts.error).toBeDefined();
@@ -69,7 +85,7 @@ describe('getMintFacts', () => {
         ],
       },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('ok');
     expect(facts.keysets[0].active).toBeUndefined();
     expect(facts.keysets[1].active).toBeUndefined();
@@ -80,7 +96,7 @@ describe('getMintFacts', () => {
       '/v1/info': infoFixture,
       '/v1/keysets': { keysets: 'not a list' },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('unknown');
   });
 
@@ -89,7 +105,7 @@ describe('getMintFacts', () => {
       '/v1/info': infoFixture,
       '/v1/keysets': { keysets: [{}] },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('unknown');
     expect(facts.keysets).toHaveLength(0);
     expect(facts.error).toContain('without a usable ID or unit');
@@ -100,7 +116,7 @@ describe('getMintFacts', () => {
       '/v1/info': infoFixture,
       '/v1/keysets': { keysets: [{ id: '017bc604aaa08e9b58804bdd552286f15d75ebdaa3d1bccc2a52fc7406b4040fda' }] },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('unknown');
     expect(facts.keysets).toHaveLength(0);
   });
@@ -120,7 +136,7 @@ describe('getMintFacts', () => {
         ],
       },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('ok');
     expect(facts.keysets).toHaveLength(1);
     expect(facts.keysets[0].inputFeePpk).toBeUndefined();
@@ -129,6 +145,19 @@ describe('getMintFacts', () => {
     expect(facts.findings).toHaveLength(2);
     expect(facts.findings[0]).toContain('malformed input_fee_ppk');
     expect(facts.findings[1]).toContain('malformed final_expiry');
+  });
+
+  it('a malformed version or nuts in the info response is named in findings', async () => {
+    const fetchFn = stubFetch({
+      '/v1/info': { ...infoFixture, version: 42, nuts: 'not-an-object' },
+      '/v1/keysets': keysetsFixture,
+    });
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+    expect(facts.status).toBe('ok');
+    expect(facts.version).toBeUndefined();
+    expect(facts.nuts).toEqual({});
+    expect(facts.findings).toContain('the mint advertises a malformed version');
+    expect(facts.findings).toContain('the mint advertises malformed nuts metadata');
   });
 
   it('an absent fee or expiry produces no finding, unlike a malformed one', async () => {
@@ -144,7 +173,7 @@ describe('getMintFacts', () => {
         ],
       },
     });
-    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(facts.status).toBe('ok');
     expect(facts.keysets[0].inputFeePpk).toBeUndefined();
     expect(facts.keysets[0].finalExpiry).toBeUndefined();

@@ -42,20 +42,27 @@ function keysetAge(): string {
 
 export async function getMintFacts(
   mintUrl: string,
+  // Required. The mint named in the decoded token. This is the one
+  // origin the call is allowed to contact. The URL to check (mintUrl)
+  // is fetched only when its origin matches this token mint; a URL
+  // outside it is refused before any request is sent, so a mint absent
+  // from the token causes zero fetches. The integration passes the
+  // token's mint for both.
+  tokenMintUrl: string,
   fetchFn: FetchFn = fetch,
 ): Promise<MintFacts> {
   let info: Record<string, unknown> | undefined;
   let keysetsRaw: Record<string, unknown> | undefined;
   let error: string | undefined;
   try {
-    // The one origin this call is allowed to contact: the mint it was
-    // configured with. The fetch helper refuses any other origin.
-    const allowedOrigin = mintOrigin(mintUrl);
-    info = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/info'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
+    // The one origin this call is allowed to contact: the mint named in
+    // the decoded token. The fetch helper refuses any other origin.
+    const allowedOrigin = mintOrigin(tokenMintUrl);
+    info = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/info'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(info)) {
       throw new Error('the /v1/info response is not an object');
     }
-    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), {}, fetchFn, allowedOrigin)) as Record<string, unknown>;
+    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
       throw new Error('the /v1/keysets response has no keysets list');
     }
@@ -78,6 +85,19 @@ export async function getMintFacts(
   // blank IDs as facts.
   const keysets: KeysetFact[] = [];
   const findingsSoFar: string[] = [];
+  // The info fields are validated too. A version, name, or nuts value
+  // that is present but the wrong shape is malformed mint data, not a
+  // fact, so it is named in findings instead of being silently replaced
+  // with a default. An absent field is fine and produces no finding.
+  if (info.name !== undefined && typeof info.name !== 'string') {
+    findingsSoFar.push('the mint advertises a malformed name');
+  }
+  if (info.version !== undefined && typeof info.version !== 'string') {
+    findingsSoFar.push('the mint advertises a malformed version');
+  }
+  if (info.nuts !== undefined && !isRecord(info.nuts)) {
+    findingsSoFar.push('the mint advertises malformed nuts metadata');
+  }
   for (const entry of keysetsRaw.keysets as unknown[]) {
     const record = isRecord(entry) ? entry : {};
     const id = typeof record.id === 'string' ? record.id : '';

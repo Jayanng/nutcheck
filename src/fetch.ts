@@ -166,13 +166,14 @@ async function readCappedBody(response: Response, signal: AbortSignal): Promise<
 
 export async function fetchMintJson(
   url: string,
+  // Required, and placed before the defaulted parameters so the
+  // signature is unambiguous. The one origin this call is allowed to
+  // contact. There is no call without an allowed origin: a fetch that
+  // does not name its mint is a fetch that could go anywhere, and this
+  // helper refuses to make one.
+  allowedOrigin: string,
   init: { method?: 'GET' | 'POST'; body?: string } = {},
   fetchFn: FetchFn = fetch,
-  // Required. The one origin this call is allowed to contact. There is
-  // no call without an allowed origin: a fetch that does not name its
-  // mint is a fetch that could go anywhere, and this helper refuses to
-  // make one.
-  allowedOrigin: string,
 ): Promise<unknown> {
   if (!isHttpUrl(url)) {
     throw new MintFetchError(`refusing to contact a non-HTTP mint URL: ${url}`);

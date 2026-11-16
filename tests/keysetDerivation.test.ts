@@ -62,7 +62,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v1.id, unit: 'sat', keys: tampered }] },
       '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('mismatch');
     expect(checks[0].derivedId).toBe('000fa40071a69c0e');
@@ -73,7 +73,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': keysFixture,
       '/v1/keysets': keysetsFixture,
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(2);
     for (const check of checks) {
       expect(check.result).toBe('match');
@@ -92,7 +92,7 @@ describe('keyset-ID derivation', () => {
         keysets: [{ id: otherId, unit: 'sat', keys: nut02.v1.keys }],
       },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].advertisedId).toBe(nut02.v2.id);
     expect(checks[0].result).toBe('unknown');
@@ -111,7 +111,7 @@ describe('keyset-ID derivation', () => {
         keysets: [{ id: nut02.v1.id.toUpperCase(), unit: 'sat', keys: nut02.v1.keys }],
       },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].advertisedId).toBe(nut02.v1.id);
     expect(checks[0].result).toBe('match');
@@ -124,7 +124,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: v3Id, unit: 'sat', keys: { 1: '02' + '00'.repeat(32) } }] },
       '/v1/keysets': { keysets: [{ id: v3Id, unit: 'sat', active: true }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('V3 keyset');
@@ -135,7 +135,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, active: true, input_fee_ppk: 100, final_expiry: 2059210353 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('no unit was supplied');
@@ -146,7 +146,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'usd', keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, input_fee_ppk: 100, final_expiry: 2059210353 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('disagree on the unit');
@@ -157,7 +157,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, input_fee_ppk: 100, final_expiry: 2059210353 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('disagree on the input fee');
@@ -168,7 +168,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, final_expiry: 2059210353 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('match');
   });
@@ -177,7 +177,7 @@ describe('keyset-ID derivation', () => {
     const fetchFn = async (): Promise<Response> => {
       throw new Error('network down');
     };
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
   });
@@ -186,7 +186,7 @@ describe('keyset-ID derivation', () => {
     const fetchFn = async (): Promise<Response> => {
       throw new Error('network down');
     };
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn, [
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn, [
       nut02.v1.id,
       nut02.v2.id,
     ]);
@@ -211,7 +211,7 @@ describe('keyset-ID derivation', () => {
         keysets: [{ id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }],
       },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn, [nut02.v1.id]);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn, [nut02.v1.id]);
     expect(checks).toHaveLength(2);
     const tokenKeyset = checks.find((c) => c.advertisedId === nut02.v1.id);
     expect(tokenKeyset).toBeDefined();
@@ -232,7 +232,7 @@ describe('keyset-ID derivation', () => {
         keysets: [{ id: nut02.v2.id, unit: 'sat', keys: nut02.v2.keys }],
       },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn, [
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn, [
       nut02.v2.id.toUpperCase(),
     ]);
     expect(checks).toHaveLength(1);
@@ -246,7 +246,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: '100', keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, final_expiry: 2059210353 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('fee');
@@ -259,7 +259,7 @@ describe('keyset-ID derivation', () => {
         '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: badFee, keys: nut02.v2.keys }] },
         '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, final_expiry: 2059210353 }] },
       });
-      const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+      const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
       expect(checks).toHaveLength(1);
       expect(checks[0].result).toBe('unknown');
       expect(checks[0].detail).toContain('malformed');
@@ -271,7 +271,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, final_expiry: 2059210353.5 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('expiry');
@@ -283,7 +283,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, final_expiry: '2059210353' }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
     expect(checks[0].detail).toContain('expiry');
@@ -298,7 +298,7 @@ describe('keyset-ID derivation', () => {
       '/v1/keys': { keysets: [{ id: nut02.v1.id, unit: 'sat', input_fee_ppk: 100.5, final_expiry: -1, keys: nut02.v1.keys }] },
       '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true, input_fee_ppk: 100.5, final_expiry: -1 }] },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('match');
     expect(checks[0].derivedId).toBe('00456a94ab4e1c46');
@@ -315,7 +315,7 @@ describe('keyset-ID derivation', () => {
       },
       // No /v1/keys/{id} entry for the token keyset: the fetch returns 404.
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn, [nut02.v1.id]);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn, [nut02.v1.id]);
     expect(checks).toHaveLength(2);
     const tokenKeyset = checks.find((c) => c.advertisedId === nut02.v1.id);
     expect(tokenKeyset).toBeDefined();
@@ -346,7 +346,7 @@ describe('keyset-ID derivation', () => {
         keysets: [{ id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }],
       },
     });
-    const checks = await checkKeysetDerivation('https://testnut.cashu.space', fetchFn);
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(2);
     const active = checks.find((c) => c.advertisedId === nut02.v2.id);
     expect(active).toBeDefined();
@@ -355,5 +355,28 @@ describe('keyset-ID derivation', () => {
     expect(inactive).toBeDefined();
     expect(inactive?.result).toBe('match');
     expect(inactive?.derivedId).toBe('00456a94ab4e1c46');
+  });
+
+  it('a malformed entry in the keys or keysets list is reported as unknown, never silently skipped', async () => {
+    const fetchFn = stubFetch({
+      '/v1/keys': {
+        keysets: [
+          { id: nut02.v2.id, unit: 'sat', keys: nut02.v2.keys },
+          { id: 'not-a-keyset' },
+          'not-an-object',
+        ],
+      },
+      '/v1/keysets': {
+        keysets: [
+          { id: nut02.v2.id, unit: 'sat', active: true, input_fee_ppk: 100, final_expiry: 2059210353 },
+          { unit: 'sat' },
+        ],
+      },
+    });
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+    const malformed = checks.find((c) => c.advertisedId === '' && c.result === 'unknown');
+    expect(malformed).toBeDefined();
+    expect(malformed?.detail).toMatch(/1 malformed entry in the \/v1\/keysets response/);
+    expect(malformed?.detail).toMatch(/2 malformed entries in the \/v1\/keys response/);
   });
 });

@@ -24,10 +24,10 @@ describe('fetchMintJson', () => {
       return new Response(JSON.stringify({}), { status: 200 });
     };
     await expect(
-      fetchMintJson('https://other-mint.example/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://other-mint.example/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(MintFetchError);
     await expect(
-      fetchMintJson('https://other-mint.example/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://other-mint.example/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/outside the allowed origin/);
     expect(called).toBe(false);
   });
@@ -37,9 +37,9 @@ describe('fetchMintJson', () => {
       new Response(JSON.stringify({ name: 'Testnut mint' }), { status: 200 });
     const result = await fetchMintJson(
       'https://testnut.cashu.space/v1/info',
+      'https://testnut.cashu.space',
       {},
       stub,
-      'https://testnut.cashu.space',
     );
     expect(result).toEqual({ name: 'Testnut mint' });
   });
@@ -72,7 +72,7 @@ describe('fetchMintJson', () => {
       return new Response(JSON.stringify({}), { status: 200 });
     };
     await expect(
-      fetchMintJson('https://other-mint.example/v1/info', {}, stub, tokenMintOrigin),
+      fetchMintJson('https://other-mint.example/v1/info', tokenMintOrigin, {}, stub),
     ).rejects.toThrow(/outside the allowed origin/);
     expect(called).toBe(false);
   });
@@ -82,10 +82,10 @@ describe('fetchMintJson', () => {
     const stub = async (): Promise<Response> =>
       new Response(JSON.stringify({ data: big }), { status: 200 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(MintFetchError);
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/exceeds the 1048576 byte cap/);
   });
 
@@ -93,7 +93,7 @@ describe('fetchMintJson', () => {
     const stub = async (): Promise<Response> =>
       new Response('', { status: 302, headers: { Location: 'https://evil.example/' } });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/redirects are not followed/);
   });
 
@@ -101,21 +101,21 @@ describe('fetchMintJson', () => {
     const stub = async (): Promise<Response> =>
       new Response('not json at all', { status: 200 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/not JSON/);
   });
 
   it('rejects a non-HTTP mint URL', async () => {
     const stub = async (): Promise<Response> => new Response('{}', { status: 200 });
     await expect(
-      fetchMintJson('file:///etc/passwd', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('file:///etc/passwd', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/non-HTTP/);
   });
 
   it('reports a 401 or 403 as refused, not as a generic failure', async () => {
     const stub = async (): Promise<Response> => new Response('', { status: 401 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/checkstate', {}, stub, 'https://testnut.cashu.space'),
+      fetchMintJson('https://testnut.cashu.space/v1/checkstate', 'https://testnut.cashu.space', {}, stub),
     ).rejects.toThrow(/refused the request \(status 401\)/);
   });
 
@@ -131,7 +131,7 @@ describe('fetchMintJson', () => {
           });
         });
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+        fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
       ).rejects.toThrow(/timed out after 4000 ms/);
     },
     10000,
@@ -142,7 +142,7 @@ describe('fetchMintJson', () => {
     async () => {
       const stub = async (): Promise<Response> => new Response(null, { status: 200 });
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+        fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
       ).rejects.toThrow(/no readable body stream/);
     },
   );
@@ -161,7 +161,7 @@ describe('fetchMintJson', () => {
       const stub = async (): Promise<Response> => stalled;
       const start = Date.now();
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
+        fetchMintJson('https://testnut.cashu.space/v1/info', 'https://testnut.cashu.space', {}, stub),
       ).rejects.toThrow(/timed out/);
       const elapsed = Date.now() - start;
       expect(elapsed).toBeLessThan(8000);
@@ -216,6 +216,7 @@ describe('mintEndpointUrl', () => {
     };
     const result = await checkProofState(
       'https://mint.example/v1/swap?x=',
+      'https://testnut.cashu.space',
       'daf4dd00a2b68a0858a80450f52c8a7d2ccf87d375e43e216e0c571f089f63e9',
       true,
       fetchFn,
