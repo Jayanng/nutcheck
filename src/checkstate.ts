@@ -149,16 +149,12 @@ export async function checkProofState(
       message: 'the mint answered but the response could not be read, verify manually',
     };
   }
-  // One Y was asked about, so exactly one state entry for that Y is
-  // required, and it must be well-formed. A mint that returns two
-  // entries for the same Y, or entries for other Ys, is not giving one
-  // clear answer, and NutCheck reports whichever came first if it just
-  // takes states[0]. Conflicting or extra entries are not checked,
-  // never resolved by picking one.
-  const matching = raw.states.filter(
-    (e) => isRecord(e) && typeof e.Y === 'string' && e.Y.toLowerCase() === y.toLowerCase(),
-  );
-  if (matching.length !== 1) {
+  // One Y was asked about, so the response must contain exactly one state
+  // entry, and it must be for the Y that was asked about. A mint that
+  // returns two entries, or an entry for a Y that was not asked about, is
+  // not giving one clear answer. Extra or conflicting entries are not
+  // checked, never resolved by picking one.
+  if (raw.states.length !== 1) {
     return {
       status: 'not-checked',
       state: undefined,
@@ -166,19 +162,16 @@ export async function checkProofState(
       message: 'the mint answered but the response could not be read, verify manually',
     };
   }
-  const first = matching[0] as Record<string, unknown>;
+  const first = raw.states[0];
+  if (!isRecord(first) || typeof first.Y !== 'string' || first.Y.toLowerCase() !== y.toLowerCase()) {
+    return {
+      status: 'not-checked',
+      state: undefined,
+      severity: 'amber',
+      message: 'the mint answered but the response could not be read, verify manually',
+    };
+  }
   const state = typeof first.state === 'string' ? first.state : '';
-  const returnedY = first.Y as string;
-  // The mint must answer for the Y that was asked about. A response for
-  // a different Y is not an answer for this proof.
-  if (returnedY.toLowerCase() !== y.toLowerCase()) {
-    return {
-      status: 'not-checked',
-      state: undefined,
-      severity: 'amber',
-      message: 'the mint answered but the response could not be read, verify manually',
-    };
-  }
   if (state === 'SPENT') {
     return {
       status: 'checked',

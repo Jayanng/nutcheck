@@ -15,7 +15,7 @@ const secret = 'daf4dd00a2b68a0858a80450f52c8a7d2ccf87d375e43e216e0c571f089f63e9
 // is worth nothing. It is recorded only so this test can reproduce the Y
 // in the spent fixture, the same way the public NUT-12 vector secret is
 // used for the unspent fixture.
-const spentSecret = '419a961f39355101018f17d01487db2e12712b3c97cb6fe2e5994e185455ea7b';
+const spentSecret = 'ff8eb03618781736a038ddd5ff91f722a6e761714abbe435e1fb8e1fdf0ae3f3';
 
 function stubFetchFor(body: unknown, status = 200) {
   return vi.fn(async (_url: string, _init?: RequestInit): Promise<Response> => {
@@ -61,8 +61,10 @@ describe('checkstate', () => {
 
   it('the live testnut spent fixture maps to spent and RED', async () => {
     // The fixture was recorded live: a proof minted at testnut, then
-    // spent by a melt, then checkstate returned SPENT for its Y.
-    expect(spentFixture.states).toHaveLength(2);
+    // spent by a melt, then checkstate returned SPENT for its Y. The
+    // fixture has exactly one state entry, for the one Y that was asked
+    // about, matching what checkProofState requests.
+    expect(spentFixture.states).toHaveLength(1);
     expect(spentFixture.states.every((s) => s.state === 'SPENT')).toBe(true);
     const fetchFn = stubFetchFor(spentFixture);
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', spentSecret, true, fetchFn);
@@ -185,7 +187,7 @@ describe('checkstate', () => {
     }
   });
 
-  it('an extra entry for a different Y does not block the answer for the asked Y', async () => {
+  it('an extra entry for a different Y is not checked, the response shape is wrong', async () => {
     const y = '024369d2d22a80ecf78f3937da9d5f30c1b9f74f0c32684d583cca0fa6a61cdcfc';
     const fetchFn = stubFetchFor({
       states: [
@@ -194,8 +196,9 @@ describe('checkstate', () => {
       ],
     });
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
-    expect(result.status).toBe('checked');
-    expect(result.state).toBe('unspent');
+    expect(result.status).toBe('not-checked');
+    expect(result.state).toBeUndefined();
+    expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
   });
 
   it('the privacy copy warns about disclosure, correlation, and the mint word', () => {
