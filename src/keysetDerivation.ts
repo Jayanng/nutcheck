@@ -8,6 +8,18 @@ import { deriveKeysetId } from '@cashu/cashu-ts';
 import { fetchMintJson, mintEndpointUrl, isRecord, type FetchFn } from './fetch.js';
 import { classifyKeysetVersion } from './keysetVersion.js';
 
+// Canonical form of a keys map for comparison. JSON property order is
+// not significant: two maps with the same amount-to-pubkey entries in
+// different orders are the same keys, not a conflict. Sorting the
+// entries makes the comparison order-independent.
+function canonicalKeys(keys: unknown): string {
+  if (!isRecord(keys)) {
+    return JSON.stringify(keys);
+  }
+  const entries = Object.entries(keys).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return JSON.stringify(entries);
+}
+
 export interface KeysetDerivationCheck {
   advertisedId: string;
   derivedId: string | undefined;
@@ -130,7 +142,7 @@ export async function checkKeysetDerivation(
         // still a conflict.
         if (
           prev.unit !== entry.unit ||
-          JSON.stringify(prev.keys) !== JSON.stringify(entry.keys) ||
+          canonicalKeys(prev.keys) !== canonicalKeys(entry.keys) ||
           prev.input_fee_ppk !== entry.input_fee_ppk ||
           prev.final_expiry !== entry.final_expiry
         ) {
@@ -227,13 +239,13 @@ export async function checkKeysetDerivation(
         // and a conflicting fee or expiry second. Mark it conflicting
         // so the main loop reports unknown instead of deriving from one.
         if (matchedAll.length > 1) {
-          const firstKeys = JSON.stringify(matched.keys);
+          const firstKeys = canonicalKeys(matched.keys);
           const firstUnit = matched.unit;
           const firstFee = matched.input_fee_ppk;
           const firstExpiry = matched.final_expiry;
           const conflict = matchedAll.some(
             (e) =>
-              JSON.stringify(e.keys) !== firstKeys ||
+              canonicalKeys(e.keys) !== firstKeys ||
               e.unit !== firstUnit ||
               e.input_fee_ppk !== firstFee ||
               e.final_expiry !== firstExpiry,

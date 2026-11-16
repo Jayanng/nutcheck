@@ -230,6 +230,26 @@ describe('keyset-ID derivation', () => {
     }
   });
 
+  it('the same keys in a different property order are the same keys, not a conflict', async () => {
+    // JSON property order is not significant. Two entries with
+    // identical amount-to-pubkey entries, only reordered, must not be
+    // flagged as conflicting duplicates.
+    const reordered = Object.fromEntries(Object.entries(nut02.v1.keys).reverse());
+    const fetchFn = stubFetch({
+      '/v1/keys': {
+        keysets: [
+          { id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys },
+          { id: nut02.v1.id, unit: 'sat', keys: reordered },
+        ],
+      },
+      '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true }] },
+    });
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+    expect(checks).toHaveLength(1);
+    expect(checks[0].result).toBe('match');
+    expect(checks[0].derivedId).toBe('00456a94ab4e1c46');
+  });
+
   it('conflicting fees in the two responses are unknown, never a guess', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys }] },
