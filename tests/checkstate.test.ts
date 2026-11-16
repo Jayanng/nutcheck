@@ -6,8 +6,16 @@ import { MintFetchError } from '../src/fetch.js';
 const unspentFixture = JSON.parse(
   readFileSync(new URL('./fixtures/testnut/checkstate-unspent.json', import.meta.url), 'utf-8'),
 ) as { states: Array<{ Y: string; state: string; witness: unknown }> };
+const spentFixture = JSON.parse(
+  readFileSync(new URL('./fixtures/testnut/checkstate-spent.json', import.meta.url), 'utf-8'),
+) as { states: Array<{ Y: string; state: string; witness: unknown }> };
 
 const secret = 'daf4dd00a2b68a0858a80450f52c8a7d2ccf87d375e43e216e0c571f089f63e9';
+// The secret of a proof minted at testnut and then spent by a melt, so it
+// is worth nothing. It is recorded only so this test can reproduce the Y
+// in the spent fixture, the same way the public NUT-12 vector secret is
+// used for the unspent fixture.
+const spentSecret = '419a961f39355101018f17d01487db2e12712b3c97cb6fe2e5994e185455ea7b';
 
 function stubFetchFor(body: unknown, status = 200) {
   return vi.fn(async (_url: string, _init?: RequestInit): Promise<Response> => {
@@ -34,6 +42,20 @@ describe('checkstate', () => {
     expect(result.state).toBe('unspent');
     expect(result.severity).toBe('none');
     expect(result.message).toBe('the mint reports this proof as unspent');
+    expect(fetchFn).toHaveBeenCalledOnce();
+  });
+
+  it('the live testnut spent fixture maps to spent and RED', async () => {
+    // The fixture was recorded live: a proof minted at testnut, then
+    // spent by a melt, then checkstate returned SPENT for its Y.
+    expect(spentFixture.states).toHaveLength(2);
+    expect(spentFixture.states.every((s) => s.state === 'SPENT')).toBe(true);
+    const fetchFn = stubFetchFor(spentFixture);
+    const result = await checkProofState('https://testnut.cashu.space', spentSecret, true, fetchFn);
+    expect(result.status).toBe('checked');
+    expect(result.state).toBe('spent');
+    expect(result.severity).toBe('red');
+    expect(result.message).toBe('the mint reports this proof as spent');
     expect(fetchFn).toHaveBeenCalledOnce();
   });
 

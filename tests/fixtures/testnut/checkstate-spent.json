@@ -1,0 +1,14 @@
+{
+  "states": [
+    {
+      "Y": "024cb29d3a00210a86ff7e49878d4fcd6fe9ed45008328379c7b3eca453863bac4",
+      "state": "SPENT",
+      "witness": null
+    },
+    {
+      "Y": "02a7e0259d0de112e9b8e8b1132277a2ace936b1cbe429a4369d6ccdab724c8d07",
+      "state": "SPENT",
+      "witness": null
+    }
+  ]
+}

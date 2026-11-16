@@ -29,6 +29,11 @@ export interface MintFacts {
   // 'ok' when both calls worked, 'unknown' when either failed.
   status: 'ok' | 'unknown';
   error: string | undefined;
+  // A field the mint supplied in a form that cannot be used (a
+  // fractional or negative fee, a negative expiry) is named here, so
+  // the report can say the mint's metadata was malformed instead of
+  // silently treating it as absent. Empty when nothing was malformed.
+  findings: string[];
 }
 
 function keysetAge(): string {
@@ -61,6 +66,7 @@ export async function getMintFacts(
       keysets: [],
       status: 'unknown',
       error,
+      findings: [],
     };
   }
   // Each keyset entry must carry a usable ID and unit. A malformed entry
@@ -68,6 +74,7 @@ export async function getMintFacts(
   // fact; the whole call is reported as unknown instead of presenting
   // blank IDs as facts.
   const keysets: KeysetFact[] = [];
+  const findingsSoFar: string[] = [];
   for (const entry of keysetsRaw.keysets as unknown[]) {
     const record = isRecord(entry) ? entry : {};
     const id = typeof record.id === 'string' ? record.id : '';
@@ -81,7 +88,25 @@ export async function getMintFacts(
         keysets: [],
         status: 'unknown',
         error: 'the /v1/keysets response has a keyset entry without a usable ID or unit',
+        findings: [],
       };
+    }
+    // A fee or expiry the mint supplied in a form that cannot be used
+    // is named in findings, so absent and malformed stay distinguishable.
+    const findings: string[] = [];
+    const feeOk =
+      typeof record.input_fee_ppk === 'number' &&
+      Number.isSafeInteger(record.input_fee_ppk) &&
+      record.input_fee_ppk >= 0;
+    const expiryOk =
+      typeof record.final_expiry === 'number' &&
+      Number.isSafeInteger(record.final_expiry) &&
+      record.final_expiry >= 0;
+    if (record.input_fee_ppk !== undefined && !feeOk) {
+      findings.push(`keyset ${id} advertises a malformed input_fee_ppk`);
+    }
+    if (record.final_expiry !== undefined && !expiryOk) {
+      findings.push(`keyset ${id} advertises a malformed final_expiry`);
     }
     keysets.push({
       id,
@@ -90,21 +115,12 @@ export async function getMintFacts(
       // The fee and expiry are published only when they are non-negative
       // safe integers, the same rule the derivation check applies. A
       // fractional, negative, or non-finite value is malformed metadata,
-      // not a fact, so it is left undefined here.
-      inputFeePpk:
-        typeof record.input_fee_ppk === 'number' &&
-        Number.isSafeInteger(record.input_fee_ppk) &&
-        record.input_fee_ppk >= 0
-          ? record.input_fee_ppk
-          : undefined,
-      finalExpiry:
-        typeof record.final_expiry === 'number' &&
-        Number.isSafeInteger(record.final_expiry) &&
-        record.final_expiry >= 0
-          ? record.final_expiry
-          : undefined,
+      // not a fact, so it is left undefined here and named in findings.
+      inputFeePpk: feeOk ? (record.input_fee_ppk as number) : undefined,
+      finalExpiry: expiryOk ? (record.final_expiry as number) : undefined,
       age: keysetAge(),
     });
+    findingsSoFar.push(...findings);
   }
   return {
     mintUrl,
@@ -114,5 +130,6 @@ export async function getMintFacts(
     keysets,
     status: 'ok',
     error: undefined,
+    findings: findingsSoFar,
   };
 }

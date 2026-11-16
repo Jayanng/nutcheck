@@ -125,5 +125,29 @@ describe('getMintFacts', () => {
     expect(facts.keysets).toHaveLength(1);
     expect(facts.keysets[0].inputFeePpk).toBeUndefined();
     expect(facts.keysets[0].finalExpiry).toBeUndefined();
+    // Malformed is named, not silently treated as absent.
+    expect(facts.findings).toHaveLength(2);
+    expect(facts.findings[0]).toContain('malformed input_fee_ppk');
+    expect(facts.findings[1]).toContain('malformed final_expiry');
+  });
+
+  it('an absent fee or expiry produces no finding, unlike a malformed one', async () => {
+    const fetchFn = stubFetch({
+      '/v1/info': infoFixture,
+      '/v1/keysets': {
+        keysets: [
+          {
+            id: '017bc604aaa08e9b58804bdd552286f15d75ebdaa3d1bccc2a52fc7406b4040fda',
+            unit: 'sat',
+            active: true,
+          },
+        ],
+      },
+    });
+    const facts = await getMintFacts('https://testnut.cashu.space', fetchFn);
+    expect(facts.status).toBe('ok');
+    expect(facts.keysets[0].inputFeePpk).toBeUndefined();
+    expect(facts.keysets[0].finalExpiry).toBeUndefined();
+    expect(facts.findings).toEqual([]);
   });
 });
