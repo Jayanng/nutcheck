@@ -8,7 +8,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Runs on an Instabox machine instead of a GitHub-hosted runner,
+    # so the job uses no GitHub Actions minutes. Needs the Instabox
+    # GitHub App installed on the repo; the free plan runs
+    # instabox-medium only.
+    runs-on: instabox-medium
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
