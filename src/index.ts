@@ -57,3 +57,14 @@ export {
   type ProofState,
   type CheckstateResult,
 } from './checkstate.js';
+export {
+  diagnoseToken,
+  reportToText,
+  scanReportCopy,
+  CANNOT_PROVE,
+  BANNED_WORDS,
+  type ReportCheck,
+  type ReportSeverity,
+  type NutCheckReport,
+  type DiagnoseOptions,
+} from './report.js';

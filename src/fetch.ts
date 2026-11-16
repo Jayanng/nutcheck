@@ -28,17 +28,21 @@ export const FETCH_TIMEOUT_MS = 4000;
 // intended endpoint). Only HTTP and HTTPS bases are accepted, and only
 // the origin and path of the base are kept.
 export function mintEndpointUrl(base: string, path: string): string {
+  // Validation errors are fixed strings with no URL: the base is
+  // token-supplied data, and a mint whose URL contains a banned word
+  // must not put that word into the report copy through an error
+  // message.
   let parsed: URL;
   try {
     parsed = new URL(base);
   } catch {
-    throw new MintFetchError(`not a valid mint URL: ${base}`);
+    throw new MintFetchError('not a valid mint URL');
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new MintFetchError(`not an HTTP mint URL: ${base}`);
+    throw new MintFetchError('not an HTTP mint URL');
   }
   if (parsed.search !== '' || parsed.hash !== '') {
-    throw new MintFetchError(`mint URL must not carry a query or fragment: ${base}`);
+    throw new MintFetchError('mint URL must not carry a query or fragment');
   }
   const basePath = parsed.pathname.replace(/\/+$/, '');
   parsed.pathname = `${basePath}${path}`;
@@ -162,8 +166,19 @@ export async function fetchMintJson(
   init: { method?: 'GET' | 'POST'; body?: string } = {},
   fetchFn: FetchFn = fetch,
 ): Promise<unknown> {
+  // Error messages carry only the request path, never the full URL:
+  // the URL is token-supplied data, and a mint whose hostname contains
+  // a banned word must not put that word into the report copy via an
+  // error message. The path is enough to identify which endpoint failed.
+  const pathOf = (u: string): string => {
+    try {
+      return new URL(u).pathname;
+    } catch {
+      return '';
+    }
+  };
   if (!isHttpUrl(url)) {
-    throw new MintFetchError(`refusing to contact a non-HTTP mint URL: ${url}`);
+    throw new MintFetchError('refusing to contact a non-HTTP mint URL');
   }
   // The mint boundary: only the one allowed mint base is contacted. A
   // URL outside it is refused before any request is sent, so an unlisted
@@ -175,20 +190,20 @@ export async function fetchMintJson(
   try {
     base = new URL(allowedMintBase).href.replace(/\/+$/, '');
   } catch {
-    throw new MintFetchError(`not a valid mint base URL: ${allowedMintBase}`);
+    throw new MintFetchError('not a valid mint base URL');
   }
   if (!isHttpUrl(base)) {
-    throw new MintFetchError(`not a valid mint base URL: ${allowedMintBase}`);
+    throw new MintFetchError('not a valid mint base URL');
   }
   let target: string;
   try {
     target = new URL(url).href;
   } catch {
-    throw new MintFetchError(`not a valid mint URL: ${url}`);
+    throw new MintFetchError('not a valid mint URL');
   }
   if (target !== base && !target.startsWith(base + '/')) {
     throw new MintFetchError(
-      `refusing to contact a mint outside the allowed mint ${base}: ${url}`,
+      `refusing to contact a mint outside the allowed mint: ${pathOf(url)}`,
     );
   }
   let response: Response;
@@ -215,32 +230,35 @@ export async function fetchMintJson(
       throw error;
     }
     if (error instanceof Error && error.name === 'TimeoutError') {
-      throw new MintFetchError(`mint request timed out after ${FETCH_TIMEOUT_MS} ms: ${url}`);
+      throw new MintFetchError(`mint request timed out after ${FETCH_TIMEOUT_MS} ms: ${pathOf(url)}`);
     }
-    throw new MintFetchError(
-      `mint request failed: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    // The wrapped message is fixed and path-only: the thrown error's
+    // message is never interpolated, because it can carry untrusted
+    // text (a fetch failure naming the mint, for example) into the
+    // report copy.
+    throw new MintFetchError(`mint request failed: ${pathOf(url)}`);
   }
   // A redirect is the mint pointing somewhere else. Do not follow it.
   // In a browser, redirect: 'manual' gives an opaqueredirect response
   // with status 0, not a 3xx code, so check the type too.
   if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
-    throw new MintFetchError(`mint redirected; redirects are not followed: ${url}`);
+    throw new MintFetchError(`mint redirected; redirects are not followed: ${pathOf(url)}`);
   }
+  const path = pathOf(url);
   if (response.status === 401 || response.status === 403) {
     throw new MintFetchError(
-      `mint refused the request (status ${response.status}): ${url}`,
+      `mint refused the request (status ${response.status}): ${path}`,
       response.status,
     );
   }
   if (!response.ok) {
-    throw new MintFetchError(`mint returned status ${response.status}: ${url}`, response.status);
+    throw new MintFetchError(`mint returned status ${response.status}: ${path}`, response.status);
   }
   const text = await readCappedBody(response, signal);
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new MintFetchError(`mint returned a body that is not JSON: ${url}`);
+    throw new MintFetchError(`mint returned a body that is not JSON: ${path}`);
   }
 }
 
