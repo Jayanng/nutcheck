@@ -221,13 +221,22 @@ export async function checkKeysetDerivation(
           continue;
         }
         // Conflicting duplicates in this single-keyset response: the
-        // same ID with different keys or unit. Mark it conflicting so
-        // the main loop reports unknown instead of deriving from one.
+        // same ID with different keys, unit, fee or expiry. Every V2
+        // derivation input is compared, the same as the list path, so a
+        // mint cannot get a match by putting the agreeing entry first
+        // and a conflicting fee or expiry second. Mark it conflicting
+        // so the main loop reports unknown instead of deriving from one.
         if (matchedAll.length > 1) {
           const firstKeys = JSON.stringify(matched.keys);
           const firstUnit = matched.unit;
+          const firstFee = matched.input_fee_ppk;
+          const firstExpiry = matched.final_expiry;
           const conflict = matchedAll.some(
-            (e) => JSON.stringify(e.keys) !== firstKeys || e.unit !== firstUnit,
+            (e) =>
+              JSON.stringify(e.keys) !== firstKeys ||
+              e.unit !== firstUnit ||
+              e.input_fee_ppk !== firstFee ||
+              e.final_expiry !== firstExpiry,
           );
           if (conflict) {
             conflictingIds.add(id.toLowerCase());

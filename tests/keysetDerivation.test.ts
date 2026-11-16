@@ -459,6 +459,32 @@ describe('keyset-ID derivation', () => {
     }
   });
 
+  it('a single-keyset answer with the same keys but different fees is unknown, whichever comes first', async () => {
+    // The fee is a V2 derivation input, so the single-keyset answer
+    // must compare it too, the same as the list path. Two entries that
+    // agree on keys but disagree on fee are still a conflict.
+    for (const order of [
+      [
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys },
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys },
+      ],
+      [
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys },
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys },
+      ],
+    ]) {
+      const fetchFn = stubFetch({
+        '/v1/keys': { keysets: [] },
+        '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: false, input_fee_ppk: 100, final_expiry: 2059210353 }] },
+        [`/v1/keys/${nut02.v2.id}`]: { keysets: order },
+      });
+      const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+      expect(checks).toHaveLength(1);
+      expect(checks[0].result).toBe('unknown');
+      expect(checks[0].detail).toContain('listed this keyset ID more than once');
+    }
+  });
+
   it('a malformed entry in the keys or keysets list is reported as unknown, never silently skipped', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': {

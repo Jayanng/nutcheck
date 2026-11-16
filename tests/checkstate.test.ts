@@ -158,6 +158,46 @@ describe('checkstate', () => {
     expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
   });
 
+  it('two entries for the same Y are not checked, whichever comes first', async () => {
+    // One Y was asked about, so exactly one state entry for it is
+    // required. A mint that returns contradictory entries for the same
+    // Y must not get a result by putting one state first.
+    const y = '024369d2d22a80ecf78f3937da9d5f30c1b9f74f0c32684d583cca0fa6a61cdcfc';
+    for (const order of [
+      [
+        { Y: y, state: 'SPENT', witness: null },
+        { Y: y, state: 'UNSPENT', witness: null },
+      ],
+      [
+        { Y: y, state: 'UNSPENT', witness: null },
+        { Y: y, state: 'SPENT', witness: null },
+      ],
+      [
+        { Y: y, state: 'UNSPENT', witness: null },
+        { Y: y, state: 'UNSPENT', witness: null },
+      ],
+    ]) {
+      const fetchFn = stubFetchFor({ states: order });
+      const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
+      expect(result.status).toBe('not-checked');
+      expect(result.state).toBeUndefined();
+      expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
+    }
+  });
+
+  it('an extra entry for a different Y does not block the answer for the asked Y', async () => {
+    const y = '024369d2d22a80ecf78f3937da9d5f30c1b9f74f0c32684d583cca0fa6a61cdcfc';
+    const fetchFn = stubFetchFor({
+      states: [
+        { Y: y, state: 'UNSPENT', witness: null },
+        { Y: '02' + '00'.repeat(32), state: 'SPENT', witness: null },
+      ],
+    });
+    const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
+    expect(result.status).toBe('checked');
+    expect(result.state).toBe('unspent');
+  });
+
   it('the privacy copy warns about disclosure, correlation, and the mint word', () => {
     expect(CHECKSTATE_PRIVACY_COPY).toContain('learns which proofs you hold');
     expect(CHECKSTATE_PRIVACY_COPY).toContain('correlate sender and receiver');
