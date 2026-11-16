@@ -205,6 +205,31 @@ describe('keyset-ID derivation', () => {
     expect(checks[0].detail).toContain('listed this keyset ID more than once');
   });
 
+  it('a keyset listed twice with the same keys but different fees is unknown, whichever comes first', async () => {
+    // The fee is a V2 derivation input, so two entries that agree on
+    // keys but disagree on fee are still a conflict. The result is
+    // unknown in both orders.
+    for (const order of [
+      [
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys },
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys },
+      ],
+      [
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys },
+        { id: nut02.v2.id, unit: 'sat', input_fee_ppk: 100, keys: nut02.v2.keys },
+      ],
+    ]) {
+      const fetchFn = stubFetch({
+        '/v1/keys': { keysets: order },
+        '/v1/keysets': { keysets: [{ id: nut02.v2.id, unit: 'sat', active: true, input_fee_ppk: 100, final_expiry: 2059210353 }] },
+      });
+      const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+      expect(checks).toHaveLength(1);
+      expect(checks[0].result).toBe('unknown');
+      expect(checks[0].detail).toContain('listed this keyset ID more than once');
+    }
+  });
+
   it('conflicting fees in the two responses are unknown, never a guess', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys }] },

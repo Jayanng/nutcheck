@@ -127,6 +127,21 @@ export function verifyProofDleq(
       message: `the keyset public key for amount ${proof.amount} is not a usable point, so DLEQ was not verified`,
     };
   }
+  // The proof's own C must be a usable curve point too. A malformed C
+  // makes hasValidDleq return false, which would be mapped to RED, but
+  // an unusable point is not a demonstrated invalid DLEQ, it is a proof
+  // that cannot be verified. RED is reserved for a DLEQ that ran and
+  // failed, so a bad C is not-checked, never RED.
+  try {
+    pointFromHex(proof.C);
+  } catch {
+    return {
+      proofIndex,
+      outcome: 'not-checked',
+      severity: 'none',
+      message: 'the proof C is not a usable point, so DLEQ was not verified',
+    };
+  }
   let valid: boolean;
   try {
     valid = hasValidDleq(

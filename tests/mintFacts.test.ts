@@ -105,6 +105,11 @@ describe('getMintFacts', () => {
     expect(facts.status).toBe('ok');
     expect(facts.keysets[0].active).toBeUndefined();
     expect(facts.keysets[1].active).toBeUndefined();
+    // Absent and malformed stay distinguishable: the absent flag has no
+    // finding, the malformed one is named.
+    expect(facts.findings).toHaveLength(1);
+    expect(facts.findings[0]).toContain('malformed active flag');
+    expect(facts.findings[0]).toContain('010eca897fd3b9d496c4ef28de870727ef616cb0a05404035c65cf5cc6fa879504');
   });
 
   it('reports unknown when the keysets response has no list', async () => {

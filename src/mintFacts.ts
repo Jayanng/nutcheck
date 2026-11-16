@@ -131,6 +131,12 @@ export async function getMintFacts(
     if (record.final_expiry !== undefined && !expiryOk) {
       findings.push(`keyset ${id} advertises a malformed final_expiry`);
     }
+    // A present but non-boolean active flag is malformed metadata, not
+    // an absent flag. It is named here so a mint that answers with a
+    // broken flag does not look the same as one that omits it.
+    if (record.active !== undefined && typeof record.active !== 'boolean') {
+      findings.push(`keyset ${id} advertises a malformed active flag`);
+    }
     keysets.push({
       id,
       unit,

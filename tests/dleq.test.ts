@@ -126,6 +126,22 @@ describe('DLEQ verification', () => {
     expect(check.message).toContain('not a usable point');
   });
 
+  it('a proof C that is not a usable point is not-checked, never RED', () => {
+    // A malformed C makes hasValidDleq return false, but an unusable
+    // point is not a demonstrated invalid DLEQ. RED is reserved for a
+    // DLEQ that ran and failed, so a bad C is not-checked.
+    for (const badC of [
+      '02zzzz',
+      '02ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    ]) {
+      const badProof = { ...validProof, C: badC };
+      const check = verifyProofDleq(badProof, 0, keyset);
+      expect(check.outcome).toBe('not-checked');
+      expect(check.severity).toBe('none');
+      expect(check.message).toContain('C is not a usable point');
+    }
+  });
+
   it('a DLEQ without r is not-checked, never RED, the proof cannot be verified offline', () => {
     const { r: _r, ...dleqNoR } = validProof.dleq;
     const noR = { ...validProof, dleq: dleqNoR };

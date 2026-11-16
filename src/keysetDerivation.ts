@@ -124,7 +124,16 @@ export async function checkKeysetDerivation(
       const lower = entry.id.toLowerCase();
       if (keysById.has(lower)) {
         const prev = keysById.get(lower) as Record<string, unknown>;
-        if (prev.unit !== entry.unit || JSON.stringify(prev.keys) !== JSON.stringify(entry.keys)) {
+        // Every V2 derivation input is compared, not just unit and keys:
+        // a different fee or expiry changes the derived V2 ID, so two
+        // entries that agree on keys but disagree on fee or expiry are
+        // still a conflict.
+        if (
+          prev.unit !== entry.unit ||
+          JSON.stringify(prev.keys) !== JSON.stringify(entry.keys) ||
+          prev.input_fee_ppk !== entry.input_fee_ppk ||
+          prev.final_expiry !== entry.final_expiry
+        ) {
           conflictingIds.add(lower);
         }
         // Keep the first entry; do not let a later one overwrite it.
