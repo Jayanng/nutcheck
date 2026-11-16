@@ -22,3 +22,13 @@ export {
   type RawToken,
 } from './rawParser.js';
 export { classifyKeysetVersion, type KeysetVersion } from './keysetVersion.js';
+export {
+  keysetResidue,
+  screenResidues,
+  RESIDUE_COVERAGE,
+  type KeysetSource,
+  type LabelledKeyset,
+  type Collision,
+  type ExcludedKeyset,
+  type ResidueResult,
+} from './residue.js';
