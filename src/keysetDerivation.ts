@@ -182,7 +182,7 @@ export async function checkKeysetDerivation(
         fetchFn,
       )) as Record<string, unknown>;
       if (isRecord(single) && Array.isArray(single.keysets) && single.keysets.length > 0) {
-        // Select ONLY an entry whose ID matches the requested ID
+        // Select ONLY entries whose ID matches the requested ID
         // case-insensitively. Keyset IDs are lowercase hex, but a mint
         // may advertise uppercase, and the module compares IDs
         // case-insensitively elsewhere, so an uppercase response for a
@@ -190,9 +190,13 @@ export async function checkKeysetDerivation(
         // If no entry matches, the requested keyset was not returned:
         // report it as unknown with the IDs that were returned, instead
         // of falling back to an unrelated first entry.
-        const matched = (single.keysets as unknown[]).find(
+        // Every matching entry is inspected, not just the first: a mint
+        // that returns the same ID twice with different keys must not
+        // get a match by putting the matching keys first.
+        const matchedAll = (single.keysets as unknown[]).filter(
           (e) => isRecord(e) && typeof e.id === 'string' && e.id.toLowerCase() === id.toLowerCase(),
-        );
+        ) as Array<Record<string, unknown>>;
+        const matched = matchedAll[0];
         if (!isRecord(matched) || typeof matched.id !== 'string') {
           const returnedIds = (single.keysets as unknown[])
             .filter((e) => isRecord(e) && typeof e.id === 'string')
@@ -206,6 +210,19 @@ export async function checkKeysetDerivation(
             detail: `the mint returned keys for ${returnedIds || 'no keysets'} when ${advertisedId} was asked for, so the ID was not recomputed`,
           });
           continue;
+        }
+        // Conflicting duplicates in this single-keyset response: the
+        // same ID with different keys or unit. Mark it conflicting so
+        // the main loop reports unknown instead of deriving from one.
+        if (matchedAll.length > 1) {
+          const firstKeys = JSON.stringify(matched.keys);
+          const firstUnit = matched.unit;
+          const conflict = matchedAll.some(
+            (e) => JSON.stringify(e.keys) !== firstKeys || e.unit !== firstUnit,
+          );
+          if (conflict) {
+            conflictingIds.add(id.toLowerCase());
+          }
         }
         const first = matched;
         if (isRecord(first.keys)) {

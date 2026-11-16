@@ -410,6 +410,30 @@ describe('keyset-ID derivation', () => {
     expect(inactive?.derivedId).toBe('00456a94ab4e1c46');
   });
 
+  it('a single-keyset answer with the same ID twice and different keys is unknown, whichever comes first', async () => {
+    // The /v1/keys/{id} answer must be inspected in full, not just its
+    // first matching entry. A mint that puts matching keys first and
+    // conflicting keys second must not get a match.
+    const tampered = { ...nut02.v1.keys };
+    const firstAmount = Object.keys(tampered)[0];
+    const k = tampered[firstAmount];
+    tampered[firstAmount] = k.slice(0, -1) + (k.endsWith('0') ? '1' : '0');
+    for (const order of [
+      [{ id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }, { id: nut02.v1.id, unit: 'sat', keys: tampered }],
+      [{ id: nut02.v1.id, unit: 'sat', keys: tampered }, { id: nut02.v1.id, unit: 'sat', keys: nut02.v1.keys }],
+    ]) {
+      const fetchFn = stubFetch({
+        '/v1/keys': { keysets: [] },
+        '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: false }] },
+        [`/v1/keys/${nut02.v1.id}`]: { keysets: order },
+      });
+      const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+      expect(checks).toHaveLength(1);
+      expect(checks[0].result).toBe('unknown');
+      expect(checks[0].detail).toContain('listed this keyset ID more than once');
+    }
+  });
+
   it('a malformed entry in the keys or keysets list is reported as unknown, never silently skipped', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': {
