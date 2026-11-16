@@ -34,7 +34,23 @@ describe('getMintFacts', () => {
     );
     expect(calls).toBe(0);
     expect(facts.status).toBe('unknown');
-    expect(facts.error).toMatch(/outside the allowed origin/);
+    expect(facts.error).toMatch(/outside the allowed mint/);
+  });
+
+  it('a different mint base on the same origin gets zero fetches through the public check', async () => {
+    let calls = 0;
+    const fetchFn = async (): Promise<Response> => {
+      calls += 1;
+      return new Response('{}', { status: 200 });
+    };
+    const facts = await getMintFacts(
+      'https://example.com/mint-b',
+      'https://example.com/mint-a',
+      fetchFn,
+    );
+    expect(calls).toBe(0);
+    expect(facts.status).toBe('unknown');
+    expect(facts.error).toMatch(/outside the allowed mint/);
   });
 
   it('surfaces version, nuts, keysets, fees, and active flags from the testnut fixtures', async () => {

@@ -47,23 +47,6 @@ export function mintEndpointUrl(base: string, path: string): string {
   return parsed.toString();
 }
 
-// The origin of a mint base URL, for the allowed-origin check in
-// fetchMintJson. An invalid base throws the same MintFetchError as
-// mintEndpointUrl, so callers get one consistent error for a bad mint
-// URL instead of a raw URL parse error.
-export function mintOrigin(base: string): string {
-  let parsed: URL;
-  try {
-    parsed = new URL(base);
-  } catch {
-    throw new MintFetchError(`not a valid mint URL: ${base}`);
-  }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new MintFetchError(`not an HTTP mint URL: ${base}`);
-  }
-  return parsed.origin;
-}
-
 export class MintFetchError extends Error {
   // The HTTP error status when one was recorded, undefined otherwise.
   // An undefined status does not by itself mean the mint was never
@@ -167,30 +150,45 @@ async function readCappedBody(response: Response, signal: AbortSignal): Promise<
 export async function fetchMintJson(
   url: string,
   // Required, and placed before the defaulted parameters so the
-  // signature is unambiguous. The one origin this call is allowed to
-  // contact. There is no call without an allowed origin: a fetch that
-  // does not name its mint is a fetch that could go anywhere, and this
-  // helper refuses to make one.
-  allowedOrigin: string,
+  // signature is unambiguous. The full mint base named in the decoded
+  // token, for example https://testnut.cashu.space. There is no call
+  // without an allowed mint: a fetch that does not name its mint is a
+  // fetch that could go anywhere, and this helper refuses to make one.
+  // The check is on the full base, not just the origin: two mints on
+  // the same host (https://example.com/mint-a and
+  // https://example.com/mint-b) are different mints, and only the one
+  // in the token is contacted.
+  allowedMintBase: string,
   init: { method?: 'GET' | 'POST'; body?: string } = {},
   fetchFn: FetchFn = fetch,
 ): Promise<unknown> {
   if (!isHttpUrl(url)) {
     throw new MintFetchError(`refusing to contact a non-HTTP mint URL: ${url}`);
   }
-  // The mint boundary: only the one allowed origin is contacted. A URL
-  // outside it is refused before any request is sent, so an unlisted
+  // The mint boundary: only the one allowed mint base is contacted. A
+  // URL outside it is refused before any request is sent, so an unlisted
   // mint causes zero fetches. The check runs before the fetch, not
-  // after, so a refused URL never reaches the network.
-  let origin: string;
+  // after, so a refused URL never reaches the network. The URL must sit
+  // under the allowed base followed by a slash, so a base that merely
+  // shares a string prefix (mint-a-evil) does not pass.
+  let base: string;
   try {
-    origin = new URL(url).origin;
+    base = new URL(allowedMintBase).href.replace(/\/+$/, '');
+  } catch {
+    throw new MintFetchError(`not a valid mint base URL: ${allowedMintBase}`);
+  }
+  if (!isHttpUrl(base)) {
+    throw new MintFetchError(`not a valid mint base URL: ${allowedMintBase}`);
+  }
+  let target: string;
+  try {
+    target = new URL(url).href;
   } catch {
     throw new MintFetchError(`not a valid mint URL: ${url}`);
   }
-  if (origin !== allowedOrigin) {
+  if (target !== base && !target.startsWith(base + '/')) {
     throw new MintFetchError(
-      `refusing to contact a mint outside the allowed origin ${allowedOrigin}: ${url}`,
+      `refusing to contact a mint outside the allowed mint ${base}: ${url}`,
     );
   }
   let response: Response;

@@ -152,6 +152,20 @@ describe('keyset-ID derivation', () => {
     expect(checks[0].detail).toContain('disagree on the unit');
   });
 
+  it('a V1 keyset with conflicting units still checks its ID, and notes the conflict', async () => {
+    // V1 derives its ID from the public keys alone, so a unit conflict
+    // does not block the comparison. It is noted in the detail instead.
+    const fetchFn = stubFetch({
+      '/v1/keys': { keysets: [{ id: nut02.v1.id, unit: 'usd', keys: nut02.v1.keys }] },
+      '/v1/keysets': { keysets: [{ id: nut02.v1.id, unit: 'sat', active: true }] },
+    });
+    const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
+    expect(checks).toHaveLength(1);
+    expect(checks[0].result).toBe('match');
+    expect(checks[0].derivedId).toBe('00456a94ab4e1c46');
+    expect(checks[0].detail).toContain('disagree on the unit');
+  });
+
   it('conflicting fees in the two responses are unknown, never a guess', async () => {
     const fetchFn = stubFetch({
       '/v1/keys': { keysets: [{ id: nut02.v2.id, unit: 'sat', input_fee_ppk: 200, keys: nut02.v2.keys }] },

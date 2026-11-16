@@ -17,7 +17,7 @@ describe('fetchMintJson', () => {
     expect(FETCH_TIMEOUT_MS).toBe(4000);
   });
 
-  it('refuses a mint outside the allowed origin without sending a request', async () => {
+  it('refuses a mint outside the allowed mint base without sending a request', async () => {
     let called = false;
     const stub = async (): Promise<Response> => {
       called = true;
@@ -28,11 +28,37 @@ describe('fetchMintJson', () => {
     ).rejects.toThrow(MintFetchError);
     await expect(
       fetchMintJson('https://other-mint.example/v1/info', 'https://testnut.cashu.space', {}, stub),
-    ).rejects.toThrow(/outside the allowed origin/);
+    ).rejects.toThrow(/outside the allowed mint/);
     expect(called).toBe(false);
   });
 
-  it('contacts the allowed origin normally', async () => {
+  it('refuses a different mint base on the same origin, with zero fetches', async () => {
+    // Two mints on one host are different mints. An origin-only check
+    // would let mint-b through when the token names mint-a.
+    let called = false;
+    const stub = async (): Promise<Response> => {
+      called = true;
+      return new Response(JSON.stringify({}), { status: 200 });
+    };
+    await expect(
+      fetchMintJson('https://example.com/mint-b/v1/info', 'https://example.com/mint-a', {}, stub),
+    ).rejects.toThrow(/outside the allowed mint/);
+    expect(called).toBe(false);
+  });
+
+  it('refuses a base that merely shares a string prefix, with zero fetches', async () => {
+    let called = false;
+    const stub = async (): Promise<Response> => {
+      called = true;
+      return new Response(JSON.stringify({}), { status: 200 });
+    };
+    await expect(
+      fetchMintJson('https://example.com/mint-a-evil/v1/info', 'https://example.com/mint-a', {}, stub),
+    ).rejects.toThrow(/outside the allowed mint/);
+    expect(called).toBe(false);
+  });
+
+  it('contacts the allowed mint base normally', async () => {
     const stub = async (): Promise<Response> =>
       new Response(JSON.stringify({ name: 'Testnut mint' }), { status: 200 });
     const result = await fetchMintJson(
@@ -45,7 +71,7 @@ describe('fetchMintJson', () => {
   });
 
   it('a mint absent from the decoded token gets zero fetches', async () => {
-    // The allowed origin comes from the token itself: decode a real
+    // The allowed mint base comes from the token itself: decode a real
     // token, take its mint, and prove a different mint is refused
     // before any request is sent. This is the plan step 3.1 rule, that
     // only mint URLs named in the token are ever contacted.
@@ -64,16 +90,16 @@ describe('fetchMintJson', () => {
       ],
     });
     const decoded = getDecodedToken(token, ['009a1f293253e41e']);
-    const tokenMintOrigin = new URL(decoded.mint).origin;
-    expect(tokenMintOrigin).toBe('https://testnut.cashu.space');
+    const tokenMintBase = decoded.mint;
+    expect(tokenMintBase).toBe('https://testnut.cashu.space');
     let called = false;
     const stub = async (): Promise<Response> => {
       called = true;
       return new Response(JSON.stringify({}), { status: 200 });
     };
     await expect(
-      fetchMintJson('https://other-mint.example/v1/info', tokenMintOrigin, {}, stub),
-    ).rejects.toThrow(/outside the allowed origin/);
+      fetchMintJson('https://other-mint.example/v1/info', tokenMintBase, {}, stub),
+    ).rejects.toThrow(/outside the allowed mint/);
     expect(called).toBe(false);
   });
 

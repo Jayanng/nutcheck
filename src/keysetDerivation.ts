@@ -5,7 +5,7 @@
 // NUT-13 secret derivation, so the two are not mixed up here. A mismatch
 // is a finding. A fetch failure is "unknown", never "fail".
 import { deriveKeysetId } from '@cashu/cashu-ts';
-import { fetchMintJson, mintEndpointUrl, mintOrigin, isRecord, type FetchFn } from './fetch.js';
+import { fetchMintJson, mintEndpointUrl, isRecord, type FetchFn } from './fetch.js';
 import { classifyKeysetVersion } from './keysetVersion.js';
 
 export interface KeysetDerivationCheck {
@@ -44,14 +44,14 @@ export async function checkKeysetDerivation(
   let keysRaw: Record<string, unknown> | undefined;
   let keysetsRaw: Record<string, unknown> | undefined;
   try {
-    // The one origin this call is allowed to contact: the mint named in
-    // the decoded token. The fetch helper refuses any other origin.
-    const allowedOrigin = mintOrigin(tokenMintUrl);
-    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
+    // The one mint base this call is allowed to contact: the mint named
+    // in the decoded token. The fetch helper refuses any other base.
+    const allowedMintBase = tokenMintUrl;
+    keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysRaw) || !Array.isArray(keysRaw.keysets)) {
       throw new Error('the /v1/keys response has no keysets list');
     }
-    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedOrigin, {}, fetchFn)) as Record<string, unknown>;
+    keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
       throw new Error('the /v1/keysets response has no keysets list');
     }
@@ -154,7 +154,7 @@ export async function checkKeysetDerivation(
     try {
       const single = (await fetchMintJson(
         mintEndpointUrl(mintUrl, `/v1/keys/${id}`),
-        mintOrigin(tokenMintUrl),
+        tokenMintUrl,
         {},
         fetchFn,
       )) as Record<string, unknown>;
@@ -224,7 +224,15 @@ export async function checkKeysetDerivation(
     const meta = metaById.get(key);
     const keysUnit = typeof entry.unit === 'string' ? entry.unit : undefined;
     const metaUnit = typeof meta?.unit === 'string' ? meta.unit : undefined;
-    if (keysUnit !== undefined && metaUnit !== undefined && keysUnit !== metaUnit) {
+    const version = classifyKeysetVersion(advertisedId);
+    // Notes for V1, where metadata problems do not block the ID check.
+    // V1 derives its ID from the public keys alone, so a conflicting or
+    // malformed unit is noted in the result detail instead of blocking
+    // the comparison.
+    const v1Notes: string[] = [];
+    const unitConflict =
+      keysUnit !== undefined && metaUnit !== undefined && keysUnit !== metaUnit;
+    if (unitConflict && version !== 'v1') {
       checks.push({
         advertisedId,
         derivedId: undefined,
@@ -234,8 +242,10 @@ export async function checkKeysetDerivation(
       });
       continue;
     }
+    if (unitConflict) {
+      v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the unit');
+    }
     const unit = keysUnit ?? metaUnit;
-    const version = classifyKeysetVersion(advertisedId);
     if (version === 'v2' && unit === undefined) {
       checks.push({
         advertisedId,
@@ -287,7 +297,6 @@ export async function checkKeysetDerivation(
     const keysFee = typeof keysFeeRaw === 'number' ? keysFeeRaw : undefined;
     const metaFee = typeof metaFeeRaw === 'number' ? metaFeeRaw : undefined;
     const feeConflict = keysFee !== undefined && metaFee !== undefined && keysFee !== metaFee;
-    const v1Notes: string[] = [];
     if (versionByte === 1 && (keysFeeMalformed || metaFeeMalformed)) {
       checks.push({
         advertisedId,
