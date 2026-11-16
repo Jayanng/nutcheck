@@ -1,7 +1,10 @@
 // Checkstate, opt-in. Builds Y = hash_to_curve(secret) per NUT-00
 // and sends POST /v1/checkstate only after consent. The privacy copy
-// (CHECKSTATE_PRIVACY_COPY) is shown to the user before consent is
-// asked for; that ordering lives with the caller, which is the report.
+// (CHECKSTATE_PRIVACY_COPY) must be shown to the user before consent
+// is asked for; that ordering is the report's job, not this module's,
+// and it is not implemented here. It is a report-integration check:
+// the report shows the copy, then offers consent, and no request is
+// sent before that action.
 // Results map like this:
 // - spent: RED
 // - pending: AMBER, "the mint reports this proof as pending"

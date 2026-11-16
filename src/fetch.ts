@@ -168,7 +168,11 @@ export async function fetchMintJson(
   url: string,
   init: { method?: 'GET' | 'POST'; body?: string } = {},
   fetchFn: FetchFn = fetch,
-  allowedOrigin?: string,
+  // Required. The one origin this call is allowed to contact. There is
+  // no call without an allowed origin: a fetch that does not name its
+  // mint is a fetch that could go anywhere, and this helper refuses to
+  // make one.
+  allowedOrigin: string,
 ): Promise<unknown> {
   if (!isHttpUrl(url)) {
     throw new MintFetchError(`refusing to contact a non-HTTP mint URL: ${url}`);
@@ -177,18 +181,16 @@ export async function fetchMintJson(
   // outside it is refused before any request is sent, so an unlisted
   // mint causes zero fetches. The check runs before the fetch, not
   // after, so a refused URL never reaches the network.
-  if (allowedOrigin !== undefined) {
-    let origin: string;
-    try {
-      origin = new URL(url).origin;
-    } catch {
-      throw new MintFetchError(`not a valid mint URL: ${url}`);
-    }
-    if (origin !== allowedOrigin) {
-      throw new MintFetchError(
-        `refusing to contact a mint outside the allowed origin ${allowedOrigin}: ${url}`,
-      );
-    }
+  let origin: string;
+  try {
+    origin = new URL(url).origin;
+  } catch {
+    throw new MintFetchError(`not a valid mint URL: ${url}`);
+  }
+  if (origin !== allowedOrigin) {
+    throw new MintFetchError(
+      `refusing to contact a mint outside the allowed origin ${allowedOrigin}: ${url}`,
+    );
   }
   let response: Response;
   const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);

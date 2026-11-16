@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Amount, getDecodedToken, getEncodedToken } from '@cashu/cashu-ts';
 import {
   fetchMintJson,
   mintEndpointUrl,
@@ -43,15 +44,48 @@ describe('fetchMintJson', () => {
     expect(result).toEqual({ name: 'Testnut mint' });
   });
 
+  it('a mint absent from the decoded token gets zero fetches', async () => {
+    // The allowed origin comes from the token itself: decode a real
+    // token, take its mint, and prove a different mint is refused
+    // before any request is sent. This is the plan step 3.1 rule, that
+    // only mint URLs named in the token are ever contacted.
+    const bytes32Hex = (ch: string): string => ch.repeat(32);
+    const token = getEncodedToken({
+      mint: 'https://testnut.cashu.space',
+      unit: 'sat',
+      proofs: [
+        {
+          id: '009a1f293253e41e',
+          amount: Amount.from(1),
+          secret: bytes32Hex('a1'),
+          C: '02' + bytes32Hex('b2'),
+          dleq: { e: bytes32Hex('c3'), s: bytes32Hex('d4'), r: bytes32Hex('e5') },
+        },
+      ],
+    });
+    const decoded = getDecodedToken(token, ['009a1f293253e41e']);
+    const tokenMintOrigin = new URL(decoded.mint).origin;
+    expect(tokenMintOrigin).toBe('https://testnut.cashu.space');
+    let called = false;
+    const stub = async (): Promise<Response> => {
+      called = true;
+      return new Response(JSON.stringify({}), { status: 200 });
+    };
+    await expect(
+      fetchMintJson('https://other-mint.example/v1/info', {}, stub, tokenMintOrigin),
+    ).rejects.toThrow(/outside the allowed origin/);
+    expect(called).toBe(false);
+  });
+
   it('rejects a body larger than the cap', async () => {
     const big = 'x'.repeat(RESPONSE_SIZE_CAP + 1);
     const stub = async (): Promise<Response> =>
       new Response(JSON.stringify({ data: big }), { status: 200 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(MintFetchError);
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(/exceeds the 1048576 byte cap/);
   });
 
@@ -59,7 +93,7 @@ describe('fetchMintJson', () => {
     const stub = async (): Promise<Response> =>
       new Response('', { status: 302, headers: { Location: 'https://evil.example/' } });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(/redirects are not followed/);
   });
 
@@ -67,21 +101,21 @@ describe('fetchMintJson', () => {
     const stub = async (): Promise<Response> =>
       new Response('not json at all', { status: 200 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+      fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(/not JSON/);
   });
 
   it('rejects a non-HTTP mint URL', async () => {
     const stub = async (): Promise<Response> => new Response('{}', { status: 200 });
     await expect(
-      fetchMintJson('file:///etc/passwd', {}, stub),
+      fetchMintJson('file:///etc/passwd', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(/non-HTTP/);
   });
 
   it('reports a 401 or 403 as refused, not as a generic failure', async () => {
     const stub = async (): Promise<Response> => new Response('', { status: 401 });
     await expect(
-      fetchMintJson('https://testnut.cashu.space/v1/checkstate', {}, stub),
+      fetchMintJson('https://testnut.cashu.space/v1/checkstate', {}, stub, 'https://testnut.cashu.space'),
     ).rejects.toThrow(/refused the request \(status 401\)/);
   });
 
@@ -97,7 +131,7 @@ describe('fetchMintJson', () => {
           });
         });
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
       ).rejects.toThrow(/timed out after 4000 ms/);
     },
     10000,
@@ -108,7 +142,7 @@ describe('fetchMintJson', () => {
     async () => {
       const stub = async (): Promise<Response> => new Response(null, { status: 200 });
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
       ).rejects.toThrow(/no readable body stream/);
     },
   );
@@ -127,7 +161,7 @@ describe('fetchMintJson', () => {
       const stub = async (): Promise<Response> => stalled;
       const start = Date.now();
       await expect(
-        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub),
+        fetchMintJson('https://testnut.cashu.space/v1/info', {}, stub, 'https://testnut.cashu.space'),
       ).rejects.toThrow(/timed out/);
       const elapsed = Date.now() - start;
       expect(elapsed).toBeLessThan(8000);
