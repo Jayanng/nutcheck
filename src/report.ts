@@ -191,7 +191,7 @@ function severityTag(severity: string): string {
   return severity === 'none' ? '' : ` [${severity}]`;
 }
 
-function mintFingerprint(mint: string): string {
+export function mintFingerprint(mint: string): string {
   // A non-cryptographic fingerprint (FNV-1a, 32-bit) of the mint URL,
   // so the export identifies the mint without printing the raw URL.
   // Pure TypeScript, no platform crypto, so it runs in the browser too.
@@ -268,8 +268,105 @@ export async function diagnoseToken(
       severity: 'amber',
       message,
     });
+
+    runOfflineLocalChecks();
     const { headline, severity } = headlineFor([...checked, ...notChecked]);
     return { headline, severity, mint, unit, checked, notChecked, cannotProve: [...CANNOT_PROVE] };
+  }
+
+  function runOfflineLocalChecks(): void {
+    checked.push({
+      name: 'Token decode',
+      checkId: 'decode',
+      result: `decoded ${raw.proofs.length} proof${raw.proofs.length === 1 ? '' : 's'}, unit ${unit ?? 'unknown'}`,
+      outcome: 'pass',
+      severity: 'none',
+      message: 'the token was decoded locally from its payload; mint keyset list was not available to verify keyset IDs',
+    });
+
+    const versions = raw.keysetIds.map((id) => classifyKeysetVersion(id).toUpperCase());
+    const versionLabel = Array.from(new Set(versions)).join(' + ');
+    if (versionLabel) {
+      checked.push({
+        name: 'Keyset versions',
+        checkId: 'decode',
+        result: versionLabel,
+        outcome: 'pass',
+        severity: 'none',
+        message: `${versionLabel} keysets identified locally`,
+      });
+    }
+
+    const labelled: LabelledKeyset[] = [];
+    for (const id of raw.keysetIds) {
+      labelled.push({ id, source: 'token' });
+    }
+    for (const id of options.knownKeysets ?? []) {
+      labelled.push({ id, source: 'known' });
+    }
+    const residueResult = screenResidues(labelled);
+    const v1Count = labelled.length - residueResult.excluded.length;
+    const excludedCount = residueResult.excluded.length;
+    const excludedNote =
+      excludedCount > 0
+        ? `; ${excludedCount} keyset${excludedCount === 1 ? '' : 's'} excluded: V2 and V3 keysets use a different derivation and are excluded from this screen`
+        : '';
+    if (residueResult.collisions.length > 0) {
+      for (const c of residueResult.collisions) {
+        const collidingIds = c.keysets.map((k) => k.id).join(', ');
+        checked.push({
+          name: 'Residue screen',
+          checkId: 'residue',
+          result: `COLLISION: residue ${c.residue} shared by ${collidingIds}${excludedNote}`,
+          outcome: 'flag',
+          severity: 'amber',
+          message: 'two different V1 keyset IDs produce the same residue',
+        });
+      }
+    } else {
+      checked.push({
+        name: 'Residue screen',
+        checkId: 'residue',
+        result: `no collision found across ${v1Count} V1 keyset${v1Count === 1 ? '' : 's'}${excludedNote}`,
+        outcome: 'pass',
+        severity: 'none',
+        message: 'no two different V1 keyset IDs in the screened list share a residue',
+      });
+    }
+
+    // If consent was not given, the accurate reason is lack of consent.
+    // If consent was given but this offline branch ran, the mint was not
+    // reached, but the specific blocker is unknown from this branch, so
+    // do not claim a failed request. State that proof state was not checked.
+    const consentGiven = typeof consent !== 'undefined' ? consent : false;
+    notChecked.push({
+      name: 'Proof state',
+      checkId: 'checkstate',
+      result: consentGiven ? 'proof state not checked' : 'not checked, consent not given',
+      outcome: 'not-checked',
+      severity: 'amber',
+      message: consentGiven
+        ? 'proof state was not checked in this run'
+        : 'proof state is only checked when you turn on the mint check',
+    });
+
+    notChecked.push({
+      name: 'DLEQ',
+      checkId: 'dleq',
+      result: 'the mint keys could not be fetched',
+      outcome: 'not-checked',
+      severity: 'amber',
+      message: 'DLEQ signatures cannot be verified without the mint keys',
+    });
+
+    notChecked.push({
+      name: 'Keyset ID derivation',
+      checkId: 'derivation',
+      result: 'the derivation check could not run',
+      outcome: 'error',
+      severity: 'amber',
+      message: 'the mint keys could not be fetched',
+    });
   }
 
   if (facts.status === 'ok') {
@@ -294,9 +391,7 @@ export async function diagnoseToken(
       severity: 'amber',
       message: facts.error ?? 'the mint facts could not be fetched',
     });
-    // The mint did not answer, so there is no keyset list and nothing
-    // further to check. Return here instead of also pushing a Token
-    // decode entry that says the same thing.
+    runOfflineLocalChecks();
     const { headline, severity } = headlineFor([...checked, ...notChecked]);
     return { headline, severity, mint, unit, checked, notChecked, cannotProve: [...CANNOT_PROVE] };
   }

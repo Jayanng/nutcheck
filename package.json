@@ -6,21 +6,29 @@
   "description": "Diagnostics for Cashu tokens you have just received.",
   "devDependencies": {
     "@types/node": "26.6.6",
-    "buffer": "^6.0.3",
+    "buffer": "6.0.3",
+    "readable-stream": "4.8.0",
     "typescript": "7.0.2",
+    "vite": "8.3.8",
     "vitest": "5.1.0"
   },
   "license": "MIT",
   "name": "@nutcheck/core",
   "scripts": {
+    "build": "vite build",
+    "dev": "vite",
     "licenses": "node scripts/check-licenses.mjs",
+    "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:core": "tsc"
   },
   "type": "module",
   "version": "0.1.0",
   "engines": {
     "node": "24.22.1",
     "npm": "10.9.4"
-  }
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts"
 }

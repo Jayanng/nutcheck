@@ -1,13 +1,11 @@
-// Browser decode check for the core library. The page and the wallet run
-// in the browser, where the only Buffer is the 'buffer' package polyfill
-// (set as the global by the app's shims). That polyfill does not support
-// the 'base64url' encoding, so any decode path that relies on it fails for
-// every token. This test reproduces the browser environment by replacing
-// the global Buffer with the polyfill before importing the parser, then
-// decodes the evilmint fixture token and runs the full check on it.
+// Browser decode check. The page runs in the browser, where the only Buffer
+// is the 'buffer' package polyfill (set as the global by shims.ts). That
+// polyfill does not support the 'base64url' encoding, so any decode path
+// that relies on it fails for every token. This test reproduces the browser
+// environment by replacing the global Buffer with the polyfill before
+// importing the parser, then decodes every sample and runs the full check.
 import { describe, it, expect, afterAll } from 'vitest';
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const polyfill = require('../node_modules/buffer/index.js');
@@ -19,29 +17,54 @@ afterAll(() => {
 });
 
 describe('browser decode with only the polyfill Buffer', () => {
-  it('decodes the evilmint fixture token', async () => {
+  it('decodes all 8 samples', async () => {
     const { parseTokenRaw } = await import('../src/rawParser.js');
-    const token = readFileSync('tests/fixtures/evilmint/token.txt', 'utf8').trim();
-    const raw = await parseTokenRaw(token);
-    expect(raw.proofs.length).toBeGreaterThan(0);
-    expect(raw.format).toBe('cashuB');
+    const { SAMPLES } = await import('../src/web/samples.js');
+    for (const [key, sample] of Object.entries(SAMPLES)) {
+      const raw = await parseTokenRaw(sample.token);
+      expect(raw.proofs.length, `${key} proofs`).toBeGreaterThan(0);
+    }
   });
 
-  it('runs the full check on the evilmint token without a decode failure', async () => {
+  it('runs the full check on all 8 samples without a decode failure', async () => {
     const { diagnoseToken } = await import('../src/report.js');
-    const token = readFileSync('tests/fixtures/evilmint/token.txt', 'utf8').trim();
-    const report = await diagnoseToken(token, {
-      knownKeysets: ['00206785c39be46b'],
-      fetchFn: async () => {
-        throw new Error('no mint fetch in this test');
-      },
+    const { SAMPLES, getSampleFetchFn } = await import('../src/web/samples.js');
+    for (const [key, sample] of Object.entries(SAMPLES)) {
+      const report = await diagnoseToken(sample.token, {
+        fetchFn: getSampleFetchFn(key),
+        consent: sample.consent,
+        knownKeysets: sample.knownKeysets,
+      });
+      const all = [...report.checked, ...report.notChecked];
+      for (const c of all) {
+        expect(c.result, `${key} result`).not.toContain('could not be parsed');
+        expect(c.result, `${key} result`).not.toContain('not valid base64url');
+        expect(c.message ?? '', `${key} message`).not.toContain('could not be parsed');
+      }
+      if (key === 'v3') {
+        // A V3-only token lands on AMBER by design: the decode entry goes to
+        // not-checked because the signature was not verified, not because
+        // the token failed to parse.
+        const decode = report.notChecked.find((c) => c.checkId === 'decode');
+        expect(decode, 'v3 decode check present in not-checked').toBeDefined();
+      } else {
+        const decode = report.checked.find((c) => c.checkId === 'decode');
+        expect(decode, `${key} decode check present`).toBeDefined();
+        expect(decode?.outcome, `${key} decode outcome`).toBe('pass');
+      }
+      expect(report.headline, `${key} headline`).not.toContain('could not be parsed');
+    }
+    const clean = await diagnoseToken(SAMPLES.clean.token, {
+      fetchFn: getSampleFetchFn('clean'),
       consent: false,
     });
-    const all = [...report.checked, ...report.notChecked];
-    for (const c of all) {
-      expect(c.result).not.toContain('could not be parsed');
-      expect(c.result).not.toContain('not valid base64url');
-    }
-    expect(report.headline).not.toContain('could not be parsed');
+    expect(clean.headline).toBe('No known issues found.');
+    const spent = await diagnoseToken(SAMPLES.spent.token, {
+      fetchFn: getSampleFetchFn('spent'),
+      consent: true,
+      knownKeysets: SAMPLES.spent.knownKeysets,
+    });
+    expect(spent.severity).toBe('red');
+    expect(spent.headline).toBe('Hold, here is why.');
   });
 });
