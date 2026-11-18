@@ -6,6 +6,7 @@
   "description": "Diagnostics for Cashu tokens you have just received.",
   "devDependencies": {
     "@types/node": "26.6.6",
+    "buffer": "^6.0.3",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   },

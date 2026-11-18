@@ -133,6 +133,17 @@ function assertBase64Url(payload: string): void {
   }
 }
 
+function decodeBase64Url(payload: string): Buffer {
+  // The browser Buffer polyfill does not support the 'base64url' encoding
+  // (it throws "Unknown encoding: base64url"), so convert the payload to
+  // standard base64 first. The polyfill does support 'base64'. The payload
+  // was already checked by assertBase64Url, so it holds only base64url
+  // characters and at most two trailing '='.
+  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+  return Buffer.from(padded, 'base64');
+}
+
 function requireBytes(value: unknown, field: string): void {
   if (!Buffer.isBuffer(value) && !(value instanceof Uint8Array)) {
     throw new TokenParseError(`cashuB field ${field} must be bytes, not a string or number`);
@@ -178,7 +189,7 @@ function parseV3(payload: string): RawToken {
   assertBase64Url(payload);
   let json: unknown;
   try {
-    json = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    json = JSON.parse(decodeBase64Url(payload).toString('utf8'));
   } catch {
     throw new TokenParseError('cashuA payload is not valid base64url JSON');
   }
@@ -251,7 +262,7 @@ async function parseV4(payload: string): Promise<RawToken> {
   assertBase64Url(payload);
   let items: unknown[];
   try {
-    items = cbor.decodeAllSync(Buffer.from(payload, 'base64url'));
+    items = cbor.decodeAllSync(decodeBase64Url(payload));
   } catch {
     throw new TokenParseError('cashuB payload is not valid base64url CBOR');
   }
