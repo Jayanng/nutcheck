@@ -42,11 +42,14 @@ $ npm --version
 $ npm ls @cashu/cashu-ts
 @nutcheck/core@0.1.0
 └── @cashu/cashu-ts@4.13.1
-$ npm run build
-> @nutcheck/core@0.1.0 build
+$ npm run build:core
+> @nutcheck/core@0.1.0 build:core
 > tsc
 $ npm run typecheck
 > tsc --noEmit
+$ npm run build
+> @nutcheck/core@0.1.0 build
+> vite build
 ```
 
 ## Case 1: colliding-residue V1 keyset (upstream)
@@ -67,6 +70,13 @@ Note: this shows the wallet accepts a token whose keyset collides in
 residue with a known keyset. It does not show signature recovery at the
 target mint, which needs a /v1/restore call the mock does not implement.
 Signature recovery and proof theft are Cannot prove here.
+
+## Version note
+The two cases differ by cashu-ts version. The colliding-residue token is
+accepted by both 4.9.0 (upstream) and 4.13.1 (clone). The partial-DLEQ
+token is REJECTED by 4.9.0 with "expected Uint8Array, got type=undefined"
+and ACCEPTED silently by 4.13.1. Issue #629 records both observations
+with the version beside each.
 
 ## Case 2: partial-DLEQ token (upstream)
 Token: token-partial-dleq.txt (the token from Case 1 with r removed from
@@ -107,9 +117,9 @@ headline "Hold, here is why." so the check blocks both.
 
 ## Tests
 Automated tests cover the mock swap, checkstate, and the core findings
-(tests/evilmint-swap.test.ts, 13 tests). Full suite: 256 tests pass.
+(tests/evilmint-swap.test.ts, 13 tests). Full suite: 277 tests pass.
 
 ```
-Test Files  13 passed (13)
-     Tests  256 passed (256)
+Test Files  14 passed (14)
+     Tests  277 passed (277)
 ```
