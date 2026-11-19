@@ -8,254 +8,215 @@
 </head>
 <body>
 
-<div class="navwrap">
-  <div class="nav">
-    <a class="brand" href="#">nutcheck</a>
-    <nav>
-      <a href="#checker">check a token</a>
-      <a href="#feed">checked just now</a>
-      <a href="#does">what it does</a>
-      <a href="#faq">faq</a>
-    </nav>
-    <a class="cta" href="#checker">check a token</a>
-  </div>
-</div>
-
-<header class="hero">
-  <svg class="blueprint" viewBox="0 0 120 600" fill="none" stroke="#111111" stroke-width="1" aria-hidden="true">
-    <line x1="20" y1="0" x2="20" y2="600" />
-    <line x1="60" y1="0" x2="60" y2="600" />
-    <line x1="100" y1="0" x2="100" y2="600" />
-    <line x1="0" y1="40" x2="120" y2="40" />
-    <line x1="0" y1="120" x2="120" y2="120" />
-    <line x1="0" y1="200" x2="120" y2="200" />
-    <line x1="0" y1="280" x2="120" y2="280" />
-    <line x1="0" y1="360" x2="120" y2="360" />
-    <line x1="0" y1="440" x2="120" y2="440" />
-    <line x1="0" y1="520" x2="120" y2="520" />
-    <rect x="28" y="52" width="24" height="56" />
-    <rect x="68" y="52" width="24" height="56" />
-    <rect x="28" y="132" width="24" height="56" />
-    <rect x="68" y="132" width="24" height="56" />
-    <rect x="28" y="212" width="24" height="56" />
-    <rect x="68" y="212" width="24" height="56" />
-    <rect x="28" y="292" width="24" height="56" />
-    <rect x="68" y="292" width="24" height="56" />
-    <rect x="28" y="372" width="24" height="56" />
-    <rect x="68" y="372" width="24" height="56" />
-    <rect x="28" y="452" width="24" height="56" />
-    <rect x="68" y="452" width="24" height="56" />
-  </svg>
-  <div class="hero-inner">
-    <p class="eyebrow">cashu token diagnostics &middot; nut november 2026</p>
-    <h1>everyone says<br>the token is fine.<br>now you can <span class="blue">check it.</span></h1>
-    <p class="subhead">paste any cashu token. nutcheck decodes it, screens the keysets, and writes down what it could and could not prove.</p>
-    <div class="labels"><span>+ decode</span><span>+ residue screen</span><span>+ dleq</span><span>+ proof state</span></div>
-    <div class="btns">
-      <button class="btn-black" type="button" onclick="document.getElementById('checker').scrollIntoView({behavior:'smooth'})">check a token</button>
-      <a class="link-arrow" href="#report">see a sample report &rarr;</a>
+<header class="site-header">
+  <div class="header-pill" id="headerPill">
+    <div class="header-inner">
+      <a class="brand" href="#"><span class="brand-mark">n</span>nutcheck</a>
+      <ul class="menu">
+        <li><a href="#checker">checker</a></li>
+        <li><a href="#does">what it does</a></li>
+        <li><a href="#feed">example checks</a></li>
+        <li><a href="#faq">faq</a></li>
+      </ul>
+      <div class="header-actions">
+        <a class="btn btn-ghost btn-sm" href="#report">see a sample</a>
+        <a class="btn btn-primary btn-sm" href="#checker">check a token</a>
+      </div>
     </div>
   </div>
-  <svg class="chart" viewBox="0 0 1140 220" aria-hidden="true">
-    <rect x="0" y="0" width="330" height="220" fill="rgba(0,24,255,0.06)" />
-    <g>
-      <rect x="20" y="120" width="56" height="100" rx="28" fill="#0018ff" />
-      <rect x="92" y="90" width="56" height="130" rx="28" fill="#1a2fff" />
-      <rect x="164" y="60" width="56" height="160" rx="28" fill="#3346ff" />
-      <rect x="236" y="100" width="56" height="120" rx="28" fill="#4d5cff" />
-      <rect x="308" y="40" width="56" height="180" rx="28" fill="#6673ff" />
-      <rect x="380" y="80" width="56" height="140" rx="28" fill="#7f8aff" />
-      <rect x="452" y="110" width="56" height="110" rx="28" fill="#9aa0b8" />
-      <rect x="524" y="70" width="56" height="150" rx="28" fill="#6b6f7d" />
-      <rect x="596" y="120" width="56" height="100" rx="28" fill="#555555" />
-      <rect x="668" y="90" width="56" height="130" rx="28" fill="#3d3d3d" />
-      <rect x="740" y="130" width="56" height="90" rx="28" fill="#2b2b2b" />
-      <rect x="812" y="100" width="56" height="120" rx="28" fill="#1e1e1e" />
-      <rect x="884" y="140" width="56" height="80" rx="28" fill="#111111" />
-      <rect x="956" y="110" width="56" height="110" rx="28" fill="#111111" />
-      <rect x="1028" y="150" width="56" height="70" rx="28" fill="#111111" />
-    </g>
-    <polyline points="48,118 120,88 192,58 264,98 336,38 408,78 480,108 552,68 624,118 696,88 768,128 840,98 912,138 984,108 1056,148" fill="none" stroke="#111111" stroke-width="1.5" />
-  </svg>
 </header>
 
-<main>
-  <div class="wrap">
-    <section class="section" id="checker" style="padding-top: 90px;">
-      <div class="t4-banner" role="note">
-        <span class="t4-badge">Notice</span>
-        <span>NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).</span>
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="badge"><span class="badge-dot"></span>nut november 2026, live now</span>
+      <h1>everyone says the token is fine. now you can <span class="blue">check it.</span></h1>
+      <p class="lede">paste any cashu token. nutcheck decodes it, screens the keysets, and writes down what it could and could not prove.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#checker">check a token &#8250;</a>
+        <a class="btn btn-ghost" href="#report">see a sample report</a>
       </div>
-
-      <div class="checker" aria-label="token checker">
-        <div class="row">
-          <div class="field">
-            <label for="token">cashu token <span class="hint">starts with cashuB or cashuA</span></label>
-            <textarea id="token" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
-          </div>
-          <div class="field">
-            <label for="known">known keysets <span class="hint">one keyset ID per line, the ones you already trust</span></label>
-            <textarea id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e"></textarea>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn-black" id="check-btn" type="button">check token</button>
-          <div class="samples-wrap">
-            <div class="samples">
-              <span>try a sample:</span>
-              <button type="button" id="btn-clean" data-which="clean" class="active"><span class="sw"></span>clean token</button>
-              <button type="button" id="btn-evil" data-which="evil"><span class="sw"></span>evil mint token</button>
-              <button type="button" id="btn-spent" data-which="spent"><span class="sw"></span>spent token</button>
-              <button type="button" id="btn-partial" data-which="partial"><span class="sw"></span>partial dleq</button>
-              <button type="button" id="btn-pending" data-which="pending"><span class="sw"></span>pending</button>
-              <button type="button" id="btn-unreachable" data-which="unreachable"><span class="sw"></span>unreachable</button>
-              <button type="button" id="btn-auth" data-which="auth"><span class="sw"></span>auth required</button>
-              <button type="button" id="btn-v3" data-which="v3"><span class="sw"></span>v3 keyset</button>
-            </div>
-          </div>
-        </div>
-        <div class="msg" id="msg" role="status" aria-live="polite"></div>
-        <div class="consent">
-          <div class="what">
-            <strong>the mint check is off until you turn it on</strong>
-            <p>asking a mint whether proofs are spent sends it identifiers derived from your proof secrets, so the mint learns which proofs you hold, and the answer is only the mint's own word at one moment in time.</p>
-          </div>
-          <label class="opt"><input type="checkbox" id="consent"><span>ask the mint for the proof state of this token</span></label>
-        </div>
-        <p class="privacy-line">local checks run on your device. mint info and public keys are fetched from the token's mint; proof state is only checked when you turn on the mint check.</p>
-      </div>
-      <div id="report" class="report" aria-label="report"></div>
-    </section>
-
-    <dialog id="consent-dialog" class="consent-dialog" aria-labelledby="consent-title" aria-describedby="consent-desc">
-      <h3 id="consent-title">Ask the mint for proof state?</h3>
-      <p id="consent-desc">Asking a mint whether proofs are spent sends it identifiers (Y) derived from your proof secrets, so the mint learns which proofs you hold. The answer is only the mint's own word at one moment in time.</p>
-      <div class="dialog-actions">
-        <button type="button" id="consent-cancel" class="btn-cancel">Cancel</button>
-        <button type="button" id="consent-confirm" class="btn-confirm">I understand, ask the mint</button>
-      </div>
-    </dialog>
-
-    <hr class="rule">
-    <section class="section" id="feed">
-      <div class="sec-head">
-        <div>
-          <h2>example checks</h2>
-          <p class="sec-note">representative tokens showing how different findings are reported. your tokens are not shown in these example checks.</p>
-        </div>
-      </div>
-      <div class="feed">
-        <div class="feed-row"><span class="av g">c</span><span class="who">clean token</span><span class="lbl g">no issues</span><span class="ref">residue 864559728</span><span class="time">12m ago</span></div>
-        <div class="feed-row"><span class="av a">e</span><span class="who">evil mint token</span><span class="lbl a">collision</span><span class="ref">residue 1138537334</span><span class="time">26m ago</span></div>
-        <div class="feed-row"><span class="av r">s</span><span class="who">spent token</span><span class="lbl r">spent</span><span class="ref">1 of 1 proof</span><span class="time">41m ago</span></div>
-        <div class="feed-row"><span class="av a">p</span><span class="who">partial dleq token</span><span class="lbl a">incomplete</span><span class="ref">0 of 1 complete</span><span class="time">1h ago</span></div>
-        <div class="feed-row"><span class="av b">v</span><span class="who">v3 keyset token</span><span class="lbl a">v3 keyset</span><span class="ref">id 02000000&hellip;0000</span><span class="time">1h ago</span></div>
-      </div>
-      <div class="feed-foot"><a class="link-arrow blue" href="#checker">check a token &rarr;</a></div>
-    </section>
-
-    <hr class="rule">
-    <section class="section" id="does">
-      <div class="sec-head">
-        <div>
-          <h2>what nutcheck does</h2>
-          <p class="sec-note">five checks, one report. hover a card to see it flip.</p>
-        </div>
-      </div>
-      <div class="does">
-        <div class="does-card"><span class="arrow">&nearr;</span><div class="letter">C</div><h3>check the decode</h3><div class="tag">token, keysets, proofs</div><p>any cashu token, v3 or v4, decoded in your browser before anything is judged.</p></div>
-        <div class="does-card"><span class="arrow">&nearr;</span><div class="letter">H</div><h3>hash the keyset</h3><div class="tag">keyset id derivation</div><p>each keyset id is recomputed from the mint's public keys. a mismatch means the keyset is not what it claims.</p></div>
-        <div class="does-card"><span class="arrow">&nearr;</span><div class="letter">E</div><h3>expose collisions</h3><div class="tag">v1 residue screen</div><p>a v1 keyset id reduces to a 31-bit residue. two mints can land on the same one, and that is the attack.</p></div>
-        <div class="does-card"><span class="arrow">&nearr;</span><div class="letter">C</div><h3>confirm signatures</h3><div class="tag">dleq on every proof</div><p>the signatures match the advertised key, and nothing more. dleq never proves the mint is honest.</p></div>
-        <div class="does-card"><span class="arrow">&nearr;</span><div class="letter">K</div><h3>know the state</h3><div class="tag">proof state, opt-in</div><p>only when you ask. the mint says spent, pending, or unspent. its word, one moment, and it learns what you hold.</p></div>
-      </div>
-    </section>
-
-    <hr class="rule">
-    <section class="section" id="faq">
-      <div class="faq">
-        <div>
-          <h2>questions,<br>answered</h2>
-          <p class="sec-note">the short version of what the tool does and does not do.</p>
-          <p style="margin-top: 18px;"><a class="link-arrow blue" href="#checker">all questions &rarr;</a></p>
-        </div>
-        <div class="faq-card">
-          <div class="faq-item open">
-            <button class="faq-q" type="button" aria-expanded="true">what is nutcheck?<span class="pm" aria-hidden="true">+</span></button>
-            <div class="faq-a"><p>a cashu token diagnostics tool. paste a token and it tells you what can be verified: the decode, the v1 residue screen, the keyset id derivation, the dleq signatures, and, only if you ask, the proof state from the mint.</p></div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-q" type="button" aria-expanded="false">what is a residue collision?<span class="pm" aria-hidden="true">+</span></button>
-            <div class="faq-a"><p>a v1 keyset id reduces to a 31-bit residue. two different keysets can land on the same residue. a mint with a colliding keyset can recover the secrets of the other mint's proofs, so nutcheck screens for it.</p></div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-q" type="button" aria-expanded="false">does it spend or sign anything?<span class="pm" aria-hidden="true">+</span></button>
-            <div class="faq-a"><p>no. it never spends, signs, derives, or holds proofs. it only reads the token and, with your consent, asks the mint about proof state.</p></div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-q" type="button" aria-expanded="false">why is the mint check off by default?<span class="pm" aria-hidden="true">+</span></button>
-            <div class="faq-a"><p>asking a mint whether proofs are spent sends it identifiers derived from your proof secrets, so the mint learns which proofs you hold. the answer is also only the mint's own word at one moment. it stays off until you turn it on.</p></div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-q" type="button" aria-expanded="false">what can it not prove?<span class="pm" aria-hidden="true">+</span></button>
-            <div class="faq-a"><p>that the mint is honest, that it is solvent, that the proofs stay unspent after the check, or that no collision exists outside the keyset lists you supplied. the report says all of this plainly.</p></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <hr class="rule">
-    <section class="section">
-      <div class="stats">
-        <div class="tilt">
-          <div class="num">2,929</div>
-          <div class="cap">tries to find two colliding keysets</div>
-          <div class="since">mod 2^31 - 1 &middot; v1 only</div>
-        </div>
-        <p class="manifesto">this isn't a promise. it's a report of what was checked. <a class="link-arrow blue" href="#checker">read how it checks &rarr;</a></p>
-      </div>
-    </section>
+    </div>
   </div>
+  <div class="marquee">
+    <div class="marquee-track">
+      <span><b>&#10003;</b> cashu tokens, v3 and v4</span>
+      <span><b>&#10003;</b> built on the nut-13 disclosure</span>
+      <span><b>&#10003;</b> dleq verified</span>
+      <span><b>&#10003;</b> residue screen</span>
+      <span><b>&#10003;</b> open source</span>
+      <span><b>&#10003;</b> nothing is spent</span>
+      <span><b>&#10003;</b> cashu tokens, v3 and v4</span>
+      <span><b>&#10003;</b> built on the nut-13 disclosure</span>
+      <span><b>&#10003;</b> dleq verified</span>
+      <span><b>&#10003;</b> residue screen</span>
+      <span><b>&#10003;</b> open source</span>
+      <span><b>&#10003;</b> nothing is spent</span>
+    </div>
+  </div>
+</section>
+
+<main>
+  <section class="section" id="checker">
+    <h2>paste a token</h2>
+    <p class="sub">the check runs locally first. the mint is only contacted when you say so.</p>
+    <div class="t4-banner" role="note">
+      <span class="t4-badge">notice</span>
+      <span>NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).</span>
+    </div>
+    <div class="paste-card" aria-label="token checker">
+      <div class="row">
+        <div class="field">
+          <label for="token">cashu token <span class="hint">starts with cashuB or cashuA</span></label>
+          <textarea id="token" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+        </div>
+        <div class="field">
+          <label for="known">known keysets <span class="hint">one keyset ID per line, the ones you already trust</span></label>
+          <textarea id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e"></textarea>
+        </div>
+      </div>
+      <div class="paste-actions">
+        <button class="btn btn-primary" id="check-btn" type="button">check token</button>
+        <div class="samples-wrap">
+          <div class="samples">
+            <span>try a sample:</span>
+            <button type="button" id="btn-clean" data-which="clean" class="active"><span class="sw"></span>clean token</button>
+            <button type="button" id="btn-evil" data-which="evil"><span class="sw"></span>evil mint token</button>
+            <button type="button" id="btn-spent" data-which="spent"><span class="sw"></span>spent token</button>
+            <button type="button" id="btn-partial" data-which="partial"><span class="sw"></span>partial dleq</button>
+            <button type="button" id="btn-pending" data-which="pending"><span class="sw"></span>pending</button>
+            <button type="button" id="btn-unreachable" data-which="unreachable"><span class="sw"></span>unreachable</button>
+            <button type="button" id="btn-auth" data-which="auth"><span class="sw"></span>auth required</button>
+            <button type="button" id="btn-v3" data-which="v3"><span class="sw"></span>v3 keyset</button>
+          </div>
+        </div>
+      </div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <div class="consent">
+        <div class="what">
+          <strong>the mint check is off until you turn it on</strong>
+          <p>asking a mint whether proofs are spent sends it identifiers derived from your proof secrets, so the mint learns which proofs you hold, and the answer is only the mint's own word at one moment in time.</p>
+        </div>
+        <label class="opt"><input type="checkbox" id="consent"><span>ask the mint for the proof state of this token</span></label>
+      </div>
+      <p class="privacy-line">local checks run on your device. mint info and public keys are fetched from the token's mint; proof state is only checked when you turn on the mint check.</p>
+    </div>
+    <div id="report" class="report" aria-label="report"></div>
+  </section>
+
+  <dialog id="consent-dialog" class="consent-dialog" aria-labelledby="consent-title" aria-describedby="consent-desc">
+    <h3 id="consent-title">ask the mint for proof state?</h3>
+    <p id="consent-desc">asking a mint whether proofs are spent sends it identifiers (y) derived from your proof secrets, so the mint learns which proofs you hold. the answer is only the mint's own word at one moment in time.</p>
+    <div class="dialog-actions">
+      <button type="button" id="consent-cancel" class="btn-cancel">cancel</button>
+      <button type="button" id="consent-confirm" class="btn-confirm">i understand, ask the mint</button>
+    </div>
+  </dialog>
+
+  <section class="section" id="does">
+    <h2>what it checks</h2>
+    <p class="sub">five checks, each one named in the report.</p>
+    <div class="feature-grid">
+      <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">c</div><h3>check the decode</h3><p>any cashu token, v3 or v4, decoded in your browser before anything is judged.</p></div>
+      <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">h</div><h3>hash the keyset</h3><p>each keyset id is recomputed from the mint's public keys. a mismatch means the keyset is not what it claims.</p></div>
+      <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">e</div><h3>expose collisions</h3><p>a v1 keyset id reduces to a 31-bit residue. two mints can land on the same one, and that is the attack.</p></div>
+      <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">c</div><h3>confirm signatures</h3><p>the signatures match the advertised key, and nothing more. dleq never proves the mint is honest.</p></div>
+      <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">k</div><h3>know the state</h3><p>only when you ask. the mint says spent, pending, or unspent. its word, one moment, and it learns what you hold.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>the numbers so far</h2>
+    <p class="sub">measured figures from the checks run, not estimates.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="stat-top"><span class="stat-label">tries to find two colliding keysets</span><span class="trend">mod 2^31 - 1</span></div>
+        <div class="stat-value">2,929</div>
+        <p>birthday-bound tries across v1 keyset ids.</p>
+        <div class="spark"><i style="height:30%"></i><i style="height:45%"></i><i style="height:40%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:75%"></i><i class="hot" style="height:100%"></i></div>
+      </div>
+      <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="stat-top"><span class="stat-label">collisions caught</span><span class="trend">1 flagged</span></div>
+        <div class="stat-value">1</div>
+        <p>an evil mint keyset sharing residue 1138537334 with a trusted one.</p>
+        <div class="spark"><i style="height:15%"></i><i style="height:15%"></i><i style="height:15%"></i><i style="height:20%"></i><i style="height:15%"></i><i style="height:15%"></i><i class="hot" style="height:90%"></i></div>
+      </div>
+      <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="stat-top"><span class="stat-label">tokens spent</span><span class="trend flat">always zero</span></div>
+        <div class="stat-value">0</div>
+        <p>the checker never spends, signs, or holds proofs.</p>
+        <div class="spark"><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="feed">
+    <h2>example checks</h2>
+    <p class="sub">representative tokens showing how different findings are reported. your tokens are not shown in these example checks.</p>
+    <div class="feed">
+      <div class="feed-row"><span class="av g">c</span><span class="who">clean token</span><span class="lbl g">no issues</span><span class="ref">residue 864559728</span><span class="time">12m ago</span></div>
+      <div class="feed-row"><span class="av a">e</span><span class="who">evil mint token</span><span class="lbl a">collision</span><span class="ref">residue 1138537334</span><span class="time">26m ago</span></div>
+      <div class="feed-row"><span class="av r">s</span><span class="who">spent token</span><span class="lbl r">spent</span><span class="ref">1 of 1 proof</span><span class="time">41m ago</span></div>
+      <div class="feed-row"><span class="av a">p</span><span class="who">partial dleq token</span><span class="lbl a">incomplete</span><span class="ref">0 of 1 complete</span><span class="time">1h ago</span></div>
+      <div class="feed-row"><span class="av b">v</span><span class="who">v3 keyset token</span><span class="lbl a">v3 keyset</span><span class="ref">id 02000000&hellip;0000</span><span class="time">1h ago</span></div>
+    </div>
+    <div class="feed-foot"><a class="link-arrow blue" href="#checker">check a token &rarr;</a></div>
+  </section>
+
+  <section class="section" id="faq">
+    <h2>questions, answered</h2>
+    <p class="sub">the short version of what the tool does and does not do.</p>
+    <div class="faq-card">
+      <div class="faq-item open">
+        <button class="faq-q" type="button" aria-expanded="true">what is nutcheck?<span class="pm" aria-hidden="true">+</span></button>
+        <div class="faq-a"><p>a cashu token diagnostics tool. paste a token and it tells you what can be verified: the decode, the v1 residue screen, the keyset id derivation, the dleq signatures, and, only if you ask, the proof state from the mint.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">what is a residue collision?<span class="pm" aria-hidden="true">+</span></button>
+        <div class="faq-a"><p>a v1 keyset id reduces to a 31-bit residue. two different keysets can land on the same residue. a mint with a colliding keyset can recover the secrets of the other mint's proofs, so nutcheck screens for it.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">does it spend or sign anything?<span class="pm" aria-hidden="true">+</span></button>
+        <div class="faq-a"><p>no. it never spends, signs, derives, or holds proofs. it only reads the token and, with your consent, asks the mint about proof state.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">why is the mint check off by default?<span class="pm" aria-hidden="true">+</span></button>
+        <div class="faq-a"><p>asking a mint whether proofs are spent sends it identifiers derived from your proof secrets, so the mint learns which proofs you hold. the answer is also only the mint's own word at one moment. it stays off until you turn it on.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">what can it not prove?<span class="pm" aria-hidden="true">+</span></button>
+        <div class="faq-a"><p>that the mint is honest, that it is solvent, that the proofs stay unspent after the check, or that no collision exists outside the keyset lists you supplied. the report says all of this plainly.</p></div>
+      </div>
+    </div>
+  </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap">
-    <div class="f-grid">
-      <div>
-        <p class="wordmark">nutcheck</p>
-        <p>check a cashu token before you accept it. local decode, residue screen, keyset derivation, dleq, and an opt-in mint check.</p>
-        <form class="subscribe" onsubmit="return false;">
-          <input type="email" placeholder="email address" aria-label="email address">
-          <button type="submit">subscribe</button>
-        </form>
-      </div>
-      <div class="cols">
-        <div>
-          <h4>product</h4>
-          <a href="#checker">check a token</a>
-          <a href="#feed">checked just now</a>
-          <a href="#does">what it does</a>
-          <a href="#faq">faq</a>
-        </div>
-        <div>
-          <h4>more</h4>
-          <a href="#checker">github</a>
-          <a href="#faq">privacy</a>
-          <a href="#faq">terms</a>
-          <a href="#checker">contact</a>
-        </div>
-      </div>
-    </div>
-    <div class="credits">
-      <span class="fm">nutcheck</span>
-      <span>a nut november 2026 project</span>
-      <span>built for the hardest nut to crack</span>
-      <span>&copy; 2026 nutcheck</span>
-    </div>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a class="brand" href="#"><span class="brand-mark">n</span>nutcheck</a>
+    <ul class="footer-links">
+      <li><a href="#checker">checker</a></li>
+      <li><a href="#does">what it does</a></li>
+      <li><a href="#feed">example checks</a></li>
+      <li><a href="#faq">faq</a></li>
+      <li><a href="https://github.com/Jayanng/nutcheck">github</a></li>
+      <li><a href="https://nutnovember.org">nut november 2026</a></li>
+    </ul>
+    <p class="footer-bottom">nutcheck, a nut november 2026 entry. check a cashu token before you accept it. local decode, residue screen, keyset derivation, dleq, and an opt-in mint check.</p>
   </div>
 </footer>
 
+<script>
+window.addEventListener("scroll", function () {
+  var pill = document.getElementById("headerPill");
+  if (!pill) return;
+  if (window.scrollY > 50) {
+    pill.classList.add("scrolled");
+  } else {
+    pill.classList.remove("scrolled");
+  }
+});
+</script>
 <script type="module" src="/src/web/main.ts"></script>
 </body>
 </html>
-
