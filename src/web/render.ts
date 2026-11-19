@@ -214,32 +214,52 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     html += `</div>`;
   }
 
-  // 5. Tests and measured values
-  html += `<p class="section-title">Tests and measured values</p>`;
-  html += `<div class="checks" role="list">`;
-  const allChecks = [...report.checked, ...report.notChecked];
-  for (const check of allChecks) {
+  // 5. Summary strip: the answer at a glance
+  const passedCheckCount = report.checked.filter((c) => c.outcome === 'pass').length;
+  const flaggedChecks = report.checked.filter((c) => c.outcome !== 'pass');
+  const notCheckedCount = report.notChecked.length;
+  const cannotProveCount = report.cannotProve.length;
+  html += `<div class="summary-strip" role="region" aria-label="Report summary">`;
+  html += `<div class="sum"><span class="dot green"></span><div><div class="num">${passedCheckCount}</div><div class="lbl">Passed</div></div></div>`;
+  html += `<div class="sum"><span class="dot amber"></span><div><div class="num">${notCheckedCount}</div><div class="lbl">Not checked</div></div></div>`;
+  html += `<div class="sum"><span class="dot blue"></span><div><div class="num">${cannotProveCount}</div><div class="lbl">Cannot prove</div></div></div>`;
+  html += `</div>`;
+
+  // 6. Tests and measured values, grouped by outcome
+  const renderCheck = (check: ReportCheck) => {
     const badge = statusBadgeClass(check);
+    const dotClass = badge.css === 'pass' ? 'green' : badge.css === 'fail' ? 'red' : badge.css === 'hold' ? 'amber' : 'grey';
     // Mock-backed sample results are labelled simulated, not presented as live mint answers.
     // A check that never ran (consent not given) has no simulated answer to label.
     const simulated = options.isSample && (check.checkId === 'checkstate' || check.checkId === 'mint') && !check.result.includes('Consent not given') ? ' (simulated)' : '';
-    html += `<div class="check" role="listitem">`;
-    html += `<div class="body">`;
-    html += `<h3>${escapeHtml(check.name)}<span class="val">${escapeHtml(check.result)}${simulated}</span></h3>`;
-    html += `<p>${escapeHtml(check.message)}</p>`;
-    html += `</div>`;
-    html += `<span class="status ${badge.css}">${escapeHtml(badge.text)}</span>`;
-    html += `</div>`;
+    return `<div class="check" role="listitem"><span class="dot ${dotClass}"></span><div class="body"><div class="check-top"><h3>${escapeHtml(check.name)}</h3><span class="status ${badge.css}">${escapeHtml(badge.text)}</span></div><p class="val">${escapeHtml(check.result)}${simulated}</p><p class="msg">${escapeHtml(check.message)}</p></div></div>`;
+  };
+  html += `<p class="section-title">Tests and measured values</p>`;
+  html += `<div class="checks" role="list">`;
+  const passedChecks = report.checked.filter((c) => c.outcome === 'pass');
+  if (passedChecks.length > 0) {
+    html += `<div class="group-label" role="presentation"><span class="dot green"></span>Passed &middot; ${passedChecks.length}</div>`;
+    for (const check of passedChecks) html += renderCheck(check);
+  }
+  if (flaggedChecks.length > 0) {
+    const flagDot = flaggedChecks.some((c) => c.severity === 'red') ? 'red' : 'amber';
+    html += `<div class="group-label divider" role="presentation"><span class="dot ${flagDot}"></span>Needs attention &middot; ${flaggedChecks.length}</div>`;
+    for (const check of flaggedChecks) html += renderCheck(check);
+  }
+  if (report.notChecked.length > 0) {
+    html += `<div class="group-label divider" role="presentation"><span class="dot grey"></span>Not checked &middot; ${notCheckedCount}</div>`;
+    for (const check of report.notChecked) html += renderCheck(check);
   }
   html += `</div>`;
 
-  // 6. What this report can and cannot say (Checked, Not checked, Cannot prove)
+  // 7. What this report can and cannot say (Checked, Not checked, Cannot prove)
   html += `<p class="section-title" id="limits">What this report can and cannot say</p>`;
+  html += `<p class="section-sub">The same report, shortened. This is what copies as text.</p>`;
   html += `<div class="cols">`;
 
   // Checked card
   html += `<div class="card c-checked">`;
-  html += `<h3><span class="b" aria-hidden="true"></span>Checked</h3>`;
+  html += `<h3><span class="b" aria-hidden="true"></span>Checked<span class="count">${report.checked.length}</span></h3>`;
   html += `<ul>`;
   if (report.checked.length === 0) {
     html += `<li>No local checks could complete</li>`;
@@ -254,7 +274,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   // Not checked card
   html += `<div class="card c-not">`;
-  html += `<h3><span class="b" aria-hidden="true"></span>Not checked</h3>`;
+  html += `<h3><span class="b" aria-hidden="true"></span>Not checked<span class="count">${notCheckedCount}</span></h3>`;
   html += `<ul>`;
   if (report.notChecked.length === 0) {
     html += `<li>All scheduled checks ran</li>`;
@@ -268,7 +288,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   // Cannot prove card
   html += `<div class="card c-cannot">`;
-  html += `<h3><span class="b" aria-hidden="true"></span>Cannot prove</h3>`;
+  html += `<h3><span class="b" aria-hidden="true"></span>Cannot prove<span class="count">${cannotProveCount}</span></h3>`;
   html += `<ul>`;
   for (const item of report.cannotProve) {
     html += `<li>${escapeHtml(item)}</li>`;
@@ -278,8 +298,8 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   html += `</div>`;
 
-  // 7. Copy bar
-  html += `<div class="copybar">`;
+  // 8. Copy bar
+  html += `<div class="copybar-card">`;
   html += `<button class="copybtn" id="copy-btn" type="button" aria-label="Copy diagnostic report to clipboard">Copy report as text</button>`;
   html += `<span class="note">Pastes as plain text, with the same three sections.</span>`;
   html += `</div>`;
