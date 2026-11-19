@@ -52,7 +52,7 @@ function toHex(value: unknown): string {
   if (value instanceof Uint8Array) {
     return Buffer.from(value).toString('hex');
   }
-  throw new TokenParseError('expected bytes');
+  throw new TokenParseError('Expected bytes');
 }
 
 function dleqMemberHex(value: unknown, bytesOnly: boolean): string | undefined {
@@ -129,7 +129,7 @@ function requireValidAmount(amount: unknown, field: string): number {
 
 function assertBase64Url(payload: string): void {
   if (!/^[A-Za-z0-9_-]*={0,2}$/.test(payload)) {
-    throw new TokenParseError('payload is not valid base64url');
+    throw new TokenParseError('Payload is not valid base64url');
   }
 }
 
@@ -167,13 +167,13 @@ export function stripUriPrefix(token: string): string {
 
 export async function parseTokenRaw(tokenString: string): Promise<RawToken> {
   if (typeof tokenString !== 'string' || tokenString.trim() === '') {
-    throw new TokenParseError('token must be a non-empty string');
+    throw new TokenParseError('Token must be a non-empty string');
   }
   const token = stripUriPrefix(tokenString);
   const lower = token.toLowerCase();
   if (lower.startsWith('creqa') || lower.startsWith('creqb')) {
     throw new TokenParseError(
-      'this is a payment request (creqA or creqB), not a Cashu token; paste a cashuA or cashuB token',
+      'This is a payment request (creqA or creqB), not a Cashu token; paste a cashuA or cashuB token',
     );
   }
   if (token.startsWith('cashuA')) {
@@ -182,7 +182,7 @@ export async function parseTokenRaw(tokenString: string): Promise<RawToken> {
   if (token.startsWith('cashuB')) {
     return parseV4(token.slice('cashuB'.length));
   }
-  throw new TokenParseError('token must start with cashuA or cashuB');
+  throw new TokenParseError('Token must start with cashuA or cashuB');
 }
 
 function parseV3(payload: string): RawToken {

@@ -43,7 +43,7 @@ describe('DLEQ verification', () => {
     const check = verifyProofDleq(noDleq, 0, keyset);
     expect(check.outcome).toBe('absent');
     expect(check.severity).toBe('none');
-    expect(check.message).toBe('no DLEQ present, signatures cannot be verified offline');
+    expect(check.message).toBe('No DLEQ present, signatures cannot be verified offline');
   });
 
   it('a DLEQ present but missing e or s is incomplete, not absent', () => {

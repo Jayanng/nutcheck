@@ -37,7 +37,7 @@ export interface MintFacts {
 }
 
 function keysetAge(): string {
-  return 'unknown: the keysets response carries no creation timestamp, so age is a trust signal only when a first-seen time is known';
+  return 'Unknown: The keysets response carries no creation timestamp, so age is a trust signal only when a first-seen time is known';
 }
 
 export async function getMintFacts(
@@ -60,11 +60,11 @@ export async function getMintFacts(
     const allowedMintBase = tokenMintUrl;
     info = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/info'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(info)) {
-      throw new Error('the /v1/info response is not an object');
+      throw new Error('The /v1/info response is not an object');
     }
     keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
-      throw new Error('the /v1/keysets response has no keysets list');
+      throw new Error('The /v1/keysets response has no keysets list');
     }
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
@@ -90,13 +90,13 @@ export async function getMintFacts(
   // fact, so it is named in findings instead of being silently replaced
   // with a default. An absent field is fine and produces no finding.
   if (info.name !== undefined && typeof info.name !== 'string') {
-    findingsSoFar.push('the mint advertises a malformed name');
+    findingsSoFar.push('The mint advertises a malformed name');
   }
   if (info.version !== undefined && typeof info.version !== 'string') {
-    findingsSoFar.push('the mint advertises a malformed version');
+    findingsSoFar.push('The mint advertises a malformed version');
   }
   if (info.nuts !== undefined && !isRecord(info.nuts)) {
-    findingsSoFar.push('the mint advertises malformed nuts metadata');
+    findingsSoFar.push('The mint advertises malformed nuts metadata');
   }
   for (const entry of keysetsRaw.keysets as unknown[]) {
     const record = isRecord(entry) ? entry : {};
@@ -110,7 +110,7 @@ export async function getMintFacts(
         nuts: isRecord(info.nuts) ? info.nuts : {},
         keysets: [],
         status: 'unknown',
-        error: 'the /v1/keysets response has a keyset entry without a usable ID or unit',
+        error: 'The /v1/keysets response has a keyset entry without a usable ID or unit',
         findings: [],
       };
     }
@@ -126,16 +126,16 @@ export async function getMintFacts(
       Number.isSafeInteger(record.final_expiry) &&
       record.final_expiry >= 0;
     if (record.input_fee_ppk !== undefined && !feeOk) {
-      findings.push(`keyset ${id} advertises a malformed input_fee_ppk`);
+      findings.push(`Keyset ${id} advertises a malformed input_fee_ppk`);
     }
     if (record.final_expiry !== undefined && !expiryOk) {
-      findings.push(`keyset ${id} advertises a malformed final_expiry`);
+      findings.push(`Keyset ${id} advertises a malformed final_expiry`);
     }
     // A present but non-boolean active flag is malformed metadata, not
     // an absent flag. It is named here so a mint that answers with a
     // broken flag does not look the same as one that omits it.
     if (record.active !== undefined && typeof record.active !== 'boolean') {
-      findings.push(`keyset ${id} advertises a malformed active flag`);
+      findings.push(`Keyset ${id} advertises a malformed active flag`);
     }
     keysets.push({
       id,

@@ -1380,7 +1380,7 @@ describe('reconciliation failure is not decoded', () => {
       ],
     };
     expect(() => reconcileToken(raw as never, decoded as never)).toThrow(
-      'the decoded token names a different mint than the token holds',
+      'The decoded token names a different mint than the token holds',
     );
   });
 });
@@ -1477,7 +1477,7 @@ describe('mixed token with a V1 proof carrying no DLEQ', () => {
     expect(result.findings).toContainEqual({
       code: 'not-checked',
       message:
-        'this proof carries no DLEQ and was not checked because the token carries a V3 keyset',
+        'This proof carries no DLEQ and was not checked because the token carries a V3 keyset',
       proofIndex: 1,
     });
   });

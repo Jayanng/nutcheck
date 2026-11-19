@@ -61,17 +61,17 @@ export async function checkKeysetDerivation(
     const allowedMintBase = tokenMintUrl;
     keysRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keys'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysRaw) || !Array.isArray(keysRaw.keysets)) {
-      throw new Error('the /v1/keys response has no keysets list');
+      throw new Error('The /v1/keys response has no keysets list');
     }
     keysetsRaw = (await fetchMintJson(mintEndpointUrl(mintUrl, '/v1/keysets'), allowedMintBase, {}, fetchFn)) as Record<string, unknown>;
     if (!isRecord(keysetsRaw) || !Array.isArray(keysetsRaw.keysets)) {
-      throw new Error('the /v1/keysets response has no keysets list');
+      throw new Error('The /v1/keysets response has no keysets list');
     }
   } catch (err) {
     // A failed list request leaves every token-referenced keyset
     // unchecked. Report one unknown per token keyset ID so none is
     // silently dropped, plus one for the list failure itself.
-    const detail = `the keys could not be fetched: ${err instanceof Error ? err.message : String(err)}`;
+    const detail = `The keys could not be fetched: ${err instanceof Error ? err.message : String(err)}`;
     const checks: KeysetDerivationCheck[] = tokenKeysetIds.map((id) => ({
       advertisedId: id,
       derivedId: undefined,
@@ -191,7 +191,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: '',
         result: 'unknown',
-        detail: 'the advertised ID is not a hex string, so its keys were not fetched',
+        detail: 'The advertised ID is not a hex string, so its keys were not fetched',
       });
       continue;
     }
@@ -286,7 +286,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: typeof entry.unit === 'string' ? entry.unit : '',
         result: 'unknown',
-        detail: 'the mint listed this keyset ID more than once with different entries, so the ID cannot be established',
+        detail: 'The mint listed this keyset ID more than once with different entries, so the ID cannot be established',
       });
       continue;
     }
@@ -296,7 +296,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: typeof entry.unit === 'string' ? entry.unit : '',
         result: 'unknown',
-        detail: 'the keys for this keyset could not be fetched',
+        detail: 'The keys for this keyset could not be fetched',
       });
       continue;
     }
@@ -322,12 +322,12 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: keysUnit,
         result: 'unknown',
-        detail: 'the /v1/keys and /v1/keysets responses disagree on the unit, so the ID cannot be established',
+        detail: 'The /v1/keys and /v1/keysets responses disagree on the unit, so the ID cannot be established',
       });
       continue;
     }
     if (unitConflict) {
-      v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the unit');
+      v1Notes.push('The /v1/keys and /v1/keysets responses disagree on the unit');
     }
     const unit = keysUnit ?? metaUnit;
     if (version === 'v2' && unit === undefined) {
@@ -336,7 +336,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: '',
         result: 'unknown',
-        detail: 'no unit was supplied for this keyset, so the V2 ID cannot be established',
+        detail: 'No unit was supplied for this keyset, so the V2 ID cannot be established',
       });
       continue;
     }
@@ -347,7 +347,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'this is a V3 keyset (BLS12-381); V3 keyset ID derivation is not checked here',
+        detail: 'This is a V3 keyset (BLS12-381); V3 keyset ID derivation is not checked here',
       });
       continue;
     }
@@ -358,7 +358,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the advertised ID has an unknown version, so it was not recomputed',
+        detail: 'The advertised ID has an unknown version, so it was not recomputed',
       });
       continue;
     }
@@ -387,7 +387,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the input fee in the mint response is malformed, so the ID cannot be established',
+        detail: 'The input fee in the mint response is malformed, so the ID cannot be established',
       });
       continue;
     }
@@ -397,15 +397,15 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the /v1/keys and /v1/keysets responses disagree on the input fee, so the ID cannot be established',
+        detail: 'The /v1/keys and /v1/keysets responses disagree on the input fee, so the ID cannot be established',
       });
       continue;
     }
     if (versionByte === 0) {
       if (keysFeeMalformed || metaFeeMalformed) {
-        v1Notes.push('the mint advertises a malformed input_fee_ppk, which V1 derivation does not use');
+        v1Notes.push('The mint advertises a malformed input_fee_ppk, which V1 derivation does not use');
       } else if (feeConflict) {
-        v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the input fee, which V1 derivation does not use');
+        v1Notes.push('The /v1/keys and /v1/keysets responses disagree on the input fee, which V1 derivation does not use');
       }
     }
     const inputFeePpk = versionByte === 1 ? keysFee ?? metaFee : undefined;
@@ -432,7 +432,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the expiry in the mint response is malformed, so the ID cannot be established',
+        detail: 'The expiry in the mint response is malformed, so the ID cannot be established',
       });
       continue;
     }
@@ -442,15 +442,15 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the /v1/keys and /v1/keysets responses disagree on the expiry, so the ID cannot be established',
+        detail: 'The /v1/keys and /v1/keysets responses disagree on the expiry, so the ID cannot be established',
       });
       continue;
     }
     if (versionByte === 0) {
       if (keysExpiryMalformed || metaExpiryMalformed) {
-        v1Notes.push('the mint advertises a malformed final_expiry, which V1 derivation does not use');
+        v1Notes.push('The mint advertises a malformed final_expiry, which V1 derivation does not use');
       } else if (expiryConflict) {
-        v1Notes.push('the /v1/keys and /v1/keysets responses disagree on the expiry, which V1 derivation does not use');
+        v1Notes.push('The /v1/keys and /v1/keysets responses disagree on the expiry, which V1 derivation does not use');
       }
     }
     const expiry = versionByte === 1 ? metaExpiry ?? keysExpiry : undefined;
@@ -478,7 +478,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: 'the keys for this keyset are malformed, so the ID was not recomputed',
+        detail: 'The keys for this keyset are malformed, so the ID was not recomputed',
       });
       continue;
     }
@@ -496,7 +496,7 @@ export async function checkKeysetDerivation(
         derivedId: undefined,
         unit: effectiveUnit,
         result: 'unknown',
-        detail: `the ID could not be recomputed: ${err instanceof Error ? err.message : String(err)}`,
+        detail: `The ID could not be recomputed: ${err instanceof Error ? err.message : String(err)}`,
       });
       continue;
     }
@@ -505,8 +505,8 @@ export async function checkKeysetDerivation(
     // false mismatch.
     const idsMatch = derivedId.toLowerCase() === advertisedId.toLowerCase();
     const baseDetail = idsMatch
-      ? 'the recomputed ID matches the advertised ID'
-      : `the recomputed ID ${derivedId} does not match the advertised ID ${advertisedId}`;
+      ? 'The recomputed ID matches the advertised ID'
+      : `The recomputed ID ${derivedId} does not match the advertised ID ${advertisedId}`;
     checks.push({
       advertisedId,
       derivedId,
@@ -531,7 +531,7 @@ export async function checkKeysetDerivation(
       derivedId: undefined,
       unit: '',
       result: 'unknown',
-      detail: `the mint response has ${parts.join(' and ')} that were skipped`,
+      detail: `The mint response has ${parts.join(' and ')} that were skipped`,
     });
   }
   return checks;

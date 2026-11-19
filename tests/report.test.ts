@@ -554,13 +554,13 @@ describe('adversarial suite', () => {
     // the NUT-12 valid vector, so its DLEQ verifies as valid here.
     expect(dleqChecks.length).toBe(2);
     const v1Check = report.checked.find(
-      (c) => c.checkId === 'dleq' && c.result.includes('proof 0'),
+      (c) => c.checkId === 'dleq' && c.result.includes('Proof 0'),
     );
     expect(v1Check).toBeDefined();
     expect(v1Check!.outcome).toBe('pass');
     expect(v1Check!.result).toContain('DLEQ valid');
     const v3Check = report.notChecked.find(
-      (c) => c.checkId === 'dleq' && c.result.includes('proof 1'),
+      (c) => c.checkId === 'dleq' && c.result.includes('Proof 1'),
     );
     expect(v3Check).toBeDefined();
     expect(v3Check!.severity).toBe('none');
@@ -568,7 +568,7 @@ describe('adversarial suite', () => {
     // appears when consent is not given.
     const checkstate = report.notChecked.find((c) => c.checkId === 'checkstate');
     expect(checkstate).toBeDefined();
-    expect(checkstate!.result).toContain('consent not given');
+    expect(checkstate!.result).toContain('Consent not given');
     // The headline is Hold: the V3 proof's signature was not verified,
     // an unknown state, even though the V1 DLEQ is valid.
     expect(report.headline).toBe('Hold, here is why.');
@@ -1258,7 +1258,7 @@ describe('evilmint', () => {
     // with the known trusted keyset A.
     expect(collision?.result).toContain('00102821c3bc6333 (token)');
     expect(collision?.result).toContain('00206785c39be46b (known)');
-    expect(collision?.message).toContain('a token keyset collides with a known keyset');
+    expect(collision?.message).toContain('A token keyset collides with a known keyset');
     // Keyset age shown. The age is honestly unknown (trust signal
     // only) unless a first-seen time is supplied; the entry must say
     // so, not invent an age.

@@ -7,11 +7,11 @@
 // sent before that action.
 // Results map like this:
 // - spent: RED
-// - pending: AMBER, "the mint reports this proof as pending"
+// - pending: AMBER, "The mint reports this proof as pending"
 // - unspent: clean
-// - unreachable or connection timeout: AMBER, "mint unreachable, verify manually"
-// - the mint answered but the body could not be read: AMBER, "the mint answered but the response could not be read, verify manually"
-// - 401 or 403: "not checked (auth required)", with the rest of the
+// - unreachable or connection timeout: AMBER, "Mint unreachable, verify manually"
+// - the mint answered but the body could not be read: AMBER, "The mint answered but the response could not be read, verify manually"
+// - 401 or 403: "Not checked (auth required)", with the rest of the
 //   report left intact.
 // No code path sends checkstate without the consent flag set.
 import { hashToCurve } from '@cashu/cashu-ts';
@@ -59,7 +59,7 @@ export async function checkProofState(
       status: 'not-checked',
       state: undefined,
       severity: 'none',
-      message: 'checkstate was not sent: consent was not given',
+      message: 'Checkstate was not sent: consent was not given',
     };
   }
   const y = hashToCurve(secretToBytes(secret)).toHex();
@@ -80,7 +80,7 @@ export async function checkProofState(
         status: 'not-checked',
         state: undefined,
         severity: 'none',
-        message: 'not checked (auth required)',
+        message: 'Not checked (auth required)',
       };
     }
     if (err instanceof MintFetchError && err.status !== undefined) {
@@ -88,17 +88,17 @@ export async function checkProofState(
         status: 'not-checked',
         state: undefined,
         severity: 'amber',
-        message: `the mint answered with an error (status ${err.status}), verify manually`,
+        message: `The mint answered with an error (status ${err.status}), verify manually`,
       };
     }
     // An invalid mint URL (a query, fragment, or non-HTTP base) is a
     // problem with the URL itself, not with the mint answering.
-    if (err instanceof MintFetchError && /mint URL/.test(err.message)) {
+    if (err instanceof MintFetchError && /Mint URL/.test(err.message)) {
       return {
         status: 'not-checked',
         state: undefined,
         severity: 'amber',
-        message: 'the mint URL is not usable, verify manually',
+        message: 'The mint URL is not usable, verify manually',
       };
     }
     // A body that stalls after the mint answered is not the same as a
@@ -109,18 +109,18 @@ export async function checkProofState(
         status: 'not-checked',
         state: undefined,
         severity: 'amber',
-        message: 'the mint answered but the response could not be read, verify manually',
+        message: 'The mint answered but the response could not be read, verify manually',
       };
     }
     if (
       err instanceof MintFetchError &&
-      (/timed out/.test(err.message) || /mint request failed/.test(err.message))
+      (/timed out/.test(err.message) || /Mint request failed/.test(err.message))
     ) {
       return {
         status: 'not-checked',
         state: undefined,
         severity: 'amber',
-        message: 'mint unreachable, verify manually',
+        message: 'Mint unreachable, verify manually',
       };
     }
     // A mint outside the one named in the token is refused before any
@@ -131,14 +131,14 @@ export async function checkProofState(
         status: 'not-checked',
         state: undefined,
         severity: 'amber',
-        message: 'the mint is not the one named in the token, verify manually',
+        message: 'The mint is not the one named in the token, verify manually',
       };
     }
     return {
       status: 'not-checked',
       state: undefined,
       severity: 'amber',
-      message: 'the mint answered but the response could not be read, verify manually',
+      message: 'The mint answered but the response could not be read, verify manually',
     };
   }
   if (!isRecord(raw) || !Array.isArray(raw.states) || raw.states.length === 0) {
@@ -146,7 +146,7 @@ export async function checkProofState(
       status: 'not-checked',
       state: undefined,
       severity: 'amber',
-      message: 'the mint answered but the response could not be read, verify manually',
+      message: 'The mint answered but the response could not be read, verify manually',
     };
   }
   // One Y was asked about, so the response must contain exactly one state
@@ -159,7 +159,7 @@ export async function checkProofState(
       status: 'not-checked',
       state: undefined,
       severity: 'amber',
-      message: 'the mint answered but the response could not be read, verify manually',
+      message: 'The mint answered but the response could not be read, verify manually',
     };
   }
   const first = raw.states[0];
@@ -168,7 +168,7 @@ export async function checkProofState(
       status: 'not-checked',
       state: undefined,
       severity: 'amber',
-      message: 'the mint answered but the response could not be read, verify manually',
+      message: 'The mint answered but the response could not be read, verify manually',
     };
   }
   const state = typeof first.state === 'string' ? first.state : '';
@@ -177,7 +177,7 @@ export async function checkProofState(
       status: 'checked',
       state: 'spent',
       severity: 'red',
-      message: 'the mint reports this proof as spent',
+      message: 'The mint reports this proof as spent',
     };
   }
   if (state === 'PENDING') {
@@ -185,7 +185,7 @@ export async function checkProofState(
       status: 'checked',
       state: 'pending',
       severity: 'amber',
-      message: 'the mint reports this proof as pending',
+      message: 'The mint reports this proof as pending',
     };
   }
   if (state === 'UNSPENT') {
@@ -193,13 +193,13 @@ export async function checkProofState(
       status: 'checked',
       state: 'unspent',
       severity: 'none',
-      message: 'the mint reports this proof as unspent',
+      message: 'The mint reports this proof as unspent',
     };
   }
   return {
     status: 'not-checked',
     state: undefined,
     severity: 'amber',
-    message: 'the mint answered but the response could not be read, verify manually',
+    message: 'The mint answered but the response could not be read, verify manually',
   };
 }

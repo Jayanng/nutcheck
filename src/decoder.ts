@@ -89,7 +89,7 @@ function requireKeysetList(keysetIds: readonly string[]): void {
     keysetIds.some((id) => typeof id !== 'string' || id.trim() === '')
   ) {
     throw new MissingKeysetListError(
-      'a non-empty keyset list is required; decoding never falls back to an empty list',
+      'A non-empty keyset list is required; decoding never falls back to an empty list',
     );
   }
 }
@@ -106,7 +106,7 @@ function requireKeysetsCoverToken(raw: RawToken, keysetIds: readonly string[]): 
     // is incomplete.
     if (classifyKeysetVersion(tokenId) === 'unknown') {
       throw new TokenParseError(
-        `keyset ${tokenId} in the token has an unknown keyset version; only V1, V2 and V3 keysets are supported`,
+        `Keyset ${tokenId} in the token has an unknown keyset version; only V1, V2 and V3 keysets are supported`,
       );
     }
     const matches = keysetIds.filter((supplied) => {
@@ -155,7 +155,7 @@ function requireKeysetsCoverToken(raw: RawToken, keysetIds: readonly string[]): 
     const uniqueMatches = [...new Set(deduped)];
     if (uniqueMatches.length === 0) {
       throw new MissingKeysetError(
-        `keyset ${tokenId} in the token is not in the supplied keyset list; the mint's full keyset list is required`,
+        `Keyset ${tokenId} in the token is not in the supplied keyset list; the mint's full keyset list is required`,
       );
     }
     // For a V2 or V3 token keyset, the library needs the full 66-char
@@ -168,7 +168,7 @@ function requireKeysetsCoverToken(raw: RawToken, keysetIds: readonly string[]): 
       const hasFull = uniqueMatches.some((m) => m.length === 66);
       if (!hasFull) {
         throw new MissingKeysetError(
-          `keyset ${tokenId} in the token needs its full keyset id in the supplied list; the mint's full keyset list is required`,
+          `Keyset ${tokenId} in the token needs its full keyset id in the supplied list; the mint's full keyset list is required`,
         );
       }
     }
@@ -177,7 +177,7 @@ function requireKeysetsCoverToken(raw: RawToken, keysetIds: readonly string[]): 
     // keyset be picked silently.
     if (classifyKeysetVersion(tokenId) !== 'v3' && uniqueMatches.length > 1) {
       throw new MissingKeysetError(
-        `keyset ${tokenId} in the token matches more than one supplied keyset; the keyset list is ambiguous`,
+        `Keyset ${tokenId} in the token matches more than one supplied keyset; the keyset list is ambiguous`,
       );
     }
   }
@@ -250,7 +250,7 @@ function decodeWithLibrary(tokenString: string, keysetIds: readonly string[]): D
     proofs: decoded.proofs.map((proof) => {
       const amount = proof.amount.toNumber();
       if (!Number.isSafeInteger(amount) || amount < 0) {
-        throw new TokenParseError('the decoded token has an amount that is not a safe integer');
+        throw new TokenParseError('The decoded token has an amount that is not a safe integer');
       }
       // A DLEQ with any member missing is incomplete, so the whole block
       // is reported as absent rather than half populated.
@@ -285,17 +285,17 @@ export async function decodeToken(
   const raw = await parseTokenRaw(tokenString);
   if (raw.mints.length > 1) {
     throw new MultiMintTokenError(
-      'token names more than one mint; multi-mint tokens are rejected',
+      'Token names more than one mint; multi-mint tokens are rejected',
     );
   }
   requireKeysetsCoverToken(raw, keysetIds);
   if (hasV3Keyset(raw)) {
     throw new V3KeysetError(
-      'token carries a V3 keyset; V3 signatures are not checked',
+      'Token carries a V3 keyset; V3 signatures are not checked',
     );
   }
   if (raw.proofs.some((proof) => proof.dleq.malformed)) {
-    throw new TokenParseError('the token carries a malformed DLEQ member');
+    throw new TokenParseError('The token carries a malformed DLEQ member');
   }
   return decodeWithLibrary(tokenString, keysetIds);
 }
@@ -303,7 +303,7 @@ export async function decodeToken(
 export function reconcileToken(raw: RawToken, decoded: DecodedToken): Finding[] {
   const findings: Finding[] = [];
   if (raw.mints.length !== 1 || raw.mints[0] !== decoded.mint) {
-    throw new TokenParseError('the decoded token names a different mint than the token holds');
+    throw new TokenParseError('The decoded token names a different mint than the token holds');
   }
   // The library defaults a missing unit to sat, while the raw parse
   // reports it as absent. Only a mismatch between two present values,
@@ -316,11 +316,11 @@ export function reconcileToken(raw: RawToken, decoded: DecodedToken): Finding[] 
     (raw.memo !== undefined && decoded.memo === undefined) ||
     (raw.memo !== undefined && decoded.memo !== undefined && raw.memo !== decoded.memo)
   ) {
-    throw new TokenParseError('the decoded token has a different unit or memo than the token holds');
+    throw new TokenParseError('The decoded token has a different unit or memo than the token holds');
   }
   if (raw.proofs.length !== decoded.proofs.length) {
     throw new TokenParseError(
-      'the decoded token has a different number of proofs than the token holds',
+      'The decoded token has a different number of proofs than the token holds',
     );
   }
   for (let index = 0; index < raw.proofs.length; index++) {
@@ -328,7 +328,7 @@ export function reconcileToken(raw: RawToken, decoded: DecodedToken): Finding[] 
     const keptProof = decoded.proofs[index];
     if (!idsMatch(rawProof.id, keptProof.id)) {
       throw new TokenParseError(
-        'the decoded proof at an index does not match the token proof at the same index',
+        'The decoded proof at an index does not match the token proof at the same index',
       );
     }
     if (
@@ -337,7 +337,7 @@ export function reconcileToken(raw: RawToken, decoded: DecodedToken): Finding[] 
       rawProof.C.toLowerCase() !== keptProof.C.toLowerCase()
     ) {
       throw new TokenParseError(
-        'the decoded proof at an index does not match the token proof at the same index',
+        'The decoded proof at an index does not match the token proof at the same index',
       );
     }
     const kept = keptProof.dleq;
@@ -359,7 +359,7 @@ export function reconcileToken(raw: RawToken, decoded: DecodedToken): Finding[] 
     }
     if (!rawProof.dleq.present && kept !== undefined) {
       throw new TokenParseError(
-        'the decoded token carries a DLEQ block that the token does not hold',
+        'The decoded token carries a DLEQ block that the token does not hold',
       );
     }
   }
@@ -403,7 +403,7 @@ function v3NotCheckedResult(raw: RawToken, keysetIds: readonly string[]): Decode
       findings.push({
         code: 'not-checked',
         message:
-          'this proof carries no DLEQ and was not checked because the token carries a V3 keyset',
+          'This proof carries no DLEQ and was not checked because the token carries a V3 keyset',
         proofIndex: index,
       });
     }
@@ -462,7 +462,7 @@ export async function decodeAndReconcile(
   const raw = await parseTokenRaw(tokenString);
   if (raw.mints.length > 1) {
     throw new MultiMintTokenError(
-      'token names more than one mint; multi-mint tokens are rejected',
+      'Token names more than one mint; multi-mint tokens are rejected',
     );
   }
   requireKeysetsCoverToken(raw, keysetIds);
@@ -492,7 +492,7 @@ export async function decodeAndReconcile(
     // The token could not be decoded. The facts still come from the token
     // itself, and the failure is reported with a distinct status so the
     // report does not present it as a decoded token.
-    const message = error instanceof Error ? error.message : 'the token could not be decoded';
+    const message = error instanceof Error ? error.message : 'The token could not be decoded';
     return {
       status: 'decode-failed',
       token: decodedFromRaw(raw, keysetIds),

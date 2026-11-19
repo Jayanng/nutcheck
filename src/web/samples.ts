@@ -151,7 +151,7 @@ export function getSampleFetchFn(sampleKey?: string) {
 
     // Offline test mint
     if (url.includes('offline-mint.example.org')) {
-      throw new Error('network down: mint unreachable');
+      throw new Error('Network down: mint unreachable');
     }
 
     // Auth required mint

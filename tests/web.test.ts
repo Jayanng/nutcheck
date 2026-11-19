@@ -116,7 +116,7 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('Hard fail');
     expect(html).toContain('Do not accept this token');
     expect(html).toContain('status fail');
-    expect(html).toContain('the mint reports this proof as spent');
+    expect(html).toContain('The mint reports this proof as spent');
     expect(scanReportCopy(html)).toEqual([]);
   });
 
@@ -132,7 +132,7 @@ describe('web report: real output across fixture states', () => {
     });
     const checkstateBefore = before.notChecked.find((c) => c.checkId === 'checkstate');
     expect(checkstateBefore).toBeDefined();
-    expect(checkstateBefore?.result).toBe('consent not given, so the mint was not asked');
+    expect(checkstateBefore?.result).toBe('Consent not given, so the mint was not asked');
 
     // Stage 2: consent on, mock returns SPENT, report is red
     const after = await diagnoseToken(sample.token, {
@@ -169,7 +169,7 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('verdict amber');
     expect(html).toContain('Hold');
     expect(html).toContain('Incomplete');
-    expect(html).toContain('a proof carries an incomplete DLEQ');
+    expect(html).toContain('A proof carries an incomplete DLEQ');
     expect(scanReportCopy(html)).toEqual([]);
   });
 
@@ -195,7 +195,7 @@ describe('web report: real output across fixture states', () => {
     });
 
     expect(html).toContain('verdict amber');
-    expect(html).toContain('the mint reports this proof as pending');
+    expect(html).toContain('The mint reports this proof as pending');
     expect(scanReportCopy(html)).toEqual([]);
   });
 
@@ -221,7 +221,7 @@ describe('web report: real output across fixture states', () => {
     });
 
     expect(html).toContain('verdict amber');
-    expect(html).toContain('the mint did not answer');
+    expect(html).toContain('The mint did not answer');
     expect(scanReportCopy(html)).toEqual([]);
   });
 
@@ -306,7 +306,7 @@ describe('web report: consent dialog and privacy guarantees', () => {
     expect(checkstateCalls).toBe(0);
     const checkstateEntry = reportNoConsent.notChecked.find((c) => c.checkId === 'checkstate');
     expect(checkstateEntry).toBeDefined();
-    expect(checkstateEntry?.result).toContain('consent not given');
+    expect(checkstateEntry?.result).toContain('Consent not given');
 
     // Run with consent
     const reportWithConsent = await diagnoseToken(SAMPLES.clean.token, {
@@ -391,19 +391,19 @@ describe('web report: static index.html and accessibility checks', () => {
     const residueCheck = report.checked.find((c) => c.checkId === 'residue');
     expect(residueCheck).toBeDefined();
     expect(residueCheck?.outcome).toBe('pass');
-    expect(residueCheck?.result).toMatch(/no collision found across \d+ V1 keysets/);
+    expect(residueCheck?.result).toMatch(/No collision found across \d+ V1 keysets/);
     expect(residueCheck?.result).toContain('excluded');
 
     // Proof state is reported under not checked when offline
     const proofStateCheck = report.notChecked.find((c) => c.checkId === 'checkstate');
     expect(proofStateCheck).toBeDefined();
-    expect(proofStateCheck?.result).toBe('not checked, consent not given');
+    expect(proofStateCheck?.result).toBe('Not checked, consent not given');
 
     // Mint facts failed
     const mintCheck = report.notChecked.find((c) => c.checkId === 'mint');
     expect(mintCheck).toBeDefined();
     expect(mintCheck?.severity).toBe('amber');
-    expect(mintCheck?.result).toBe('the mint did not answer');
+    expect(mintCheck?.result).toBe('The mint did not answer');
   });
 
   it('plain-text report export prints mint fingerprint, never raw mint URL', async () => {

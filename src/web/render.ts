@@ -157,7 +157,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   html += `</div>`;
 
   // 3. Decoded Token Facts
-  html += `<div class="decoded" role="region" aria-label="decoded token">`;
+  html += `<div class="decoded" role="region" aria-label="Decoded token">`;
   html += `<div class="label">Decoded token</div>`;
   html += `<div class="grid">`;
   html += `<div class="fact"><div class="k">Mint</div><div class="v mono">${escapeHtml(mintDisplay)}</div></div>`;
@@ -202,7 +202,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // 4. Collision diagram if collision occurred
   const collision = extractCollision(report);
   if (collision) {
-    html += `<div class="diagram" role="region" aria-label="collision diagram">`;
+    html += `<div class="diagram" role="region" aria-label="Collision diagram">`;
     html += `<div class="label">The collision, drawn out</div>`;
     html += `<div class="flow">`;
     html += `<div class="node"><div class="nk">Keyset A</div><div class="nv">${escapeHtml(collision.keysetA.slice(0, 8))}<span class="hl">${escapeHtml(collision.keysetA.slice(8))}</span></div></div>`;
@@ -222,7 +222,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     const badge = statusBadgeClass(check);
     // Mock-backed sample results are labelled simulated, not presented as live mint answers.
     // A check that never ran (consent not given) has no simulated answer to label.
-    const simulated = options.isSample && (check.checkId === 'checkstate' || check.checkId === 'mint') && !check.result.includes('consent not given') ? ' (simulated)' : '';
+    const simulated = options.isSample && (check.checkId === 'checkstate' || check.checkId === 'mint') && !check.result.includes('Consent not given') ? ' (simulated)' : '';
     html += `<div class="check" role="listitem">`;
     html += `<div class="body">`;
     html += `<h3>${escapeHtml(check.name)}<span class="val">${escapeHtml(check.result)}${simulated}</span></h3>`;
@@ -245,7 +245,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     html += `<li>No local checks could complete</li>`;
   } else {
     for (const c of report.checked) {
-      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('consent not given') ? ' (simulated)' : '';
+      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
       html += `<li>${escapeHtml(c.name)}: ${escapeHtml(c.result)}${simulated}</li>`;
     }
   }
@@ -325,7 +325,7 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
     lines.push('  (nothing)');
   } else {
     for (const c of report.checked) {
-      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('consent not given') ? ' (simulated)' : '';
+      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
       lines.push(`  - ${c.name} [${c.checkId}]: ${c.result}${simulated} - ${c.message}`);
     }
   }

@@ -228,11 +228,11 @@ describe('mintEndpointUrl', () => {
   });
 
   it('rejects a non-HTTP base', () => {
-    expect(() => mintEndpointUrl('ftp://mint.example', '/v1/info')).toThrow(/not an HTTP mint URL/);
+    expect(() => mintEndpointUrl('ftp://mint.example', '/v1/info')).toThrow(/Not an HTTP mint URL/);
   });
 
   it('rejects a base that is not a URL at all', () => {
-    expect(() => mintEndpointUrl('not a url', '/v1/info')).toThrow(/not a valid mint URL/);
+    expect(() => mintEndpointUrl('not a url', '/v1/info')).toThrow(/Not a valid mint URL/);
   });
 
   it('a checkstate call to an adversarial mint URL never reaches the network', async () => {
@@ -248,6 +248,6 @@ describe('mintEndpointUrl', () => {
       fetchFn,
     );
     expect(result.status).toBe('not-checked');
-    expect(result.message).toBe('the mint URL is not usable, verify manually');
+    expect(result.message).toBe('The mint URL is not usable, verify manually');
   });
 });

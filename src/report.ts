@@ -216,7 +216,7 @@ export async function diagnoseToken(
   try {
     raw = await parseTokenRaw(tokenString);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'the token could not be parsed';
+    const message = err instanceof Error ? err.message : 'The token could not be parsed';
     const report: NutCheckReport = {
       headline: 'Hold, here is why.',
       severity: 'amber',
@@ -227,7 +227,7 @@ export async function diagnoseToken(
         {
           name: 'Token decode',
           checkId: 'decode',
-          result: 'the token could not be parsed',
+          result: 'The token could not be parsed',
           outcome: 'error',
           severity: 'amber',
           message,
@@ -245,10 +245,10 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: 'the token names more than one mint or no mint',
+      result: 'The token names more than one mint or no mint',
       outcome: 'error',
       severity: 'amber',
-      message: 'multi-mint tokens are rejected, so no further check ran',
+      message: 'Multi-mint tokens are rejected, so no further check ran',
     });
     const { headline, severity } = headlineFor([...checked, ...notChecked]);
     return { headline, severity, mint, unit, checked, notChecked, cannotProve: [...CANNOT_PROVE] };
@@ -259,11 +259,11 @@ export async function diagnoseToken(
   try {
     facts = await getMintFacts(mint, mint, fetchFn);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'the mint facts could not be fetched';
+    const message = err instanceof Error ? err.message : 'The mint facts could not be fetched';
     notChecked.push({
       name: 'Mint facts',
       checkId: 'mint',
-      result: 'the mint did not answer',
+      result: 'The mint did not answer',
       outcome: 'error',
       severity: 'amber',
       message,
@@ -278,10 +278,10 @@ export async function diagnoseToken(
     checked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: `decoded ${raw.proofs.length} proof${raw.proofs.length === 1 ? '' : 's'}, unit ${unit ?? 'unknown'}`,
+      result: `Decoded ${raw.proofs.length} proof${raw.proofs.length === 1 ? '' : 's'}, unit ${unit ?? 'unknown'}`,
       outcome: 'pass',
       severity: 'none',
-      message: 'the token was decoded locally from its payload; mint keyset list was not available to verify keyset IDs',
+      message: 'The token was decoded locally from its payload; mint keyset list was not available to verify keyset IDs',
     });
 
     const versions = raw.keysetIds.map((id) => classifyKeysetVersion(id).toUpperCase());
@@ -320,17 +320,17 @@ export async function diagnoseToken(
           result: `COLLISION: residue ${c.residue} shared by ${collidingIds}${excludedNote}`,
           outcome: 'flag',
           severity: 'amber',
-          message: 'two different V1 keyset IDs produce the same residue',
+          message: 'Two different V1 keyset IDs produce the same residue',
         });
       }
     } else {
       checked.push({
         name: 'Residue screen',
         checkId: 'residue',
-        result: `no collision found across ${v1Count} V1 keyset${v1Count === 1 ? '' : 's'}${excludedNote}`,
+        result: `No collision found across ${v1Count} V1 keyset${v1Count === 1 ? '' : 's'}${excludedNote}`,
         outcome: 'pass',
         severity: 'none',
-        message: 'no two different V1 keyset IDs in the screened list share a residue',
+        message: 'No two different V1 keyset IDs in the screened list share a residue',
       });
     }
 
@@ -342,18 +342,18 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Proof state',
       checkId: 'checkstate',
-      result: consentGiven ? 'proof state not checked' : 'not checked, consent not given',
+      result: consentGiven ? 'Proof state not checked' : 'Not checked, consent not given',
       outcome: 'not-checked',
       severity: 'amber',
       message: consentGiven
-        ? 'proof state was not checked in this run'
-        : 'proof state is only checked when you turn on the mint check',
+        ? 'Proof state was not checked in this run'
+        : 'Proof state is only checked when you turn on the mint check',
     });
 
     notChecked.push({
       name: 'DLEQ',
       checkId: 'dleq',
-      result: 'the mint keys could not be fetched',
+      result: 'The mint keys could not be fetched',
       outcome: 'not-checked',
       severity: 'amber',
       message: 'DLEQ signatures cannot be verified without the mint keys',
@@ -362,10 +362,10 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Keyset ID derivation',
       checkId: 'derivation',
-      result: 'the derivation check could not run',
+      result: 'The derivation check could not run',
       outcome: 'error',
       severity: 'amber',
-      message: 'the mint keys could not be fetched',
+      message: 'The mint keys could not be fetched',
     });
   }
 
@@ -377,26 +377,26 @@ export async function diagnoseToken(
     checked.push({
       name: 'Mint facts',
       checkId: 'mint',
-      result: `the mint answered, ${facts.keysets.length} keysets listed`,
+      result: `The mint answered, ${facts.keysets.length} keysets listed`,
       outcome: 'pass',
       severity: 'none',
-      message: facts.findings.length > 0 ? `note: ${facts.findings.join('; ')}` : 'the mint metadata read cleanly',
+      message: facts.findings.length > 0 ? `Note: ${facts.findings.join('; ')}` : 'The mint metadata read cleanly',
     });
   } else {
     notChecked.push({
       name: 'Mint facts',
       checkId: 'mint',
-      result: 'the mint did not answer',
+      result: 'The mint did not answer',
       outcome: 'error',
       severity: 'amber',
-      message: facts.error ?? 'the mint facts could not be fetched',
+      message: facts.error ?? 'The mint facts could not be fetched',
     });
     runOfflineLocalChecks();
     const { headline, severity } = headlineFor([...checked, ...notChecked]);
     return { headline, severity, mint, unit, checked, notChecked, cannotProve: [...CANNOT_PROVE] };
   }
 
-  // Decode with the mint's keyset list. If the mint did not answer, the
+  // Decode with the mint's keyset list. If The mint did not answer, the
   // keyset list is missing, and decoding waits: the report records that
   // keyset context is missing instead of falling back to the token's own
   // short IDs, which are not the mint's full list.
@@ -405,10 +405,10 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: 'the mint did not supply a keyset list, so the token was not decoded',
+      result: 'The mint did not supply a keyset list, so the token was not decoded',
       outcome: 'not-checked',
       severity: 'amber',
-      message: 'decoding needs the mint\'s full keyset list; the token names keysets but the mint did not answer',
+      message: 'decoding needs the mint\'s full keyset list; the token names keysets but The mint did not answer',
     });
     const { headline, severity } = headlineFor([...checked, ...notChecked]);
     return { headline, severity, mint, unit, checked, notChecked, cannotProve: [...CANNOT_PROVE] };
@@ -417,11 +417,11 @@ export async function diagnoseToken(
   try {
     decode = await decodeAndReconcile(tokenString, keysetIds);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'the token could not be decoded';
+    const message = err instanceof Error ? err.message : 'The token could not be decoded';
     notChecked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: 'the token could not be decoded',
+      result: 'The token could not be decoded',
       outcome: 'error',
       severity: 'amber',
       message,
@@ -435,10 +435,10 @@ export async function diagnoseToken(
     checked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: `decoded ${token.proofs.length} proof${token.proofs.length === 1 ? '' : 's'}${token.unit ? `, unit ${token.unit}` : ''}`,
+      result: `Decoded ${token.proofs.length} proof${token.proofs.length === 1 ? '' : 's'}${token.unit ? `, unit ${token.unit}` : ''}`,
       outcome: 'pass',
       severity: 'none',
-      message: decode.findings.length > 0 ? decode.findings.map((f) => f.message).join('; ') : 'the token parsed cleanly',
+      message: decode.findings.length > 0 ? decode.findings.map((f) => f.message).join('; ') : 'The token parsed cleanly',
     });
     // Findings from reconciliation (incomplete DLEQ, V3) go to Not checked
     // when they mean a check could not run.
@@ -447,7 +447,7 @@ export async function diagnoseToken(
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
-          result: 'a proof carries an incomplete DLEQ',
+          result: 'A proof carries an incomplete DLEQ',
           outcome: 'not-checked',
           severity: 'amber',
           message: finding.message,
@@ -462,7 +462,7 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: 'the token carries a V3 keyset',
+      result: 'The token carries a V3 keyset',
       outcome: 'not-checked',
       severity: 'amber',
       message: 'V3 signatures are not checked; the proof facts are shown but the signatures are not verified',
@@ -476,7 +476,7 @@ export async function diagnoseToken(
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
-          result: 'a proof carries an incomplete DLEQ',
+          result: 'A proof carries an incomplete DLEQ',
           outcome: 'not-checked',
           severity: 'amber',
           message: finding.message,
@@ -487,7 +487,7 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Token decode',
       checkId: 'decode',
-      result: 'the token could not be decoded',
+      result: 'The token could not be decoded',
       outcome: 'error',
       severity: 'amber',
       message: decode.findings.map((f) => f.message).join('; '),
@@ -549,7 +549,7 @@ export async function diagnoseToken(
     checked.push({
       name: 'Residue screen',
       checkId: 'residue',
-      result: `no two different V1 keyset IDs in the supplied lists share a residue${residue.excluded.length > 0 ? `; ${residue.excluded.length} keyset${residue.excluded.length === 1 ? '' : 's'} excluded: V2 keysets are excluded because the NUT-13 residue collision applies to the legacy BIP32 derivation (V1), while V2 secret derivation uses HMAC-SHA256 over the full 33-byte keyset ID, so the 31-bit residue reduction does not apply, and V3 keysets use BLS12-381` : ''}`,
+      result: `No two different V1 keyset IDs in the supplied lists share a residue${residue.excluded.length > 0 ? `; ${residue.excluded.length} keyset${residue.excluded.length === 1 ? '' : 's'} excluded: V2 keysets are excluded because the NUT-13 residue collision applies to the legacy BIP32 derivation (V1), while V2 secret derivation uses HMAC-SHA256 over the full 33-byte keyset ID, so the 31-bit residue reduction does not apply, and V3 keysets use BLS12-381` : ''}`,
       outcome: 'pass',
       severity: 'none',
       message: RESIDUE_COVERAGE,
@@ -558,12 +558,12 @@ export async function diagnoseToken(
     for (const collision of residue.collisions) {
       const ids = collision.keysets.map((k) => `${k.id} (${k.source})`).join(', ');
       const rel = collision.relationships.includes('token-known')
-        ? 'a token keyset collides with a known keyset'
+        ? 'A token keyset collides with a known keyset'
         : collision.relationships.includes('token-mint')
-          ? 'a token keyset collides with a mint keyset'
+          ? 'A token keyset collides with a mint keyset'
           : collision.relationships.includes('mint-known')
-            ? 'a mint keyset collides with a known keyset'
-            : 'two keysets from the same source collide';
+            ? 'A mint keyset collides with a known keyset'
+            : 'Two keysets from the same source collide';
       const excludedNote =
         residue.excluded.length > 0
           ? ` ${residue.excluded.length} keyset${residue.excluded.length === 1 ? '' : 's'} excluded from this screen: V2 keysets are excluded because the NUT-13 residue collision applies to the legacy BIP32 derivation (V1), while V2 secret derivation uses HMAC-SHA256 over the full 33-byte keyset ID, so the 31-bit residue reduction does not apply, and V3 keysets use BLS12-381.`
@@ -588,10 +588,10 @@ export async function diagnoseToken(
     notChecked.push({
       name: 'Keyset ID derivation',
       checkId: 'derivation',
-      result: 'the derivation check could not run',
+      result: 'The derivation check could not run',
       outcome: 'error',
       severity: 'amber',
-      message: err instanceof Error ? err.message : 'the derivation check failed',
+      message: err instanceof Error ? err.message : 'The derivation check failed',
     });
   }
   for (const check of derivation) {
@@ -599,16 +599,16 @@ export async function diagnoseToken(
       checked.push({
         name: 'Keyset ID derivation',
         checkId: 'derivation',
-        result: `keyset ${check.advertisedId} recomputes to ${check.derivedId}`,
+        result: `Keyset ${check.advertisedId} recomputes to ${check.derivedId}`,
         outcome: 'pass',
         severity: 'none',
-        message: 'the advertised ID matches the keys',
+        message: 'The advertised ID matches the keys',
       });
     } else if (check.result === 'mismatch') {
       checked.push({
         name: 'Keyset ID derivation',
         checkId: 'derivation',
-        result: `keyset ${check.advertisedId} does not match the recomputed ID ${check.derivedId ?? 'unknown'}`,
+        result: `Keyset ${check.advertisedId} does not match the recomputed ID ${check.derivedId ?? 'unknown'}`,
         outcome: 'flag',
         severity: 'amber',
         message: check.detail,
@@ -622,7 +622,7 @@ export async function diagnoseToken(
       notChecked.push({
         name: 'Keyset ID derivation',
         checkId: 'derivation',
-        result: `keyset ${check.advertisedId} could not be checked`,
+        result: `Keyset ${check.advertisedId} could not be checked`,
         outcome: 'not-checked',
         severity: isV3 ? 'none' : 'amber',
         message: check.detail,
@@ -685,16 +685,16 @@ export async function diagnoseToken(
         checked.push({
           name: 'DLEQ',
           checkId: 'dleq',
-          result: `proof ${i}: DLEQ valid`,
+          result: `Proof ${i}: DLEQ valid`,
           outcome: 'pass',
           severity: 'none',
-          message: 'key consistency only, never evidence of honesty',
+          message: 'Key consistency only, never evidence of honesty',
         });
       } else if (check.outcome === 'invalid') {
         checked.push({
           name: 'DLEQ',
           checkId: 'dleq',
-          result: `proof ${i}: DLEQ invalid`,
+          result: `Proof ${i}: DLEQ invalid`,
           outcome: 'flag',
           severity: 'red',
           message: check.message,
@@ -713,7 +713,7 @@ export async function diagnoseToken(
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
-          result: `proof ${i}: DLEQ ${check.outcome}`,
+          result: `Proof ${i}: DLEQ ${check.outcome}`,
           outcome: 'not-checked',
           severity: benign ? 'none' : 'amber',
           message: check.message,
@@ -732,7 +732,7 @@ export async function diagnoseToken(
       notChecked.push({
         name: 'Checkstate',
         checkId: 'checkstate',
-        result: 'consent not given, so the mint was not asked',
+        result: 'Consent not given, so the mint was not asked',
         outcome: 'not-checked',
         severity: 'none',
         message: CHECKSTATE_PRIVACY_COPY,
@@ -747,10 +747,10 @@ export async function diagnoseToken(
           notChecked.push({
             name: 'Checkstate',
             checkId: 'checkstate',
-            result: `proof ${i}: the checkstate call failed`,
+            result: `Proof ${i}: The checkstate call failed`,
             outcome: 'error',
             severity: 'amber',
-            message: err instanceof Error ? err.message : 'the checkstate call failed',
+            message: err instanceof Error ? err.message : 'The checkstate call failed',
           });
           continue;
         }
@@ -758,7 +758,7 @@ export async function diagnoseToken(
           checked.push({
             name: 'Checkstate',
             checkId: 'checkstate',
-            result: `proof ${i}: the mint reports this proof as spent`,
+            result: `Proof ${i}: The mint reports this proof as spent`,
             outcome: 'flag',
             severity: 'red',
             message: state.message,
@@ -767,7 +767,7 @@ export async function diagnoseToken(
           checked.push({
             name: 'Checkstate',
             checkId: 'checkstate',
-            result: `proof ${i}: the mint reports this proof as pending`,
+            result: `Proof ${i}: The mint reports this proof as pending`,
             outcome: 'flag',
             severity: 'amber',
             message: state.message,
@@ -776,7 +776,7 @@ export async function diagnoseToken(
           checked.push({
             name: 'Checkstate',
             checkId: 'checkstate',
-            result: `proof ${i}: the mint reports this proof as unspent`,
+            result: `Proof ${i}: The mint reports this proof as unspent`,
             outcome: 'pass',
             severity: 'none',
             message: state.message,
@@ -785,7 +785,7 @@ export async function diagnoseToken(
           notChecked.push({
             name: 'Checkstate',
             checkId: 'checkstate',
-            result: `proof ${i}: not checked`,
+            result: `Proof ${i}: not checked`,
             outcome: 'not-checked',
             severity: 'amber',
             message: state.message,
@@ -802,10 +802,10 @@ export async function diagnoseToken(
     checked.push({
       name: 'Keyset age',
       checkId: 'mint',
-      result: `keyset age shown for ${ages} of ${facts.keysets.length} keysets; the rest are unknown, trust signal only`,
+      result: `Keyset age shown for ${ages} of ${facts.keysets.length} keysets; the rest are unknown, trust signal only`,
       outcome: 'pass',
       severity: 'none',
-      message: 'the keysets response carries no creation timestamp, so age is a trust signal only when a first-seen time is known',
+      message: 'The keysets response carries no creation timestamp, so age is a trust signal only when a first-seen time is known',
     });
   }
 

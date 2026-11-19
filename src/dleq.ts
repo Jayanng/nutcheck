@@ -1,9 +1,9 @@
 // DLEQ verification. Verifies (e, s) for every proof that carries
 // DLEQ, against the keyset pubkey, using the library's hasValidDleq. The
 // NUT-12 test vectors are the source of truth. Outcomes:
-// - Absent DLEQ: "no DLEQ present, signatures cannot be verified offline".
+// - Absent DLEQ: "No DLEQ present, signatures cannot be verified offline".
 //   Never RED.
-// - Invalid DLEQ: RED, "signatures do not match the advertised key".
+// - Invalid DLEQ: RED, "Signatures do not match the advertised key".
 // - Valid DLEQ: reported as key consistency only, never as evidence of
 //   honesty. DLEQ proves the mint used the same key for the public key
 //   and the signature; a mint that owns its key passes DLEQ.
@@ -55,7 +55,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'absent',
       severity: 'none',
-      message: 'no DLEQ present, signatures cannot be verified offline',
+      message: 'No DLEQ present, signatures cannot be verified offline',
     };
   }
   // A DLEQ block that is present but missing e or s is incomplete, not
@@ -86,7 +86,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'not-checked',
       severity: 'none',
-      message: 'the keyset for this proof was not supplied, so DLEQ was not verified',
+      message: 'The keyset for this proof was not supplied, so DLEQ was not verified',
     };
   }
   // The keyset must belong to this proof. The library does not check
@@ -99,7 +99,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'not-checked',
       severity: 'none',
-      message: 'the supplied keyset does not belong to this proof, so DLEQ was not verified',
+      message: 'The supplied keyset does not belong to this proof, so DLEQ was not verified',
     };
   }
   // DLEQ verification needs the mint public key for the proof's amount.
@@ -114,7 +114,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'not-checked',
       severity: 'none',
-      message: `the keyset has no public key for amount ${proof.amount}, so DLEQ was not verified`,
+      message: `The keyset has no public key for amount ${proof.amount}, so DLEQ was not verified`,
     };
   }
   try {
@@ -124,7 +124,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'not-checked',
       severity: 'none',
-      message: `the keyset public key for amount ${proof.amount} is not a usable point, so DLEQ was not verified`,
+      message: `The keyset public key for amount ${proof.amount} is not a usable point, so DLEQ was not verified`,
     };
   }
   // The proof's own C must be a usable curve point too. A malformed C
@@ -139,7 +139,7 @@ export function verifyProofDleq(
       proofIndex,
       outcome: 'not-checked',
       severity: 'none',
-      message: 'the proof C is not a usable point, so DLEQ was not verified',
+      message: 'The proof C is not a usable point, so DLEQ was not verified',
     };
   }
   let valid: boolean;

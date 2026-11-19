@@ -36,13 +36,13 @@ export function mintEndpointUrl(base: string, path: string): string {
   try {
     parsed = new URL(base);
   } catch {
-    throw new MintFetchError('not a valid mint URL');
+    throw new MintFetchError('Not a valid mint URL');
   }
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    throw new MintFetchError('not an HTTP mint URL');
+    throw new MintFetchError('Not an HTTP mint URL');
   }
   if (parsed.search !== '' || parsed.hash !== '') {
-    throw new MintFetchError('mint URL must not carry a query or fragment');
+    throw new MintFetchError('Mint URL must not carry a query or fragment');
   }
   const basePath = parsed.pathname.replace(/\/+$/, '');
   parsed.pathname = `${basePath}${path}`;
@@ -93,7 +93,7 @@ async function readCappedBody(response: Response, signal: AbortSignal): Promise<
     // checked after buffering would defeat the cap's purpose, which is
     // to stop a runaway body early. Real fetch responses always carry a
     // body stream, so this only fires for a malformed response.
-    throw new MintFetchError('mint response has no readable body stream');
+    throw new MintFetchError('Mint response has no readable body stream');
   }
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -111,7 +111,7 @@ async function readCappedBody(response: Response, signal: AbortSignal): Promise<
   signal.addEventListener('abort', onAbort, { once: true });
   if (signal.aborted) {
     signal.removeEventListener('abort', onAbort);
-    throw new MintFetchError('mint request timed out while reading the response body');
+    throw new MintFetchError('Mint request timed out while reading the response body');
   }
   try {
     for (;;) {
@@ -126,21 +126,21 @@ async function readCappedBody(response: Response, signal: AbortSignal): Promise<
         // limit. The size error is thrown at once.
         reader.cancel().catch(() => {});
         throw new MintFetchError(
-          `mint response exceeds the ${RESPONSE_SIZE_CAP} byte cap`,
+          `Mint response exceeds the ${RESPONSE_SIZE_CAP} byte cap`,
         );
       }
       chunks.push(value);
     }
   } catch (err) {
     if (signal.aborted) {
-      throw new MintFetchError('mint request timed out while reading the response body');
+      throw new MintFetchError('Mint request timed out while reading the response body');
     }
     throw err;
   } finally {
     signal.removeEventListener('abort', onAbort);
   }
   if (abortedDuringRead) {
-    throw new MintFetchError('mint request timed out while reading the response body');
+    throw new MintFetchError('Mint request timed out while reading the response body');
   }
   const merged = new Uint8Array(total);
   let offset = 0;
@@ -178,7 +178,7 @@ export async function fetchMintJson(
     }
   };
   if (!isHttpUrl(url)) {
-    throw new MintFetchError('refusing to contact a non-HTTP mint URL');
+    throw new MintFetchError('Refusing to contact a non-HTTP mint URL');
   }
   // The mint boundary: only the one allowed mint base is contacted. A
   // URL outside it is refused before any request is sent, so an unlisted
@@ -190,20 +190,20 @@ export async function fetchMintJson(
   try {
     base = new URL(allowedMintBase).href.replace(/\/+$/, '');
   } catch {
-    throw new MintFetchError('not a valid mint base URL');
+    throw new MintFetchError('Not a valid mint base URL');
   }
   if (!isHttpUrl(base)) {
-    throw new MintFetchError('not a valid mint base URL');
+    throw new MintFetchError('Not a valid mint base URL');
   }
   let target: string;
   try {
     target = new URL(url).href;
   } catch {
-    throw new MintFetchError('not a valid mint URL');
+    throw new MintFetchError('Not a valid mint URL');
   }
   if (target !== base && !target.startsWith(base + '/')) {
     throw new MintFetchError(
-      `refusing to contact a mint outside the allowed mint: ${pathOf(url)}`,
+      `Refusing to contact a mint outside the allowed mint: ${pathOf(url)}`,
     );
   }
   let response: Response;
@@ -230,24 +230,24 @@ export async function fetchMintJson(
       throw error;
     }
     if (error instanceof Error && error.name === 'TimeoutError') {
-      throw new MintFetchError(`mint request timed out after ${FETCH_TIMEOUT_MS} ms: ${pathOf(url)}`);
+      throw new MintFetchError(`Mint request timed out after ${FETCH_TIMEOUT_MS} ms: ${pathOf(url)}`);
     }
     // The wrapped message is fixed and path-only: the thrown error's
     // message is never interpolated, because it can carry untrusted
     // text (a fetch failure naming the mint, for example) into the
     // report copy.
-    throw new MintFetchError(`mint request failed: ${pathOf(url)}`);
+    throw new MintFetchError(`Mint request failed: ${pathOf(url)}`);
   }
   // A redirect is the mint pointing somewhere else. Do not follow it.
   // In a browser, redirect: 'manual' gives an opaqueredirect response
   // with status 0, not a 3xx code, so check the type too.
   if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
-    throw new MintFetchError(`mint redirected; redirects are not followed: ${pathOf(url)}`);
+    throw new MintFetchError(`Mint redirected; redirects are not followed: ${pathOf(url)}`);
   }
   const path = pathOf(url);
   if (response.status === 401 || response.status === 403) {
     throw new MintFetchError(
-      `mint refused the request (status ${response.status}): ${path}`,
+      `Mint refused the request (status ${response.status}): ${path}`,
       response.status,
     );
   }

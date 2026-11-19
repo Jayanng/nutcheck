@@ -55,7 +55,7 @@ describe('checkstate', () => {
     expect(result.status).toBe('checked');
     expect(result.state).toBe('unspent');
     expect(result.severity).toBe('none');
-    expect(result.message).toBe('the mint reports this proof as unspent');
+    expect(result.message).toBe('The mint reports this proof as unspent');
     expect(fetchFn).toHaveBeenCalledOnce();
   });
 
@@ -71,7 +71,7 @@ describe('checkstate', () => {
     expect(result.status).toBe('checked');
     expect(result.state).toBe('spent');
     expect(result.severity).toBe('red');
-    expect(result.message).toBe('the mint reports this proof as spent');
+    expect(result.message).toBe('The mint reports this proof as spent');
     expect(fetchFn).toHaveBeenCalledOnce();
   });
 
@@ -80,7 +80,7 @@ describe('checkstate', () => {
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.state).toBe('spent');
     expect(result.severity).toBe('red');
-    expect(result.message).toBe('the mint reports this proof as spent');
+    expect(result.message).toBe('The mint reports this proof as spent');
   });
 
   it('pending maps to AMBER, the mint reports the proof as pending', async () => {
@@ -88,7 +88,7 @@ describe('checkstate', () => {
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.state).toBe('pending');
     expect(result.severity).toBe('amber');
-    expect(result.message).toBe('the mint reports this proof as pending');
+    expect(result.message).toBe('The mint reports this proof as pending');
   });
 
   it('an HTTP error from a reachable mint is not called unreachable', async () => {
@@ -98,11 +98,11 @@ describe('checkstate', () => {
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.severity).toBe('amber');
-    expect(result.message).toBe('the mint answered with an error (status 500), verify manually');
+    expect(result.message).toBe('The mint answered with an error (status 500), verify manually');
   });
 
   it(
-    'a timeout maps to AMBER, mint unreachable, verify manually',
+    'a timeout maps to AMBER, Mint unreachable, verify manually',
     async () => {
       // An abort-aware stub: the fetch rejects with a TimeoutError when the
       // signal fires, the same way a real timed-out fetch behaves. This
@@ -119,34 +119,34 @@ describe('checkstate', () => {
       const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
       expect(result.status).toBe('not-checked');
       expect(result.severity).toBe('amber');
-      expect(result.message).toBe('mint unreachable, verify manually');
+      expect(result.message).toBe('Mint unreachable, verify manually');
     },
     10000,
   );
 
   it('a body that stalls after the mint answered is not called unreachable', async () => {
     const fetchFn = vi.fn(async (): Promise<Response> => {
-      throw new MintFetchError('mint request timed out while reading the response body');
+      throw new MintFetchError('Mint request timed out while reading the response body');
     });
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.severity).toBe('amber');
-    expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
+    expect(result.message).toBe('The mint answered but the response could not be read, verify manually');
   });
 
-  it('401 maps to not checked (auth required)', async () => {
+  it('401 maps to Not checked (auth required)', async () => {
     const fetchFn = stubFetchFor(null, 401);
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
-    expect(result.message).toBe('not checked (auth required)');
+    expect(result.message).toBe('Not checked (auth required)');
     expect(result.severity).toBe('none');
   });
 
-  it('403 maps to not checked (auth required)', async () => {
+  it('403 maps to Not checked (auth required)', async () => {
     const fetchFn = stubFetchFor(null, 403);
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
-    expect(result.message).toBe('not checked (auth required)');
+    expect(result.message).toBe('Not checked (auth required)');
     expect(result.severity).toBe('none');
   });
 
@@ -157,7 +157,7 @@ describe('checkstate', () => {
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.state).toBeUndefined();
-    expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
+    expect(result.message).toBe('The mint answered but the response could not be read, verify manually');
   });
 
   it('two entries for the same Y are not checked, whichever comes first', async () => {
@@ -183,7 +183,7 @@ describe('checkstate', () => {
       const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
       expect(result.status).toBe('not-checked');
       expect(result.state).toBeUndefined();
-      expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
+      expect(result.message).toBe('The mint answered but the response could not be read, verify manually');
     }
   });
 
@@ -198,7 +198,7 @@ describe('checkstate', () => {
     const result = await checkProofState('https://testnut.cashu.space', 'https://testnut.cashu.space', secret, true, fetchFn);
     expect(result.status).toBe('not-checked');
     expect(result.state).toBeUndefined();
-    expect(result.message).toBe('the mint answered but the response could not be read, verify manually');
+    expect(result.message).toBe('The mint answered but the response could not be read, verify manually');
   });
 
   it('the privacy copy warns about disclosure, correlation, and the mint word', () => {

@@ -138,7 +138,7 @@ describe('keyset-ID derivation', () => {
     const checks = await checkKeysetDerivation('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
     expect(checks).toHaveLength(1);
     expect(checks[0].result).toBe('unknown');
-    expect(checks[0].detail).toContain('no unit was supplied');
+    expect(checks[0].detail).toContain('No unit was supplied');
   });
 
   it('conflicting units in the two responses are unknown, never a guess', async () => {

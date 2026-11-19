@@ -77,7 +77,7 @@ describe('getMintFacts', () => {
       '/v1/keysets': keysetsFixture,
     });
     const facts = await getMintFacts('https://testnut.cashu.space', 'https://testnut.cashu.space', fetchFn);
-    expect(facts.keysets[0].age).toContain('unknown');
+    expect(facts.keysets[0].age).toContain('Unknown');
     expect(facts.keysets[0].age).toContain('trust signal only');
   });
 
@@ -177,8 +177,8 @@ describe('getMintFacts', () => {
     expect(facts.status).toBe('ok');
     expect(facts.version).toBeUndefined();
     expect(facts.nuts).toEqual({});
-    expect(facts.findings).toContain('the mint advertises a malformed version');
-    expect(facts.findings).toContain('the mint advertises malformed nuts metadata');
+    expect(facts.findings).toContain('The mint advertises a malformed version');
+    expect(facts.findings).toContain('The mint advertises malformed nuts metadata');
   });
 
   it('an absent fee or expiry produces no finding, unlike a malformed one', async () => {
