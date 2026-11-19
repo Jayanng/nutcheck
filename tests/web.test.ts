@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { diagnoseToken, scanReportCopy, BANNED_WORDS, CANNOT_PROVE, mintFingerprint, type NutCheckReport } from '../src/report.js';
 import { parseTokenRaw } from '../src/rawParser.js';
+import { classifyKeysetVersion } from '../src/keysetVersion.js';
 import { SAMPLES, getSampleFetchFn } from '../src/web/samples.js';
 import { renderReportHtml, reportToPlainText } from '../src/web/render.js';
 
@@ -607,5 +608,79 @@ describe('web report: static index.html and accessibility checks', () => {
     for (const sample of Object.values(SAMPLES)) {
       expect(sample.consent).toBe(false);
     }
+  });
+});
+
+describe('web checker: three-step flow, token summary, case ledger', () => {
+  const appHtml = readFileSync(path.join(root, 'app.html'), 'utf8');
+
+  it('app.html carries the three checker steps in order', () => {
+    expect(appHtml).toContain('Paste the token');
+    expect(appHtml).toContain('Trusted keysets');
+    expect(appHtml).toContain('Optional');
+    expect(appHtml).toContain('id="check-btn"');
+    const tokenAt = appHtml.indexOf('Paste the token');
+    const keysAt = appHtml.indexOf('Trusted keysets');
+    const checkAt = appHtml.indexOf('id="check-btn"');
+    expect(tokenAt).toBeLessThan(keysAt);
+    expect(keysAt).toBeLessThan(checkAt);
+  });
+
+  it('app.html has the paste zone and the token summary card', () => {
+    expect(appHtml).toContain('id="paste-zone"');
+    expect(appHtml).toContain('id="paste-btn"');
+    expect(appHtml).toContain('Paste from clipboard');
+    expect(appHtml).toContain('id="token-summary"');
+    expect(appHtml).toContain('id="ts-format"');
+    expect(appHtml).toContain('id="ts-amount"');
+    expect(appHtml).toContain('id="ts-mint"');
+    expect(appHtml).toContain('id="ts-keys"');
+    expect(appHtml).toContain('id="ts-change"');
+    expect(appHtml).toContain('id="ts-clear"');
+  });
+
+  it('app.html has the case ledger with all 8 cases and their real outcomes', () => {
+    expect(appHtml).toContain('No token handy? Run a case');
+    expect(appHtml).toContain('class="cases"');
+    for (const key of ['clean', 'evil', 'spent', 'partial', 'pending', 'unreachable', 'auth', 'v3']) {
+      expect(appHtml).toContain(`data-which="${key}"`);
+    }
+    expect(appHtml).toContain('21 sat · 2 proofs');
+    expect(appHtml).toContain('residue 1138537334');
+    expect(appHtml).toContain('proof spent');
+    expect(appHtml).toContain('DLEQ incomplete');
+    expect(appHtml).toContain('BLS12-381');
+    expect(appHtml).not.toContain('class="samples"');
+    expect(appHtml).not.toContain('Try a sample:');
+  });
+
+  it('app.html has the mint check as a switch with the privacy note', () => {
+    expect(appHtml).toContain('Ask the mint for proof state');
+    expect(appHtml).toContain('class="switch"');
+    expect(appHtml).toContain('id="consent"');
+    expect(appHtml).toContain('Why this matters');
+  });
+
+  it('token summary facts match the real clean token', async () => {
+    const raw = await parseTokenRaw(SAMPLES.clean.token);
+    expect(raw.format).toBe('cashuB');
+    const total = raw.proofs.reduce((sum, p) => sum + p.amount, 0);
+    expect(total).toBe(21);
+    expect(raw.proofs.length).toBe(2);
+    expect(raw.mints[0]).toBe('https://testnut.cashu.space');
+    expect(raw.keysetIds).toContain('00e1577700e127f1');
+    expect(raw.keysetIds).toContain('016120b31266f218');
+    expect(classifyKeysetVersion('00e1577700e127f1')).toBe('v1');
+    expect(classifyKeysetVersion('016120b31266f218')).toBe('v2');
+  });
+
+  it('token summary facts match the real evil token', async () => {
+    const raw = await parseTokenRaw(SAMPLES.evil.token);
+    expect(raw.format).toBe('cashuB');
+    const total = raw.proofs.reduce((sum, p) => sum + p.amount, 0);
+    expect(total).toBe(1);
+    expect(raw.proofs.length).toBe(1);
+    expect(raw.keysetIds).toContain('00102821c3bc6333');
+    expect(classifyKeysetVersion('00102821c3bc6333')).toBe('v1');
   });
 });
