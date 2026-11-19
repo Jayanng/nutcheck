@@ -62,15 +62,24 @@ function extractCollision(report: NutCheckReport): CollisionInfo | null {
   const residueCheck = report.checked.find((c) => c.checkId === 'residue' && c.severity === 'amber');
   if (!residueCheck) return null;
 
-  const match = residueCheck.result.match(/residue (\d+) shared by ([0-9a-fA-F]+).*?, ([0-9a-fA-F]+)/i);
-  if (match) {
-    return {
-      residue: match[1],
-      keysetA: match[2],
-      keysetB: match[3],
-    };
-  }
-  return null;
+  const residueMatch = residueCheck.result.match(/residue (\d+) shared by/i);
+  if (!residueMatch) return null;
+
+  // The two sides of the collision are the first and last distinct keyset
+  // IDs after "shared by". The mint lists the same keyset the token uses,
+  // so the token and mint entries are the same ID; the distinct pair is
+  // the token keyset and the known keyset it collides with. Showing the
+  // token and mint entries would draw two identical IDs colliding, which
+  // is not what happened.
+  const afterShared = residueCheck.result.split(/shared by/i)[1] || '';
+  const ids = afterShared.match(/[0-9a-fA-F]{16,}/g) || [];
+  const distinct = [...new Set(ids)];
+  if (distinct.length < 2) return null;
+  return {
+    residue: residueMatch[1],
+    keysetA: distinct[0],
+    keysetB: distinct[distinct.length - 1],
+  };
 }
 
 // The report's checks become a verification pipeline: each step is one

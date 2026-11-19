@@ -313,12 +313,12 @@ textarea::placeholder { color: var(--muted); }
 .rail-dot.grey { background: var(--muted); }
 .rail-dot.red { background: var(--red); }
 .step-name { font-size: 15px; font-weight: 600; flex: none; margin-top: 1px; }
-.step-val { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--blue); flex: 1; min-width: 0; word-break: break-all; line-height: 1.6; margin-top: 2px; }
+.step-val { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--blue); flex: 1; min-width: 0; overflow-wrap: break-word; line-height: 1.6; margin-top: 2px; }
 .chev { flex: none; color: var(--muted); font-size: 19px; line-height: 1; margin-top: 1px; transition: transform 0.2s ease; }
 .step[open] .chev { transform: rotate(90deg); }
 .step-body { padding: 2px 0 16px 24px; }
 .step-body .msg { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
-.step-body .full { font-family: var(--mono); font-size: 13px; color: var(--blue); margin: 0 0 8px; word-break: break-all; line-height: 1.6; }
+.step-body .full { font-family: var(--mono); font-size: 13px; color: var(--blue); margin: 0 0 8px; overflow-wrap: break-word; line-height: 1.6; }
 .substep { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
 .substep:last-child { margin-bottom: 0; }
 .substep .mini { width: 7px; height: 7px; border-radius: 50%; flex: none; margin-top: 6px; }
@@ -326,7 +326,7 @@ textarea::placeholder { color: var(--muted); }
 .substep .mini.amber { background: var(--amber); }
 .substep .mini.grey { background: var(--muted); }
 .substep .mini.red { background: var(--red); }
-.substep .r { font-family: var(--mono); font-size: 13px; color: var(--ink-2); word-break: break-all; line-height: 1.6; }
+.substep .r { font-family: var(--mono); font-size: 13px; color: var(--ink-2); overflow-wrap: break-word; line-height: 1.6; }
 .status { flex: none; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 8px; margin-top: 1px; white-space: nowrap; }
 .status.pass { color: var(--green); background: rgba(21, 128, 61, 0.10); }
 .status.fail { color: var(--red); background: rgba(220, 38, 38, 0.10); }

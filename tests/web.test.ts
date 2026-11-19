@@ -355,6 +355,12 @@ describe('web report: real output across fixture states', () => {
     const residuePos = html.indexOf('Residue screen');
     expect(diagramPos).toBeGreaterThan(residuePos);
     expect(html).toContain('Two keysets, one residue. That is the attack.');
+    // The diagram shows the two distinct keysets that share the residue:
+    // the token keyset and the known keyset, not the token keyset twice
+    // (the mint lists the same keyset the token uses, so that entry is
+    // the same ID and is not a side of the collision).
+    expect(html).toContain('Keyset A</div><div class="nv">00102821<span class="hl">c3bc6333</span>');
+    expect(html).toContain('Keyset B</div><div class="nv">00206785<span class="hl">c39be46b</span>');
     // Verdict counts show the one step that needs attention
     expect(html).toContain('Needs attention');
     expect(scanReportCopy(html)).toEqual([]);
