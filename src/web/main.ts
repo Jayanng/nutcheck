@@ -3,7 +3,6 @@
 import './shims.js';
 import { diagnoseToken, type NutCheckReport } from '../report.js';
 import { parseTokenRaw, type RawToken } from '../rawParser.js';
-import { classifyKeysetVersion } from '../keysetVersion.js';
 import { SAMPLES, getSampleFetchFn, type SampleToken } from './samples.js';
 import { renderReportHtml, reportToPlainText } from './render.js';
 
@@ -39,22 +38,25 @@ function showMessage(text: string): void {
   }
 }
 
-// The token summary card. When the pasted token parses, the paste zone
-// hides and this card shows what the token actually is: format, amount,
-// mint, and keysets with their versions. When the field is empty or the
-// token does not parse, the paste zone stays visible instead.
-async function updateTokenSummary(): Promise<void> {
+// The token facts line. When the pasted token parses, this line shows
+// what the token actually is: format, amount, mint, and keyset count.
+// The token itself stays visible in the textarea, never hidden behind
+// a summary card. When the field is empty, the line shows a hint. When
+// the token does not parse, it says so plainly.
+async function updateTokenFacts(): Promise<void> {
   const tokenBox = document.getElementById('token') as HTMLTextAreaElement | null;
-  const pasteZone = document.getElementById('paste-zone');
-  const summary = document.getElementById('token-summary');
-  const step1Num = document.getElementById('step1-num');
-  if (!tokenBox || !pasteZone || !summary) return;
+  const facts = document.getElementById('token-facts');
+  if (!tokenBox || !facts) return;
 
   const raw = tokenBox.value.trim();
+  updateCheckButton();
+
   if (!raw) {
-    pasteZone.hidden = false;
-    summary.hidden = true;
-    if (step1Num) step1Num.classList.remove('done');
+    facts.innerHTML = '';
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = 'Decoded on your device. Nothing leaves it until you check.';
+    facts.appendChild(hint);
     return;
   }
 
@@ -68,46 +70,38 @@ async function updateTokenSummary(): Promise<void> {
   // Only apply the result if the token has not changed while parsing.
   if (tokenBox.value.trim() !== raw) return;
 
+  facts.innerHTML = '';
   if (!parsed) {
-    pasteZone.hidden = false;
-    summary.hidden = true;
-    if (step1Num) step1Num.classList.remove('done');
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = 'Not a Cashu token yet. It starts with cashuB or cashuA.';
+    facts.appendChild(hint);
     return;
   }
 
-  const formatEl = document.getElementById('ts-format');
-  const amountEl = document.getElementById('ts-amount');
-  const mintEl = document.getElementById('ts-mint');
-  const keysEl = document.getElementById('ts-keys');
+  const fmt = document.createElement('span');
+  fmt.className = 'fmt';
+  fmt.textContent = parsed.format === 'cashuA' ? 'cashuA, v3' : 'cashuB, v4';
+  facts.appendChild(fmt);
 
-  if (formatEl) {
-    formatEl.textContent = parsed.format === 'cashuA' ? 'cashuA, v3' : 'cashuB, v4';
-  }
-  if (amountEl) {
-    const total = parsed.proofs.reduce((sum, p) => sum + p.amount, 0);
-    const unit = parsed.unit || 'sat';
-    const count = parsed.proofs.length;
-    amountEl.textContent = `${total} ${unit}, ${count} proof${count === 1 ? '' : 's'}`;
-  }
-  if (mintEl) {
-    const mint = parsed.mints[0];
-    mintEl.textContent = mint ? mint.replace(/^https?:\/\//, '').replace(/\/$/, '') : '(unknown mint)';
-  }
-  if (keysEl) {
-    keysEl.innerHTML = '';
-    for (const id of parsed.keysetIds) {
-      const chip = document.createElement('span');
-      chip.textContent = id;
-      const ver = document.createElement('i');
-      ver.textContent = classifyKeysetVersion(id).toUpperCase();
-      chip.appendChild(ver);
-      keysEl.appendChild(chip);
-    }
-  }
+  const total = parsed.proofs.reduce((sum, p) => sum + p.amount, 0);
+  const unit = parsed.unit || 'sat';
+  const count = parsed.proofs.length;
+  const mint = parsed.mints[0]
+    ? parsed.mints[0].replace(/^https?:\/\//, '').replace(/\/$/, '')
+    : 'unknown mint';
+  const ftext = document.createElement('span');
+  ftext.className = 'ftext';
+  ftext.textContent = `${total} ${unit} \u00b7 ${count} proof${count === 1 ? '' : 's'} \u00b7 ${mint} \u00b7 ${parsed.keysetIds.length} keyset${parsed.keysetIds.length === 1 ? '' : 's'}`;
+  facts.appendChild(ftext);
+}
 
-  pasteZone.hidden = true;
-  summary.hidden = false;
-  if (step1Num) step1Num.classList.add('done');
+// The Check button is only enabled when there is a token to check.
+function updateCheckButton(): void {
+  const tokenBox = document.getElementById('token') as HTMLTextAreaElement | null;
+  const checkBtn = document.getElementById('check-btn') as HTMLButtonElement | null;
+  if (!tokenBox || !checkBtn) return;
+  checkBtn.disabled = tokenBox.value.trim().length === 0;
 }
 
 function fallbackCopyText(text: string, onDone: () => void): void {
@@ -159,7 +153,7 @@ let currentRequestId = 0;
 async function runCheck(scrollIntoView = false): Promise<void> {
   const requestId = ++currentRequestId;
   const tokenBox = getElement<HTMLTextAreaElement>('token');
-  const knownBox = getElement<HTMLTextAreaElement>('known');
+  const knownBox = getElement<HTMLInputElement>('known');
   const consentBox = getElement<HTMLInputElement>('consent');
   const checkBtn = getElement<HTMLButtonElement>('check-btn');
   const reportContainer = getElement<HTMLDivElement>('report');
@@ -237,8 +231,8 @@ async function runCheck(scrollIntoView = false): Promise<void> {
     const errMsg = err instanceof Error ? err.message : 'Unknown error during token diagnostics';
     showMessage(`Diagnostic check halted: ${errMsg}`);
   } finally {
-    checkBtn.disabled = false;
     checkBtn.textContent = originalBtnText;
+    updateCheckButton();
   }
 }
 
@@ -250,18 +244,18 @@ function loadSample(key: string, autoRun = true): void {
   showMessage('');
 
   const tokenBox = getElement<HTMLTextAreaElement>('token');
-  const knownBox = getElement<HTMLTextAreaElement>('known');
+  const knownBox = getElement<HTMLInputElement>('known');
   const consentBox = getElement<HTMLInputElement>('consent');
 
   tokenBox.value = sample.token;
-  knownBox.value = sample.knownKeysets.join('\n');
+  knownBox.value = sample.knownKeysets.join(', ');
   consentBox.checked = false;
 
-  document.querySelectorAll<HTMLButtonElement>('.cases .case').forEach((btn) => {
+  document.querySelectorAll<HTMLButtonElement>('.samples .sample').forEach((btn) => {
     btn.classList.toggle('active', btn.getAttribute('data-which') === key);
   });
 
-  void updateTokenSummary();
+  void updateTokenFacts();
 
   if (autoRun) {
     runCheck(false);
@@ -281,7 +275,7 @@ function clearForm(): void {
     consentBox.checked = false;
   }
   activeSampleKey = null;
-  document.querySelectorAll<HTMLButtonElement>('.cases .case').forEach((btn) => {
+  document.querySelectorAll<HTMLButtonElement>('.samples .sample').forEach((btn) => {
     btn.classList.remove('active');
   });
   showMessage('');
@@ -294,7 +288,7 @@ function clearForm(): void {
   if (copyBtn) {
     copyBtn.style.display = 'none';
   }
-  void updateTokenSummary();
+  void updateTokenFacts();
 }
 
 export function initApp(): void {
@@ -309,7 +303,7 @@ export function initApp(): void {
     checkBtn.addEventListener('click', () => runCheck(true));
   }
 
-  const knownBox = document.getElementById('known') as HTMLTextAreaElement | null;
+  const knownBox = document.getElementById('known') as HTMLInputElement | null;
   if (knownBox) {
     knownBox.addEventListener('input', () => {
       // Changing the supplied keysets invalidates any pending run and
@@ -344,10 +338,10 @@ export function initApp(): void {
       lastSampleName = '';
       // Invalidate any pending request so a late response cannot render.
       currentRequestId++;
-      document.querySelectorAll<HTMLButtonElement>('.cases .case').forEach((btn) => {
+      document.querySelectorAll<HTMLButtonElement>('.samples .sample').forEach((btn) => {
         btn.classList.remove('active');
       });
-      void updateTokenSummary();
+      void updateTokenFacts();
     });
 
     tokenBox.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -364,76 +358,6 @@ export function initApp(): void {
       if (e.key === 'Escape') {
         clearForm();
       }
-    });
-  }
-
-  // Paste from clipboard: reads the clipboard into the token field, then
-  // runs the normal input path so the summary and report state update.
-  // When clipboard read is denied, focus the field so the user can paste.
-  const pasteBtn = document.getElementById('paste-btn');
-  if (pasteBtn && tokenBox) {
-    pasteBtn.addEventListener('click', async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          tokenBox.value = text.trim();
-          tokenBox.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      } catch {
-        tokenBox.focus();
-      }
-    });
-  }
-
-  // Drag and drop onto the paste zone: a dropped token string, or the
-  // text of a dropped token file, lands in the token field.
-  const pasteZone = document.getElementById('paste-zone');
-  if (pasteZone && tokenBox) {
-    pasteZone.addEventListener('dragover', (e: DragEvent) => {
-      e.preventDefault();
-      pasteZone.classList.add('drag-over');
-    });
-    pasteZone.addEventListener('dragleave', () => {
-      pasteZone.classList.remove('drag-over');
-    });
-    pasteZone.addEventListener('drop', async (e: DragEvent) => {
-      e.preventDefault();
-      pasteZone.classList.remove('drag-over');
-      const text = e.dataTransfer?.getData('text');
-      if (text) {
-        tokenBox.value = text.trim();
-        tokenBox.dispatchEvent(new Event('input', { bubbles: true }));
-        return;
-      }
-      const file = e.dataTransfer?.files?.[0];
-      if (file) {
-        try {
-          tokenBox.value = (await file.text()).trim();
-          tokenBox.dispatchEvent(new Event('input', { bubbles: true }));
-        } catch {
-          showMessage('Could not read the dropped file. Paste the token instead.');
-        }
-      }
-    });
-  }
-
-  // Token summary actions: show the paste zone again to edit the token,
-  // or clear the whole form.
-  const tsChange = document.getElementById('ts-change');
-  if (tsChange && tokenBox) {
-    tsChange.addEventListener('click', () => {
-      const pasteZoneEl = document.getElementById('paste-zone');
-      const summaryEl = document.getElementById('token-summary');
-      if (pasteZoneEl) pasteZoneEl.hidden = false;
-      if (summaryEl) summaryEl.hidden = true;
-      tokenBox.focus();
-      tokenBox.select();
-    });
-  }
-  const tsClear = document.getElementById('ts-clear');
-  if (tsClear) {
-    tsClear.addEventListener('click', () => {
-      clearForm();
     });
   }
 
@@ -512,7 +436,7 @@ export function initApp(): void {
     });
   }
 
-  document.querySelectorAll<HTMLButtonElement>('.cases .case').forEach((btn) => {
+  document.querySelectorAll<HTMLButtonElement>('.samples .sample').forEach((btn) => {
     btn.addEventListener('click', () => {
       const which = btn.getAttribute('data-which');
       if (which) {

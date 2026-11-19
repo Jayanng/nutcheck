@@ -611,57 +611,59 @@ describe('web report: static index.html and accessibility checks', () => {
   });
 });
 
-describe('web checker: three-step flow, token summary, case ledger', () => {
+describe('web checker: premium instrument panel', () => {
   const appHtml = readFileSync(path.join(root, 'app.html'), 'utf8');
 
-  it('app.html carries the three checker steps in order', () => {
-    expect(appHtml).toContain('Paste the token');
-    expect(appHtml).toContain('Trusted keysets');
-    expect(appHtml).toContain('Optional');
+  it('app.html carries the instrument panel with the token field and the facts line', () => {
+    expect(appHtml).toContain('class="instrument"');
+    expect(appHtml).toContain('aria-label="token checker"');
+    expect(appHtml).toContain('id="token"');
+    expect(appHtml).toContain('Paste a Cashu token here');
+    expect(appHtml).toContain('id="token-facts"');
+    expect(appHtml).toContain('Decoded on your device. Nothing leaves it until you check.');
+    expect(appHtml).toContain('Starts with cashuB or cashuA');
+  });
+
+  it('app.html has the check button disabled until there is a token', () => {
     expect(appHtml).toContain('id="check-btn"');
-    const tokenAt = appHtml.indexOf('Paste the token');
-    const keysAt = appHtml.indexOf('Trusted keysets');
-    const checkAt = appHtml.indexOf('id="check-btn"');
-    expect(tokenAt).toBeLessThan(keysAt);
-    expect(keysAt).toBeLessThan(checkAt);
+    expect(appHtml).toContain('Check token');
+    const btnAt = appHtml.indexOf('id="check-btn"');
+    const btnTag = appHtml.slice(appHtml.lastIndexOf('<button', btnAt), btnAt + 40);
+    expect(btnTag).toContain('disabled');
   });
 
-  it('app.html has the paste zone and the token summary card', () => {
-    expect(appHtml).toContain('id="paste-zone"');
-    expect(appHtml).toContain('id="paste-btn"');
-    expect(appHtml).toContain('Paste from clipboard');
-    expect(appHtml).toContain('id="token-summary"');
-    expect(appHtml).toContain('id="ts-format"');
-    expect(appHtml).toContain('id="ts-amount"');
-    expect(appHtml).toContain('id="ts-mint"');
-    expect(appHtml).toContain('id="ts-keys"');
-    expect(appHtml).toContain('id="ts-change"');
-    expect(appHtml).toContain('id="ts-clear"');
+  it('app.html has the trusted keysets and the mint check as quiet controls', () => {
+    expect(appHtml).toContain('Trusted keysets');
+    expect(appHtml).toContain('id="known"');
+    expect(appHtml).toContain('id="consent"');
+    expect(appHtml).toContain('Ask the mint');
+    expect(appHtml).toContain('Why this matters');
+    expect(appHtml).toContain('Local checks run on your device.');
   });
 
-  it('app.html has the case ledger with all 8 cases and their real outcomes', () => {
-    expect(appHtml).toContain('No token handy? Run a case');
-    expect(appHtml).toContain('class="cases"');
+  it('app.html has the samples as one row of pills with all 8 cases', () => {
+    expect(appHtml).toContain('class="samples"');
     for (const key of ['clean', 'evil', 'spent', 'partial', 'pending', 'unreachable', 'auth', 'v3']) {
       expect(appHtml).toContain(`data-which="${key}"`);
     }
-    expect(appHtml).toContain('21 sat · 2 proofs');
-    expect(appHtml).toContain('residue 1138537334');
-    expect(appHtml).toContain('proof spent');
-    expect(appHtml).toContain('DLEQ incomplete');
-    expect(appHtml).toContain('BLS12-381');
-    expect(appHtml).not.toContain('class="samples"');
-    expect(appHtml).not.toContain('Try a sample:');
+    expect(appHtml).toContain('Clean token');
+    expect(appHtml).toContain('Evil mint token');
+    expect(appHtml).toContain('Spent token');
+    expect(appHtml).toContain('V3 keyset');
   });
 
-  it('app.html has the mint check as a switch with the privacy note', () => {
-    expect(appHtml).toContain('Ask the mint for proof state');
-    expect(appHtml).toContain('class="switch"');
-    expect(appHtml).toContain('id="consent"');
-    expect(appHtml).toContain('Why this matters');
+  it('app.html no longer carries the rejected three-step checker', () => {
+    expect(appHtml).not.toContain('paste-card');
+    expect(appHtml).not.toContain('id="token-summary"');
+    expect(appHtml).not.toContain('id="paste-zone"');
+    expect(appHtml).not.toContain('id="paste-btn"');
+    expect(appHtml).not.toContain('class="cases"');
+    expect(appHtml).not.toContain('No token handy? Run a case');
+    expect(appHtml).not.toContain('class="switch"');
+    expect(appHtml).not.toContain('Paste a different token');
   });
 
-  it('token summary facts match the real clean token', async () => {
+  it('token facts match the real clean token', async () => {
     const raw = await parseTokenRaw(SAMPLES.clean.token);
     expect(raw.format).toBe('cashuB');
     const total = raw.proofs.reduce((sum, p) => sum + p.amount, 0);
@@ -674,7 +676,7 @@ describe('web checker: three-step flow, token summary, case ledger', () => {
     expect(classifyKeysetVersion('016120b31266f218')).toBe('v2');
   });
 
-  it('token summary facts match the real evil token', async () => {
+  it('token facts match the real evil token', async () => {
     const raw = await parseTokenRaw(SAMPLES.evil.token);
     expect(raw.format).toBe('cashuB');
     const total = raw.proofs.reduce((sum, p) => sum + p.amount, 0);

@@ -34,123 +34,43 @@
       <span class="t4-badge">notice</span>
       <span>NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).</span>
     </div>
-    <div class="paste-card" aria-label="token checker">
-      <div class="cstep">
-        <div class="cstep-top">
-          <span class="num" id="step1-num">1</span>
-          <div class="cstep-body">
-            <h3>Paste the token</h3>
-            <p class="sub">CashuB or cashuA. It is decoded on your device, nothing leaves it until you check.</p>
-            <div class="paste-zone" id="paste-zone">
-              <label class="paste-prompt" for="token">
-                <span class="paste-big">Paste a Cashu token here</span>
-                <span class="paste-small">Or drop a token file. Starts with cashuB or cashuA.</span>
-              </label>
-              <textarea id="token" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Cashu token"></textarea>
-              <button type="button" class="paste-btn" id="paste-btn">Paste from clipboard</button>
-            </div>
-            <div class="token-card" id="token-summary" hidden>
-              <div class="trow">
-                <span class="fmt" id="ts-format"></span>
-                <span class="amt" id="ts-amount"></span>
-                <span class="mint" id="ts-mint"></span>
-              </div>
-              <div class="keys" id="ts-keys"></div>
-              <div class="actions">
-                <a id="ts-change">Paste a different token</a>
-                <a id="ts-clear">Clear</a>
-              </div>
-            </div>
-            <div class="msg" id="msg" role="status" aria-live="polite"></div>
-          </div>
+    <div class="instrument" aria-label="token checker">
+      <div class="top">
+        <span class="lbl">Cashu token</span>
+        <span class="hint">Starts with cashuB or cashuA</span>
+      </div>
+      <textarea id="token" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Cashu token" placeholder="Paste a Cashu token here"></textarea>
+      <div class="facts" id="token-facts">
+        <span class="hint">Decoded on your device. Nothing leaves it until you check.</span>
+      </div>
+      <div class="foot">
+        <button class="btn btn-primary check-btn" id="check-btn" type="button" disabled>Check token</button>
+        <div class="opt-keys">
+          <label for="known">Trusted keysets</label>
+          <input id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e" aria-label="Trusted keysets, comma separated">
+        </div>
+        <div class="opt-mint">
+          <label class="mint-label"><input type="checkbox" id="consent"><span>Ask the mint</span></label>
+          <details class="why-details">
+            <summary>Why this matters</summary>
+            <p>Asking a mint whether proofs are spent sends it identifiers (Y) derived from your proof secrets. The answer is only the mint's own word at one moment in time, and proof state is only checked when you turn this on.</p>
+          </details>
         </div>
       </div>
-
-      <div class="cstep">
-        <div class="cstep-top">
-          <span class="num">2</span>
-          <div class="cstep-body">
-            <h3>Trusted keysets <span class="tag">Optional</span></h3>
-            <p class="sub">The keysets you already trust. The residue screen compares the token against these.</p>
-            <div class="keys-field">
-              <textarea id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e" aria-label="Known keysets, one per line"></textarea>
-              <p class="note">One keyset ID per line. Leave it empty and the screen runs against the mint's own list only.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="cstep">
-        <div class="cstep-top">
-          <span class="num">3</span>
-          <div class="cstep-body">
-            <h3>Check</h3>
-            <p class="sub">Runs the local checks, then the report below.</p>
-            <button class="btn btn-primary check-btn" id="check-btn" type="button">Check token</button>
-            <div class="mint-toggle">
-              <div class="txt">
-                <b>Ask the mint for proof state</b>
-                <span>Off by default. Turning it on sends the mint identifiers derived from your proof secrets, so the mint learns which proofs you hold.</span>
-                <details>
-                  <summary>Why this matters</summary>
-                  <p>Asking a mint whether proofs are spent sends it identifiers (Y) derived from your proof secrets. The answer is only the mint's own word at one moment in time, and proof state is only checked when you turn this on.</p>
-                </details>
-              </div>
-              <label class="switch" for="consent">
-                <input type="checkbox" id="consent">
-                <span class="track" aria-hidden="true"></span>
-              </label>
-            </div>
-            <p class="privacy-line">Local checks run on your device. Mint info and public keys are fetched from the token's mint.</p>
-          </div>
-        </div>
+      <div class="samples" aria-label="sample tokens">
+        <span class="try">Try:</span>
+        <button type="button" data-which="clean" class="sample active"><span class="sw green"></span>Clean token</button>
+        <button type="button" data-which="evil" class="sample"><span class="sw amber"></span>Evil mint token</button>
+        <button type="button" data-which="spent" class="sample"><span class="sw red"></span>Spent token</button>
+        <button type="button" data-which="partial" class="sample"><span class="sw amber"></span>Partial DLEQ</button>
+        <button type="button" data-which="pending" class="sample"><span class="sw amber"></span>Pending</button>
+        <button type="button" data-which="unreachable" class="sample"><span class="sw grey"></span>Unreachable</button>
+        <button type="button" data-which="auth" class="sample"><span class="sw amber"></span>Auth required</button>
+        <button type="button" data-which="v3" class="sample"><span class="sw blue"></span>V3 keyset</button>
       </div>
     </div>
-
-    <h3 class="cases-title">No token handy? Run a case</h3>
-    <div class="cases" aria-label="sample tokens">
-      <button type="button" id="btn-clean" data-which="clean" class="case active">
-        <span class="edge green"></span>
-        <span class="cmain"><span class="cname">Clean token <span class="v green">Clean</span></span><span class="cfind">A good token, end to end.</span></span>
-        <span class="ckey">21 sat · 2 proofs</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-evil" data-which="evil" class="case">
-        <span class="edge amber"></span>
-        <span class="cmain"><span class="cname">Evil mint token <span class="v amber">Hold</span></span><span class="cfind">A colliding keyset residue. The one to watch.</span></span>
-        <span class="ckey">residue 1138537334</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-spent" data-which="spent" class="case">
-        <span class="edge red"></span>
-        <span class="cmain"><span class="cname">Spent token <span class="v red">Hard fail</span></span><span class="cfind">The mint already spent this proof.</span></span>
-        <span class="ckey">proof spent</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-partial" data-which="partial" class="case">
-        <span class="edge amber"></span>
-        <span class="cmain"><span class="cname">Partial DLEQ <span class="v amber">Hold</span></span><span class="cfind">One proof carries an incomplete DLEQ block.</span></span>
-        <span class="ckey">DLEQ incomplete</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-pending" data-which="pending" class="case">
-        <span class="edge amber"></span>
-        <span class="cmain"><span class="cname">Pending <span class="v amber">Hold</span></span><span class="cfind">A melt in flight. The mint says pending.</span></span>
-        <span class="ckey">proof pending</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-unreachable" data-which="unreachable" class="case">
-        <span class="edge grey"></span>
-        <span class="cmain"><span class="cname">Unreachable <span class="v amber">Hold</span></span><span class="cfind">The mint does not answer. It degrades gracefully.</span></span>
-        <span class="ckey">mint silent</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-auth" data-which="auth" class="case">
-        <span class="edge amber"></span>
-        <span class="cmain"><span class="cname">Auth required <span class="v amber">Hold</span></span><span class="cfind">The mint wants auth for the checkstate call.</span></span>
-        <span class="ckey">auth required</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-      <button type="button" id="btn-v3" data-which="v3" class="case">
-        <span class="edge blue"></span>
-        <span class="cmain"><span class="cname">V3 keyset <span class="v amber">Hold</span></span><span class="cfind">A BLS12-381 keyset. DLEQ is skipped for it.</span></span>
-        <span class="ckey">BLS12-381</span><span class="go" aria-hidden="true">&rarr;</span>
-      </button>
-    </div>
-
+    <p class="privacy-line">Local checks run on your device. Mint info and public keys are fetched from the token's mint; proof state is only checked when you turn on the mint check.</p>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
     <div id="report" class="report" aria-label="report"></div>
   </section>
 
