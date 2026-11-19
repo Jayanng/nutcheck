@@ -322,19 +322,26 @@ describe('web report: consent dialog and privacy guarantees', () => {
 
 describe('web report: static index.html and accessibility checks', () => {
   const indexHtml = readFileSync(path.join(root, 'index.html'), 'utf8');
+  const appHtml = readFileSync(path.join(root, 'app.html'), 'utf8');
 
-  it('index.html carries the T4 banner', () => {
-    expect(indexHtml).toContain('NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).');
-    expect(indexHtml).toContain('class="t4-banner"');
-    expect(indexHtml).toContain('role="note"');
+  it('app.html carries the T4 banner', () => {
+    expect(appHtml).toContain('NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).');
+    expect(appHtml).toContain('class="t4-banner"');
+    expect(appHtml).toContain('role="note"');
   });
 
-  it('index.html contains required semantic regions and aria labels', () => {
-    expect(indexHtml).toContain('aria-label="token checker"');
-    expect(indexHtml).toContain('aria-label="report"');
-    expect(indexHtml).toContain('role="status"');
-    expect(indexHtml).toContain('aria-live="polite"');
+  it('landing page links to the checker app and keeps the faq', () => {
+    expect(indexHtml).toContain('href="/app.html"');
     expect(indexHtml).toContain('aria-expanded');
+    expect(indexHtml).not.toContain('id="checker"');
+    expect(indexHtml).not.toContain('id="token"');
+  });
+
+  it('app.html contains required semantic regions and aria labels', () => {
+    expect(appHtml).toContain('aria-label="token checker"');
+    expect(appHtml).toContain('aria-label="report"');
+    expect(appHtml).toContain('role="status"');
+    expect(appHtml).toContain('aria-live="polite"');
   });
 
   it('index.html is free of banned words in verdict copy', () => {

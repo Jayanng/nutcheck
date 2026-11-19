@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nutcheck, check a cashu token</title>
+<link rel="stylesheet" href="/src/web/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-pill" id="headerPill">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark">n</span>nutcheck</a>
+      <ul class="menu">
+        <li><a href="/">home</a></li>
+        <li><a href="/#does">what it does</a></li>
+        <li><a href="/#feed">example checks</a></li>
+        <li><a href="/#faq">faq</a></li>
+      </ul>
+      <div class="header-actions">
+        <a class="btn btn-ghost btn-sm" href="/">back home</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/Jayanng/nutcheck">github</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section" id="checker">
+    <h2>paste a token</h2>
+    <p class="sub">the check runs locally first. the mint is only contacted when you say so.</p>
+    <div class="t4-banner" role="note">
+      <span class="t4-badge">notice</span>
+      <span>NutCheck never spends. If you pasted for recovery, use a wallet restore (NUT-13).</span>
+    </div>
+    <div class="paste-card" aria-label="token checker">
+      <div class="row">
+        <div class="field">
+          <label for="token">cashu token <span class="hint">starts with cashuB or cashuA</span></label>
+          <textarea id="token" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+        </div>
+        <div class="field">
+          <label for="known">known keysets <span class="hint">one keyset ID per line, the ones you already trust</span></label>
+          <textarea id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e"></textarea>
+        </div>
+      </div>
+      <div class="paste-actions">
+        <button class="btn btn-primary" id="check-btn" type="button">check token</button>
+        <div class="samples-wrap">
+          <div class="samples">
+            <span>try a sample:</span>
+            <button type="button" id="btn-clean" data-which="clean" class="active"><span class="sw"></span>clean token</button>
+            <button type="button" id="btn-evil" data-which="evil"><span class="sw"></span>evil mint token</button>
+            <button type="button" id="btn-spent" data-which="spent"><span class="sw"></span>spent token</button>
+            <button type="button" id="btn-partial" data-which="partial"><span class="sw"></span>partial dleq</button>
+            <button type="button" id="btn-pending" data-which="pending"><span class="sw"></span>pending</button>
+            <button type="button" id="btn-unreachable" data-which="unreachable"><span class="sw"></span>unreachable</button>
+            <button type="button" id="btn-auth" data-which="auth"><span class="sw"></span>auth required</button>
+            <button type="button" id="btn-v3" data-which="v3"><span class="sw"></span>v3 keyset</button>
+          </div>
+        </div>
+      </div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+      <div class="consent">
+        <div class="what">
+          <strong>the mint check is off until you turn it on</strong>
+          <p>asking a mint whether proofs are spent sends it identifiers derived from your proof secrets, so the mint learns which proofs you hold, and the answer is only the mint's own word at one moment in time.</p>
+        </div>
+        <label class="opt"><input type="checkbox" id="consent"><span>ask the mint for the proof state of this token</span></label>
+      </div>
+      <p class="privacy-line">local checks run on your device. mint info and public keys are fetched from the token's mint; proof state is only checked when you turn on the mint check.</p>
+    </div>
+    <div id="report" class="report" aria-label="report"></div>
+  </section>
+
+  <dialog id="consent-dialog" class="consent-dialog" aria-labelledby="consent-title" aria-describedby="consent-desc">
+    <h3 id="consent-title">ask the mint for proof state?</h3>
+    <p id="consent-desc">asking a mint whether proofs are spent sends it identifiers (y) derived from your proof secrets, so the mint learns which proofs you hold. the answer is only the mint's own word at one moment in time.</p>
+    <div class="dialog-actions">
+      <button type="button" id="consent-cancel" class="btn-cancel">cancel</button>
+      <button type="button" id="consent-confirm" class="btn-confirm">i understand, ask the mint</button>
+    </div>
+  </dialog>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a class="brand" href="/"><span class="brand-mark">n</span>nutcheck</a>
+    <ul class="footer-links">
+      <li><a href="/">home</a></li>
+      <li><a href="/#does">what it does</a></li>
+      <li><a href="/#faq">faq</a></li>
+      <li><a href="https://github.com/Jayanng/nutcheck">github</a></li>
+    </ul>
+    <p class="footer-bottom">nutcheck. check a cashu token before you accept it. local decode, residue screen, keyset derivation, dleq, and an opt-in mint check.</p>
+  </div>
+</footer>
+
+<script>
+window.addEventListener("scroll", function () {
+  var pill = document.getElementById("headerPill");
+  if (!pill) return;
+  if (window.scrollY > 50) {
+    pill.classList.add("scrolled");
+  } else {
+    pill.classList.remove("scrolled");
+  }
+});
+</script>
+<script type="module" src="/src/web/main.ts"></script>
+</body>
+</html>
