@@ -73,6 +73,167 @@ function extractCollision(report: NutCheckReport): CollisionInfo | null {
   return null;
 }
 
+// The report's checks become a verification pipeline: each step is one
+// stage of the check flow, in the order it runs, and a step that covers
+// several checks (one per keyset or proof) shows them as sub-steps.
+// The pattern is borrowed from Spectrum UI agent-steps (a timeline of
+// steps with status) and Fluid Functionalism thinking-steps (collapsible
+// per-step detail), rebuilt here in the page's own tokens because both
+// ship as React and this page is plain static HTML.
+
+interface PipelineStep {
+  name: string;
+  checks: ReportCheck[];
+}
+
+// The pipeline order is the logical order the verification runs in:
+// decode the token, learn the mint facts, verify the keyset IDs,
+// screen residues, note keyset age, verify signatures, ask the mint.
+const PIPELINE_ORDER = [
+  'decode',
+  'mint-facts',
+  'derivation',
+  'residue',
+  'keyset-age',
+  'dleq',
+  'checkstate',
+] as const;
+
+type PipelineStepId = (typeof PIPELINE_ORDER)[number];
+
+const PIPELINE_NAMES: Record<PipelineStepId, string> = {
+  decode: 'Token decode',
+  'mint-facts': 'Mint facts',
+  derivation: 'Keyset ID derivation',
+  residue: 'Residue screen',
+  'keyset-age': 'Keyset age',
+  dleq: 'DLEQ',
+  checkstate: 'Checkstate',
+};
+
+function pipelineStepId(check: ReportCheck): PipelineStepId | null {
+  if (check.checkId === 'decode') return 'decode';
+  if (check.checkId === 'derivation') return 'derivation';
+  if (check.checkId === 'residue') return 'residue';
+  if (check.checkId === 'dleq') return 'dleq';
+  if (check.checkId === 'checkstate') return 'checkstate';
+  // 'mint' covers two different steps, split by name.
+  if (check.checkId === 'mint' && check.name === 'Mint facts') return 'mint-facts';
+  if (check.checkId === 'mint' && check.name === 'Keyset age') return 'keyset-age';
+  return null;
+}
+
+function groupIntoPipeline(report: NutCheckReport): PipelineStep[] {
+  const byId = new Map<PipelineStepId, ReportCheck[]>();
+  const extra: PipelineStep[] = [];
+  for (const check of [...report.checked, ...report.notChecked]) {
+    const id = pipelineStepId(check);
+    if (id === null) {
+      // A check no step knows about gets its own step, named after itself,
+      // so nothing is ever silently dropped from the report.
+      extra.push({ name: check.name, checks: [check] });
+      continue;
+    }
+    const list = byId.get(id);
+    if (list) list.push(check);
+    else byId.set(id, [check]);
+  }
+  const steps: PipelineStep[] = [];
+  for (const id of PIPELINE_ORDER) {
+    const checks = byId.get(id);
+    if (checks) steps.push({ name: PIPELINE_NAMES[id], checks });
+  }
+  return [...steps, ...extra];
+}
+
+// Mock-backed sample results are labelled simulated, not presented as live
+// mint answers. A check that never ran (consent not given) has no
+// simulated answer to label.
+function simulatedLabel(check: ReportCheck, options: RenderOptions): string {
+  if (
+    options.isSample &&
+    (check.checkId === 'checkstate' || check.checkId === 'mint') &&
+    !check.result.includes('Consent not given')
+  ) {
+    return ' (simulated)';
+  }
+  return '';
+}
+
+interface StepStatus {
+  css: 'pass' | 'fail' | 'hold' | 'idle';
+  text: string;
+  dot: 'green' | 'red' | 'amber' | 'grey';
+  open: boolean;
+}
+
+function pipelineStepStatus(step: PipelineStep): StepStatus {
+  const worst = step.checks.find((c) => c.severity === 'red');
+  if (worst) {
+    return { css: 'fail', text: 'Hard fail', dot: 'red', open: true };
+  }
+  const flagged = step.checks.find((c) => c.severity === 'amber');
+  if (flagged) {
+    const badge = statusBadgeClass(flagged);
+    return { css: 'hold', text: badge.text, dot: 'amber', open: true };
+  }
+  const allPass = step.checks.every((c) => c.outcome === 'pass');
+  if (allPass) {
+    return { css: 'pass', text: 'Pass', dot: 'green', open: false };
+  }
+  const allIdle = step.checks.every((c) => c.outcome === 'not-checked');
+  if (allIdle) {
+    return { css: 'idle', text: 'Not checked', dot: 'grey', open: false };
+  }
+  return { css: 'idle', text: 'Partial', dot: 'grey', open: false };
+}
+
+// The line a step shows while closed. Single checks show their result
+// (the residue result is a paragraph, so the line shows its first clause
+// and the full result sits in the expanded detail). Grouped steps show
+// a count: derivation counts matching keysets, DLEQ counts proof states.
+function pipelineStepValue(step: PipelineStep, options: RenderOptions): string {
+  const checks = step.checks;
+  if (checks.length === 1) {
+    const check = checks[0];
+    const result = `${check.result}${simulatedLabel(check, options)}`;
+    if (step.name === 'Residue screen') {
+      const first = result.split(';')[0];
+      return first.length < result.length && first.length >= 20 ? first : result;
+    }
+    return result;
+  }
+  if (step.name === 'Keyset ID derivation') {
+    const passed = checks.filter((c) => c.outcome === 'pass').length;
+    if (passed === checks.length) {
+      return `${checks.length} keysets recomputed, ${checks.length === 2 ? 'both' : 'all'} match`;
+    }
+    return `${passed} of ${checks.length} keysets recomputed`;
+  }
+  if (step.name === 'DLEQ') {
+    const valid = checks.filter((c) => c.outcome === 'pass').length;
+    const absent = checks.filter((c) => c.result.includes('DLEQ absent')).length;
+    const incomplete = checks.filter((c) => c.result.includes('incomplete')).length;
+    if (absent === checks.length) {
+      return `DLEQ absent on ${checks.length} proof${checks.length === 1 ? '' : 's'}`;
+    }
+    if (valid === checks.length) {
+      return `DLEQ valid on ${checks.length} proof${checks.length === 1 ? '' : 's'}`;
+    }
+    const parts: string[] = [];
+    if (valid > 0) parts.push(`${valid} valid`);
+    if (absent > 0) parts.push(`${absent} absent`);
+    if (incomplete > 0) parts.push(`${incomplete} incomplete`);
+    const other = checks.length - valid - absent - incomplete;
+    if (other > 0) parts.push(`${other} not checked`);
+    return `DLEQ: ${parts.join(', ')}`;
+  }
+  // Any other multi-check step: the primary check's result (the check
+  // named after the step), or the first check's result.
+  const primary = checks.find((c) => c.name === step.name) || checks[0];
+  return `${primary.result}${simulatedLabel(primary, options)}`;
+}
+
 export function renderReportHtml(report: NutCheckReport, options: RenderOptions = {}): string {
   const stateClass =
     report.severity === 'red' ? 'red' : report.severity === 'amber' ? 'amber' : 'green';
@@ -134,6 +295,12 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     todoLine = 'Do not accept this token until the DLEQ block is complete. Ask the sender for a full token.';
   }
 
+  // Outcome counts, used by the verdict foot and the limits panel.
+  const passedCheckCount = report.checked.filter((c) => c.outcome === 'pass').length;
+  const flaggedChecks = report.checked.filter((c) => c.outcome !== 'pass');
+  const notCheckedCount = report.notChecked.length;
+  const cannotProveCount = report.cannotProve.length;
+
   const rawMint = report.mint || options.rawToken?.mints[0];
   const mintDisplay = rawMint !== undefined ? mintFingerprint(rawMint) : 'Unknown mint';
   const sampleName = options.sampleName || (rawMint ? `Token from ${mintDisplay}` : 'Diagnostic report');
@@ -154,6 +321,16 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   if (todoLine) {
     html += `<div class="todo"><b>What to do:</b> ${escapeHtml(todoLine)}</div>`;
   }
+  // Counts at the foot of the verdict: the answer and its composition in
+  // one glance. The separate summary strip is gone; these chips are it.
+  html += `<div class="counts">`;
+  html += `<span class="chip"><span class="dot green"></span><b>${passedCheckCount}</b> Passed</span>`;
+  if (flaggedChecks.length > 0) {
+    html += `<span class="chip"><span class="dot amber"></span><b>${flaggedChecks.length}</b> Needs attention</span>`;
+  }
+  html += `<span class="chip"><span class="dot amber"></span><b>${notCheckedCount}</b> Not checked</span>`;
+  html += `<span class="chip"><span class="dot blue"></span><b>${cannotProveCount}</b> Cannot prove</span>`;
+  html += `</div>`;
   html += `</div>`;
 
   // 3. Decoded Token Facts
@@ -199,81 +376,80 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   }
   html += `</div>`;
 
-  // 4. Collision diagram if collision occurred
+  // 4. Verification pipeline: the checks as steps of the flow, in order.
+  // Passed steps start closed, a flagged step starts open, and the
+  // collision diagram sits inside the flagged residue step.
   const collision = extractCollision(report);
-  if (collision) {
-    html += `<div class="diagram" role="region" aria-label="Collision diagram">`;
-    html += `<div class="label">The collision, drawn out</div>`;
-    html += `<div class="flow">`;
-    html += `<div class="node"><div class="nk">Keyset A</div><div class="nv">${escapeHtml(collision.keysetA.slice(0, 8))}<span class="hl">${escapeHtml(collision.keysetA.slice(8))}</span></div></div>`;
-    html += `<div class="arrow"><span class="sym">&rarr;</span><span>mod 2^31 - 1</span></div>`;
-    html += `<div class="node"><div class="nk">Keyset B</div><div class="nv">${escapeHtml(collision.keysetB.slice(0, 8))}<span class="hl">${escapeHtml(collision.keysetB.slice(8))}</span></div></div>`;
-    html += `<div class="arrow"><span class="sym">&rarr;</span><span>mod 2^31 - 1</span></div>`;
-    html += `<div class="result"><div class="nk">Same residue</div><div class="nv">${escapeHtml(collision.residue)}</div><div class="ns">Two keysets, one residue. That is the attack.</div></div>`;
-    html += `</div>`;
-    html += `</div>`;
-  }
-
-  // 5. Summary strip: the answer at a glance
-  const passedCheckCount = report.checked.filter((c) => c.outcome === 'pass').length;
-  const flaggedChecks = report.checked.filter((c) => c.outcome !== 'pass');
-  const notCheckedCount = report.notChecked.length;
-  const cannotProveCount = report.cannotProve.length;
-  html += `<div class="summary-strip" role="region" aria-label="Report summary">`;
-  html += `<div class="sum"><span class="dot green"></span><div><div class="num">${passedCheckCount}</div><div class="lbl">Passed</div></div></div>`;
-  html += `<div class="sum"><span class="dot amber"></span><div><div class="num">${notCheckedCount}</div><div class="lbl">Not checked</div></div></div>`;
-  html += `<div class="sum"><span class="dot blue"></span><div><div class="num">${cannotProveCount}</div><div class="lbl">Cannot prove</div></div></div>`;
-  html += `</div>`;
-
-  // 6. Tests and measured values, grouped by outcome
-  const renderCheck = (check: ReportCheck) => {
-    const badge = statusBadgeClass(check);
-    const dotClass = badge.css === 'pass' ? 'green' : badge.css === 'fail' ? 'red' : badge.css === 'hold' ? 'amber' : 'grey';
-    // Mock-backed sample results are labelled simulated, not presented as live mint answers.
-    // A check that never ran (consent not given) has no simulated answer to label.
-    const simulated = options.isSample && (check.checkId === 'checkstate' || check.checkId === 'mint') && !check.result.includes('Consent not given') ? ' (simulated)' : '';
-    return `<div class="check" role="listitem"><span class="dot ${dotClass}"></span><div class="body"><div class="check-top"><h3>${escapeHtml(check.name)}</h3><span class="status ${badge.css}">${escapeHtml(badge.text)}</span></div><p class="val">${escapeHtml(check.result)}${simulated}</p><p class="msg">${escapeHtml(check.message)}</p></div></div>`;
+  const steps = groupIntoPipeline(report);
+  const renderStep = (step: PipelineStep): string => {
+    const status = pipelineStepStatus(step);
+    const value = pipelineStepValue(step, options);
+    const open = status.open ? ' open' : '';
+    let body = '';
+    if (step.checks.length === 1) {
+      const check = step.checks[0];
+      const full = `${check.result}${simulatedLabel(check, options)}`;
+      if (full !== value) {
+        body += `<p class="full">${escapeHtml(full)}</p>`;
+      }
+      body += `<p class="msg">${escapeHtml(check.message)}</p>`;
+    } else {
+      const messages = step.checks.map((c) => c.message);
+      const sharedMessage = messages.every((m) => m === messages[0]) ? messages[0] : null;
+      for (const check of step.checks) {
+        const badge = statusBadgeClass(check);
+        const miniDot =
+          badge.css === 'pass' ? 'green' : badge.css === 'fail' ? 'red' : badge.css === 'hold' ? 'amber' : 'grey';
+        body += `<div class="substep"><span class="mini ${miniDot}"></span><span class="r">${escapeHtml(check.result)}${simulatedLabel(check, options)}</span></div>`;
+        if (sharedMessage === null) {
+          body += `<p class="msg">${escapeHtml(check.message)}</p>`;
+        }
+      }
+      if (sharedMessage !== null) {
+        body += `<p class="msg">${escapeHtml(sharedMessage)}</p>`;
+      }
+    }
+    if (step.name === 'Residue screen' && collision) {
+      body += `<div class="diagram" role="region" aria-label="Collision diagram">`;
+      body += `<div class="label">The collision, drawn out</div>`;
+      body += `<div class="flow">`;
+      body += `<div class="node"><div class="nk">Keyset A</div><div class="nv">${escapeHtml(collision.keysetA.slice(0, 8))}<span class="hl">${escapeHtml(collision.keysetA.slice(8))}</span></div></div>`;
+      body += `<div class="arrow"><span class="sym">&rarr;</span><span>mod 2^31 - 1</span></div>`;
+      body += `<div class="node"><div class="nk">Keyset B</div><div class="nv">${escapeHtml(collision.keysetB.slice(0, 8))}<span class="hl">${escapeHtml(collision.keysetB.slice(8))}</span></div></div>`;
+      body += `<div class="arrow"><span class="sym">&rarr;</span><span>mod 2^31 - 1</span></div>`;
+      body += `<div class="result"><div class="nk">Same residue</div><div class="nv">${escapeHtml(collision.residue)}</div><div class="ns">Two keysets, one residue. That is the attack.</div></div>`;
+      body += `</div>`;
+      body += `</div>`;
+    }
+    return `<details class="step"${open} role="listitem"><summary><span class="rail-dot ${status.dot}"></span><span class="step-name">${escapeHtml(step.name)}</span><span class="step-val">${escapeHtml(value)}</span><span class="status ${status.css}">${escapeHtml(status.text)}</span><span class="chev">&#8250;</span></summary><div class="step-body">${body}</div></details>`;
   };
-  html += `<p class="section-title">Tests and measured values</p>`;
-  html += `<div class="checks" role="list">`;
-  const passedChecks = report.checked.filter((c) => c.outcome === 'pass');
-  if (passedChecks.length > 0) {
-    html += `<div class="group-label" role="presentation"><span class="dot green"></span>Passed &middot; ${passedChecks.length}</div>`;
-    for (const check of passedChecks) html += renderCheck(check);
-  }
-  if (flaggedChecks.length > 0) {
-    const flagDot = flaggedChecks.some((c) => c.severity === 'red') ? 'red' : 'amber';
-    html += `<div class="group-label divider" role="presentation"><span class="dot ${flagDot}"></span>Needs attention &middot; ${flaggedChecks.length}</div>`;
-    for (const check of flaggedChecks) html += renderCheck(check);
-  }
-  if (report.notChecked.length > 0) {
-    html += `<div class="group-label divider" role="presentation"><span class="dot grey"></span>Not checked &middot; ${notCheckedCount}</div>`;
-    for (const check of report.notChecked) html += renderCheck(check);
-  }
+  html += `<p class="section-title">Verification pipeline</p>`;
+  html += `<p class="section-sub">Each step ran in order. Open a step to see what it measured.</p>`;
+  html += `<div class="pipeline" role="list">`;
+  for (const step of steps) html += renderStep(step);
   html += `</div>`;
 
-  // 7. What this report can and cannot say (Checked, Not checked, Cannot prove)
+  // 5. What this report can and cannot say, as one panel with three columns
   html += `<p class="section-title" id="limits">What this report can and cannot say</p>`;
   html += `<p class="section-sub">The same report, shortened. This is what copies as text.</p>`;
-  html += `<div class="cols">`;
+  html += `<div class="limits-panel">`;
 
-  // Checked card
-  html += `<div class="card c-checked">`;
+  // Checked column
+  html += `<div class="limit-col c-checked">`;
   html += `<h3><span class="b" aria-hidden="true"></span>Checked<span class="count">${report.checked.length}</span></h3>`;
   html += `<ul>`;
   if (report.checked.length === 0) {
     html += `<li>No local checks could complete</li>`;
   } else {
     for (const c of report.checked) {
-      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
-      html += `<li>${escapeHtml(c.name)}: ${escapeHtml(c.result)}${simulated}</li>`;
+      html += `<li>${escapeHtml(c.name)}: ${escapeHtml(c.result)}${simulatedLabel(c, options)}</li>`;
     }
   }
   html += `</ul>`;
   html += `</div>`;
 
-  // Not checked card
-  html += `<div class="card c-not">`;
+  // Not checked column
+  html += `<div class="limit-col c-not">`;
   html += `<h3><span class="b" aria-hidden="true"></span>Not checked<span class="count">${notCheckedCount}</span></h3>`;
   html += `<ul>`;
   if (report.notChecked.length === 0) {
@@ -286,8 +462,8 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   html += `</ul>`;
   html += `</div>`;
 
-  // Cannot prove card
-  html += `<div class="card c-cannot">`;
+  // Cannot prove column
+  html += `<div class="limit-col c-cannot">`;
   html += `<h3><span class="b" aria-hidden="true"></span>Cannot prove<span class="count">${cannotProveCount}</span></h3>`;
   html += `<ul>`;
   for (const item of report.cannotProve) {
@@ -298,7 +474,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   html += `</div>`;
 
-  // 8. Copy bar
+  // 6. Copy bar
   html += `<div class="copybar-card">`;
   html += `<button class="copybtn" id="copy-btn" type="button" aria-label="Copy diagnostic report to clipboard">Copy report as text</button>`;
   html += `<span class="note">Pastes as plain text, with the same three sections.</span>`;

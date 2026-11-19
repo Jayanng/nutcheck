@@ -278,6 +278,112 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('V3 keyset');
     expect(scanReportCopy(html)).toEqual([]);
   });
+
+  it('pipeline groups derivation and DLEQ into steps with sub-steps', async () => {
+    const sample = SAMPLES.clean;
+    const rawToken = await parseTokenRaw(sample.token);
+    const fetchFn = getSampleFetchFn('clean');
+
+    const report = await diagnoseToken(sample.token, {
+      fetchFn,
+      consent: false,
+      knownKeysets: sample.knownKeysets,
+    });
+
+    const html = renderReportHtml(report, {
+      sampleName: sample.name,
+      sampleDescription: sample.description,
+      isSample: true,
+      rawToken,
+    });
+
+    // Seven steps, in pipeline order
+    expect(html).toContain('Verification pipeline');
+    const stepNames = [...html.matchAll(/<span class="step-name">([^<]+)<\/span>/g)].map((m) => m[1]);
+    expect(stepNames).toEqual([
+      'Token decode',
+      'Mint facts',
+      'Keyset ID derivation',
+      'Residue screen',
+      'Keyset age',
+      'DLEQ',
+      'Checkstate',
+    ]);
+    // Grouped steps show a count, with the per-keyset results as sub-steps
+    expect(html).toContain('2 keysets recomputed, both match');
+    expect(html).toContain('Keyset 00e1577700e127f1 recomputes to 00e1577700e127f1');
+    expect(html).toContain('DLEQ absent on 2 proofs');
+    expect(html).toContain('Proof 0: DLEQ absent');
+    // The residue full result is in the expanded detail, not lost
+    expect(html).toContain('V2 keysets are excluded because the NUT-13 residue collision applies');
+    // Verdict counts live in the verdict card, the separate strip is gone
+    expect(html).toContain('class="counts"');
+    expect(html).not.toContain('summary-strip');
+    expect(html).not.toContain('group-label');
+    // The three sections are one panel now
+    expect(html).toContain('class="limits-panel"');
+    expect(html).not.toContain('class="cols"');
+    expect(scanReportCopy(html)).toEqual([]);
+  });
+
+  it('evil pipeline opens the flagged residue step with the diagram inside', async () => {
+    const sample = SAMPLES.evil;
+    const rawToken = await parseTokenRaw(sample.token);
+    const fetchFn = getSampleFetchFn('evil');
+
+    const report = await diagnoseToken(sample.token, {
+      fetchFn,
+      consent: false,
+      knownKeysets: sample.knownKeysets,
+    });
+
+    const html = renderReportHtml(report, {
+      sampleName: sample.name,
+      sampleDescription: sample.description,
+      isSample: true,
+      rawToken,
+    });
+
+    // The flagged step starts open, the passed steps start closed
+    const openSteps = [...html.matchAll(/<details class="step" open/g)].length;
+    expect(openSteps).toBe(1);
+    expect(html).toContain('COLLISION: residue 1138537334');
+    expect(html).toContain('status hold');
+    expect(html).toContain('Collision');
+    // The diagram sits inside the residue step, not as its own section
+    const diagramPos = html.indexOf('The collision, drawn out');
+    const residuePos = html.indexOf('Residue screen');
+    expect(diagramPos).toBeGreaterThan(residuePos);
+    expect(html).toContain('Two keysets, one residue. That is the attack.');
+    // Verdict counts show the one step that needs attention
+    expect(html).toContain('Needs attention');
+    expect(scanReportCopy(html)).toEqual([]);
+  });
+
+  it('partial DLEQ pipeline shows the incomplete step open with an Incomplete badge', async () => {
+    const sample = SAMPLES.partial;
+    const rawToken = await parseTokenRaw(sample.token);
+    const fetchFn = getSampleFetchFn('partial');
+
+    const report = await diagnoseToken(sample.token, {
+      fetchFn,
+      consent: false,
+      knownKeysets: sample.knownKeysets,
+    });
+
+    const html = renderReportHtml(report, {
+      sampleName: sample.name,
+      sampleDescription: sample.description,
+      isSample: true,
+      rawToken,
+    });
+
+    expect(html).toContain('A proof carries an incomplete DLEQ');
+    expect(html).toContain('Incomplete');
+    const openSteps = [...html.matchAll(/<details class="step" open/g)].length;
+    expect(openSteps).toBe(1);
+    expect(scanReportCopy(html)).toEqual([]);
+  });
 });
 
 describe('web report: consent dialog and privacy guarantees', () => {
