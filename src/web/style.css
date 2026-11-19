@@ -109,18 +109,6 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
 .hero { overflow-x: hidden; background-image: radial-gradient(rgba(0, 24, 255, 0.08) 1px, transparent 1px); background-size: 22px 22px; }
 .hero-inner { max-width: 80rem; margin: 0 auto; padding: 190px 24px 72px; }
 .hero-copy { max-width: 680px; }
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 999px;
-  padding: 5px 14px;
-  font-size: 13px;
-  color: var(--muted);
-}
-.badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
 .hero h1 {
   margin: 32px 0;
   font-size: 68px;
