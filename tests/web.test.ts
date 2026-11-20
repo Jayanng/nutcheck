@@ -199,6 +199,8 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('Not fully checked.');
     expect(html).toContain('Incomplete');
     expect(html).toContain('A proof carries an incomplete DLEQ');
+    expect(html).toContain('The DLEQ check could not run on one proof');
+    expect(html).not.toContain('Do not accept this token');
     expect(scanReportCopy(html)).toEqual([]);
   });
 

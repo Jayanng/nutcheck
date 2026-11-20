@@ -305,7 +305,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   } else if (report.checked.some((c) => c.checkId === 'residue' && c.severity === 'amber')) {
     todoLine = 'Do not swap this token in a wallet that also holds proofs on the colliding keyset.';
   } else if (report.notChecked.some((c) => c.checkId === 'dleq' && c.result.includes('incomplete'))) {
-    todoLine = 'Do not accept this token until the DLEQ block is complete. Ask the sender for a full token.';
+    todoLine = 'The DLEQ check could not run on one proof, its DLEQ block is incomplete. A proof without DLEQ can still be valid, ask the sender for a full token if you want that check to run.';
   } else if (report.notChecked.some((c) => c.checkId === 'checkstate' && c.result.toLowerCase().includes('consent not given'))) {
     todoLine = 'Turn on \'Ask the mint\' to check whether the proofs are spent.';
   }
