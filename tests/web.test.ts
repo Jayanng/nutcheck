@@ -655,6 +655,9 @@ describe('web checker: premium instrument panel', () => {
   it('app.html has the trusted keysets and the mint check as quiet controls', () => {
     expect(appHtml).toContain('Trusted keysets');
     expect(appHtml).toContain('id="known"');
+    // The keysets placeholder must read as an example, not a value: a bare
+    // hex ID looks pre-filled after Clear empties the field.
+    expect(appHtml).toContain('placeholder="e.g. 009a1f293253e41e"');
     expect(appHtml).toContain('id="consent"');
     expect(appHtml).toContain('Ask the mint');
     expect(appHtml).toContain('Why this matters');
