@@ -241,6 +241,7 @@ describe('web report: real output across fixture states', () => {
 
     expect(html).toContain('verdict amber');
     expect(html).toContain('The mint did not answer');
+    expect(html).toContain('Turn on');
     expect(scanReportCopy(html)).toEqual([]);
   });
 
