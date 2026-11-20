@@ -14,7 +14,7 @@ import { renderReportHtml, reportToPlainText } from '../src/web/render.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 describe('web report: real output across fixture states', () => {
-  it('clean sample renders real library output with no findings', async () => {
+  it('clean sample is incomplete without consent and clean after the mint check runs', async () => {
     const sample = SAMPLES.clean;
     const rawToken = await parseTokenRaw(sample.token);
     const fetchFn = getSampleFetchFn('clean');
@@ -25,8 +25,8 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('No known issues found.');
-    expect(report.severity).toBe('none');
+    expect(report.headline).toBe('Not fully checked.');
+    expect(report.severity).toBe('amber');
 
     const html = renderReportHtml(report, {
       sampleName: sample.name,
@@ -36,8 +36,8 @@ describe('web report: real output across fixture states', () => {
     });
 
     // Check DOM elements
-    expect(html).toContain('verdict green');
-    expect(html).toContain('No findings');
+    expect(html).toContain('verdict amber');
+    expect(html).toContain('Incomplete');
     expect(html).toContain(report.headline);
     expect(html).toContain('Checked');
     expect(html).toContain('Not checked');
@@ -55,6 +55,24 @@ describe('web report: real output across fixture states', () => {
     for (const word of BANNED_WORDS) {
       expect(html.toLowerCase()).not.toContain(` ${word} `);
     }
+
+    // After consent, the mint reports unspent and the headline is clean.
+    const cleanReport = await diagnoseToken(sample.token, {
+      fetchFn,
+      consent: true,
+      knownKeysets: sample.knownKeysets,
+    });
+    expect(cleanReport.headline).toBe('No known issues found.');
+    expect(cleanReport.severity).toBe('none');
+    const cleanHtml = renderReportHtml(cleanReport, {
+      sampleName: sample.name,
+      sampleDescription: sample.description,
+      isSample: true,
+      rawToken,
+    });
+    expect(cleanHtml).toContain('verdict green');
+    expect(cleanHtml).toContain('No findings');
+    expect(scanReportCopy(cleanHtml)).toEqual([]);
   });
 
   it('evil mint sample flags collision and renders collision diagram', async () => {
@@ -211,7 +229,7 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
 
     const html = renderReportHtml(report, {
@@ -237,7 +255,7 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
 
     const html = renderReportHtml(report, {
@@ -264,7 +282,7 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
 
     const html = renderReportHtml(report, {
@@ -345,9 +363,10 @@ describe('web report: real output across fixture states', () => {
       rawToken,
     });
 
-    // The flagged step starts open, the passed steps start closed
+    // The flagged step and the Checkstate step (amber without consent)
+    // start open, the passed steps start closed
     const openSteps = [...html.matchAll(/<details class="step" open/g)].length;
-    expect(openSteps).toBe(1);
+    expect(openSteps).toBe(2);
     expect(html).toContain('COLLISION: residue 1138537334');
     expect(html).toContain('status hold');
     expect(html).toContain('Collision');
@@ -388,7 +407,7 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('A proof carries an incomplete DLEQ');
     expect(html).toContain('Incomplete');
     const openSteps = [...html.matchAll(/<details class="step" open/g)].length;
-    expect(openSteps).toBe(1);
+    expect(openSteps).toBe(2);
     expect(scanReportCopy(html)).toEqual([]);
   });
 });
@@ -492,7 +511,7 @@ describe('web report: static index.html and accessibility checks', () => {
       knownKeysets: ['00e1577700e127f1'],
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
 
     // Decode and residue screen ran locally
@@ -547,7 +566,7 @@ describe('web report: static index.html and accessibility checks', () => {
     });
     // Assert the headline matches the expected literal for the scenario.
     expect(cleanReport.headline).toBe(SAMPLES.clean.expectedHeadline);
-    expect(cleanReport.headline).toBe('No known issues found.');
+    expect(cleanReport.headline).toBe('Not fully checked.');
     const cleanHtml = renderReportHtml(cleanReport, { rawToken: cleanRaw });
     const cleanText = reportToPlainText(cleanReport, { rawToken: cleanRaw });
     expect(cleanHtml).toContain(`<h2>${cleanReport.headline}</h2>`);
@@ -572,7 +591,7 @@ describe('web report: static index.html and accessibility checks', () => {
     const rawToken = await parseTokenRaw(SAMPLES.clean.token);
     const report = await diagnoseToken(SAMPLES.clean.token, {
       fetchFn: getSampleFetchFn('clean'),
-      consent: false,
+      consent: true,
     });
     const html = renderReportHtml(report, { rawToken });
     expect(html).toContain('the signature check did not run');

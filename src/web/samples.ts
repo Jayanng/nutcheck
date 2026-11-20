@@ -27,9 +27,11 @@ export const SAMPLES: Record<string, SampleToken> = {
     knownKeysets: ['00e1577700e127f1'],
     consent: false,
     mint: 'https://testnut.cashu.space',
-    expectedState: 'green',
-    expectedStateWord: 'No findings',
-    expectedHeadline: 'No known issues found.',
+    expectedState: 'amber',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
+    expectedStateAfterConsent: 'green',
+    expectedHeadlineAfterConsent: 'No known issues found.',
   },
   evil: {
     key: 'evil',
@@ -53,12 +55,12 @@ export const SAMPLES: Record<string, SampleToken> = {
     knownKeysets: ['00e1577700e127f1'],
     consent: false,
     mint: 'https://testnut.cashu.space',
-    // Before consent, proof state is not checked, so the report is green
-    // "No known issues found" (verified live 2026-11-18). After consent,
-    // the simulated mint answer makes it red.
-    expectedState: 'green',
-    expectedStateWord: 'No findings',
-    expectedHeadline: 'No known issues found.',
+    // Before consent, proof state is not checked, so the report is
+    // "Not fully checked." (amber). After consent, the simulated mint
+    // answer makes it red.
+    expectedState: 'amber',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
     expectedStateAfterConsent: 'red',
     expectedHeadlineAfterConsent: 'Hold, here is why.',
   },
@@ -85,8 +87,10 @@ export const SAMPLES: Record<string, SampleToken> = {
     consent: false,
     mint: 'https://testnut.cashu.space',
     expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
+    expectedStateAfterConsent: 'amber',
+    expectedHeadlineAfterConsent: 'Hold, here is why.',
   },
   unreachable: {
     key: 'unreachable',
@@ -98,8 +102,8 @@ export const SAMPLES: Record<string, SampleToken> = {
     consent: false,
     mint: 'https://offline-mint.example.org',
     expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
   },
   auth: {
     key: 'auth',
@@ -111,8 +115,10 @@ export const SAMPLES: Record<string, SampleToken> = {
     consent: false,
     mint: 'https://auth-mint.example.org',
     expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
+    expectedStateAfterConsent: 'amber',
+    expectedHeadlineAfterConsent: 'Hold, here is why.',
   },
   v3: {
     key: 'v3',
@@ -124,8 +130,8 @@ export const SAMPLES: Record<string, SampleToken> = {
     consent: false,
     mint: 'https://testnut.cashu.space',
     expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
   },
 };
 

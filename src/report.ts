@@ -1,8 +1,11 @@
 // Verdict report. Runs the full diagnostic on a pasted token and assembles
 // the result into three sections on every run: Checked, Not checked, and
-// Cannot prove. The headline is either "No known issues found." or "Hold,
-// here is why." Any error or unknown state lands on AMBER, never the clean
-// headline. A clean headline is never the default when something errors.
+// Cannot prove. The headline is "No known issues found.", "Hold, here is
+// why.", or "Not fully checked." Any error or unknown state lands on AMBER,
+// never the clean headline. A clean headline is never the default when
+// something errors, and a check that did not run never earns it either:
+// when the only amber entries are checks that did not run, the headline
+// is "Not fully checked.", not a Hold.
 // The report names which check did the work, so a reader can see whether
 // the residue screen, the DLEQ check, or the mint checks caught the problem.
 // Report copy never uses the banned words safe, guaranteed, secure, or
@@ -48,7 +51,7 @@ export interface ReportCheck {
 }
 
 export interface NutCheckReport {
-  headline: 'No known issues found.' | 'Hold, here is why.';
+  headline: 'No known issues found.' | 'Hold, here is why.' | 'Not fully checked.';
   severity: ReportSeverity;
   mint: string | undefined;
   unit: string | undefined;
@@ -132,6 +135,7 @@ function headlineFor(checks: ReportCheck[]): {
   severity: ReportSeverity;
 } {
   let severity: ReportSeverity = 'none';
+  let hasFlag = false;
   for (const check of checks) {
     if (check.severity === 'red') {
       severity = 'red';
@@ -140,11 +144,20 @@ function headlineFor(checks: ReportCheck[]): {
     if (check.severity === 'amber') {
       severity = 'amber';
     }
+    if (check.outcome === 'flag') {
+      hasFlag = true;
+    }
   }
   if (severity === 'none') {
     return { headline: 'No known issues found.', severity: 'none' };
   }
-  return { headline: 'Hold, here is why.', severity };
+  if (severity === 'red' || hasFlag) {
+    return { headline: 'Hold, here is why.', severity };
+  }
+  // AMBER with no flag: every amber entry is a check that did not run
+  // (not-checked or error), so nothing was found, but the check is not
+  // finished. That is not a Hold and it is not clean.
+  return { headline: 'Not fully checked.', severity: 'amber' };
 }
 
 function toText(report: NutCheckReport): string {
@@ -444,11 +457,14 @@ export async function diagnoseToken(
     // when they mean a check could not run.
     for (const finding of decode.findings) {
       if (finding.code === 'dleq-incomplete') {
+        // An incomplete DLEQ is a finding about the token, not a check
+        // that did not run: the raw parser already detected the stripped
+        // field. It is a flag, so the headline is Hold.
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
           result: 'A proof carries an incomplete DLEQ',
-          outcome: 'not-checked',
+          outcome: 'flag',
           severity: 'amber',
           message: finding.message,
         });
@@ -473,11 +489,14 @@ export async function diagnoseToken(
     // silently dropped.
     for (const finding of decode.findings) {
       if (finding.code === 'dleq-incomplete') {
+        // An incomplete DLEQ is a finding about the token, not a check
+        // that did not run: the raw parser already detected the stripped
+        // field. It is a flag, so the headline is Hold.
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
           result: 'A proof carries an incomplete DLEQ',
-          outcome: 'not-checked',
+          outcome: 'flag',
           severity: 'amber',
           message: finding.message,
         });
@@ -729,12 +748,16 @@ export async function diagnoseToken(
     const proofs: { secret: string }[] =
       decode.status === 'decoded' ? decode.token.proofs : decode.proofs;
     if (!consent) {
+      // The proof state was not checked, so the report cannot claim the
+      // token is clean: a spent proof would not show up. This lands on
+      // AMBER, which makes the headline "Not fully checked.", never the
+      // clean headline and never a Hold.
       notChecked.push({
         name: 'Checkstate',
         checkId: 'checkstate',
         result: 'Consent not given, so the mint was not asked',
         outcome: 'not-checked',
-        severity: 'none',
+        severity: 'amber',
         message: CHECKSTATE_PRIVACY_COPY,
       });
     } else {

@@ -58,7 +58,7 @@ describe('browser decode with only the polyfill Buffer', () => {
       fetchFn: getSampleFetchFn('clean'),
       consent: false,
     });
-    expect(clean.headline).toBe('No known issues found.');
+    expect(clean.headline).toBe('Not fully checked.');
     const spent = await diagnoseToken(SAMPLES.spent.token, {
       fetchFn: getSampleFetchFn('spent'),
       consent: true,

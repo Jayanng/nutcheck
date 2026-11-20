@@ -248,11 +248,13 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     report.severity === 'red' ? 'red' : report.severity === 'amber' ? 'amber' : 'green';
 
   const stateWord =
-    report.severity === 'red'
-      ? 'Hard fail'
-      : report.severity === 'amber'
-        ? 'Hold'
-        : 'No findings';
+    report.headline === 'Not fully checked.'
+      ? 'Incomplete'
+      : report.severity === 'red'
+        ? 'Hard fail'
+        : report.severity === 'amber'
+          ? 'Hold'
+          : 'No findings';
 
   const headline = report.headline;
   const sampleNotice = options.isSample ? ' (sample demo: mint results are simulated)' : '';
@@ -302,6 +304,8 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     todoLine = 'Do not swap this token in a wallet that also holds proofs on the colliding keyset.';
   } else if (report.notChecked.some((c) => c.checkId === 'dleq' && c.result.includes('incomplete'))) {
     todoLine = 'Do not accept this token until the DLEQ block is complete. Ask the sender for a full token.';
+  } else if (report.notChecked.some((c) => c.checkId === 'checkstate' && c.result.includes('Consent not given'))) {
+    todoLine = 'Turn on \'Ask the mint\' to check whether the proofs are spent.';
   }
 
   // Outcome counts, used by the verdict foot and the limits panel.

@@ -17,6 +17,7 @@ import {
 import { screenResidues } from '../src/residue.js';
 import { keysetResidue } from '../src/residue.js';
 import { verifyProofDleq } from '../src/dleq.js';
+import { SAMPLES, getSampleFetchFn } from '../src/web/samples.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -99,8 +100,9 @@ function stubFetchForTestnut(checkstateBody?: Record<string, unknown>) {
 describe('report: three sections and headline', () => {
   it('a clean run produces the clean headline and its copy has no banned words', async () => {
     // Serve only keyset B, so there is no collision. DLEQ passes, the
-    // derivation matches, and checkstate is not consented, so nothing is
-    // flagged and the headline is the clean one.
+    // derivation matches, and checkstate is consented with the mock mint
+    // reporting unspent, so nothing is flagged and the headline is the
+    // clean one.
     const singleKeyset = JSON.parse(JSON.stringify(evilmintKeysets)) as {
       keysets: Array<Record<string, unknown>>;
     };
@@ -109,7 +111,12 @@ describe('report: three sections and headline', () => {
       keysets: Array<Record<string, unknown>>;
     };
     singleKeys.keysets = singleKeys.keysets.filter((k) => k.id === '00102821c3bc6333');
-    const fetchFn = async (url: string): Promise<Response> => {
+    const fetchFn = async (url: string, init?: RequestInit): Promise<Response> => {
+      if (url.endsWith('/v1/checkstate')) {
+        const body = JSON.parse(String(init?.body ?? '{}')) as { Ys?: string[] };
+        const y = body.Ys?.[0] ?? '';
+        return new Response(JSON.stringify({ states: [{ Y: y, state: 'UNSPENT' }] }), { status: 200 });
+      }
       if (url.endsWith('/v1/info')) {
         return new Response(JSON.stringify(evilmintInfo), { status: 200 });
       }
@@ -131,7 +138,7 @@ describe('report: three sections and headline', () => {
       }
       return new Response('not found', { status: 404 });
     };
-    const report = await diagnoseToken(evilmintToken, { fetchFn });
+    const report = await diagnoseToken(evilmintToken, { fetchFn, consent: true });
     expect(report.headline).toBe('No known issues found.');
     expect(report.severity).toBe('none');
     const text = reportToText(report);
@@ -139,6 +146,21 @@ describe('report: three sections and headline', () => {
     for (const word of BANNED_WORDS) {
       expect(text.toLowerCase()).not.toContain(word.toLowerCase());
     }
+  });
+
+  it('a run without mint consent never earns the clean headline', async () => {
+    // The clean sample decodes fine and nothing is flagged, but the proof
+    // state was never checked, so the headline is "Not fully checked.",
+    // not clean and not a Hold.
+    const report = await diagnoseToken(SAMPLES.clean.token, {
+      fetchFn: getSampleFetchFn('clean'),
+      consent: false,
+      knownKeysets: SAMPLES.clean.knownKeysets,
+    });
+    expect(report.headline).toBe('Not fully checked.');
+    expect(report.severity).toBe('amber');
+    const text = reportToText(report);
+    expect(scanReportCopy(text)).toEqual([]);
   });
 
   it('every report has Checked, Not checked and Cannot prove, even when short', async () => {
@@ -157,7 +179,7 @@ describe('report: three sections and headline', () => {
       throw new Error('network down');
     };
     const report = await diagnoseToken(evilmintToken, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
   });
 
@@ -175,7 +197,7 @@ describe('report: three sections and headline', () => {
       return new Response('not found', { status: 404 });
     };
     const report = await diagnoseToken(evilmintToken, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
     const decode = report.notChecked.find((c) => c.checkId === 'decode');
     expect(decode).toBeDefined();
@@ -199,7 +221,7 @@ describe('report: three sections and headline', () => {
       return new Response('not found', { status: 404 });
     };
     const report = await diagnoseToken(evilmintToken, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
     const dleq = report.notChecked.find((c) => c.checkId === 'dleq');
     expect(dleq).toBeDefined();
@@ -322,7 +344,7 @@ describe('report: banned words', () => {
       throw new Error('network down at the safe gateway, guaranteed timeout');
     };
     const report = await diagnoseToken(token, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(scanReportCopy(reportToText(report))).toEqual([]);
     const text = reportToText(report);
     expect(text).not.toContain('safe');
@@ -353,7 +375,7 @@ describe('report: banned words', () => {
       return new Response('not found', { status: 404 });
     };
     const report = await diagnoseToken(token, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(fetches).toBe(0);
     expect(scanReportCopy(reportToText(report))).toEqual([]);
     expect(reportToText(report)).not.toContain('safe-mint');
@@ -569,9 +591,9 @@ describe('adversarial suite', () => {
     const checkstate = report.notChecked.find((c) => c.checkId === 'checkstate');
     expect(checkstate).toBeDefined();
     expect(checkstate!.result).toContain('Consent not given');
-    // The headline is Hold: the V3 proof's signature was not verified,
+    // The headline is 'Not fully checked.': the V3 proof's signature was not verified,
     // an unknown state, even though the V1 DLEQ is valid.
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
   });
 
   it('an ambiguous short keyset ID is not resolved to the first prefix match', async () => {
@@ -778,9 +800,9 @@ describe('adversarial suite', () => {
     expect(decode).toBeDefined();
     expect(decode!.outcome).toBe('not-checked');
     // The V3 signature was not verified, an unknown state, so the
-    // headline is Hold, not clean.
+    // headline is 'Not fully checked.', not clean.
     expect(decode!.severity).toBe('amber');
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
   });
 
@@ -876,7 +898,7 @@ describe('adversarial suite', () => {
       throw new Error('fetch failed');
     };
     const report = await diagnoseToken(evilmintToken, { fetchFn });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
   });
 
@@ -921,7 +943,7 @@ describe('adversarial suite', () => {
         fetchFn,
         consent: true,
       });
-      expect(report.headline).toBe('Hold, here is why.');
+      expect(report.headline).toBe('Not fully checked.');
       const cs = report.notChecked.find((c) => c.checkId === 'checkstate');
       expect(cs).toBeDefined();
       expect(cs?.severity).toBe('amber');
