@@ -44,7 +44,10 @@
         <span class="hint">Decoded on your device. Nothing leaves it until you check.</span>
       </div>
       <div class="foot">
-        <button class="btn btn-primary check-btn" id="check-btn" type="button" disabled>Check token</button>
+        <div class="action-btns">
+          <button class="btn btn-primary check-btn" id="check-btn" type="button" disabled>Check token</button>
+          <button class="btn btn-ghost clear-btn" id="clear-btn" type="button" aria-label="Clear token and reset">Clear</button>
+        </div>
         <div class="opt-keys">
           <label for="known">Trusted keysets</label>
           <input id="known" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="009a1f293253e41e" aria-label="Trusted keysets, comma separated">

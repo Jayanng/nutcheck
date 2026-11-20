@@ -186,9 +186,12 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
 .instrument .facts .ftext { font-family: var(--mono); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .instrument .facts .hint { color: var(--muted); font-size: 13px; }
 .instrument .foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }
-.check-btn { padding: 0 26px; font-weight: 700; box-shadow: 0 8px 24px rgba(0, 24, 255, 0.28); }
+.action-btns { display: flex; align-items: center; gap: 8px; }
+.check-btn { padding: 0 24px; font-weight: 700; box-shadow: 0 8px 24px rgba(0, 24, 255, 0.28); }
 .check-btn:hover { background: #0014d6; }
 .check-btn:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+.clear-btn { height: 48px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--muted); border-radius: 999px; }
+.clear-btn:hover { background: rgba(10, 10, 10, 0.05); color: var(--ink); }
 .instrument .opt-keys { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
 .instrument .opt-keys label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
 .instrument .opt-keys input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--bg); outline: none; }
