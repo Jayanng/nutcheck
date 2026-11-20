@@ -38,6 +38,11 @@ describe('web report: real output across fixture states', () => {
     // Check DOM elements
     expect(html).toContain('verdict amber');
     expect(html).toContain('Incomplete');
+    // Verdict foot counts pipeline steps, not individual checks, so the
+    // chips add up to the seven steps the user sees.
+    expect(html).toContain('<b>5</b> Passed');
+    expect(html).toContain('<b>1</b> Needs attention');
+    expect(html).toContain('<b>1</b> Not checked');
     expect(html).toContain(report.headline);
     expect(html).toContain('Checked');
     expect(html).toContain('Not checked');

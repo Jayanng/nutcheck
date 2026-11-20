@@ -308,9 +308,17 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     todoLine = 'Turn on \'Ask the mint\' to check whether the proofs are spent.';
   }
 
-  // Outcome counts, used by the verdict foot and the limits panel.
-  const passedCheckCount = report.checked.filter((c) => c.outcome === 'pass').length;
-  const flaggedChecks = report.checked.filter((c) => c.outcome !== 'pass');
+  // Outcome counts for the verdict foot: pipeline steps, not individual
+  // checks. A step groups one check per proof or keyset, so counting
+  // checks made Clean read '6 Passed, 3 Not checked' while the pipeline
+  // shows 7 steps. The chips must add up to the steps the user sees.
+  const steps = groupIntoPipeline(report);
+  const stepStatuses = steps.map((step) => pipelineStepStatus(step));
+  const passedStepCount = stepStatuses.filter((s) => s.css === 'pass').length;
+  const attentionStepCount = stepStatuses.filter((s) => s.css === 'fail' || s.css === 'hold').length;
+  const notCheckedStepCount = stepStatuses.filter((s) => s.css === 'idle').length;
+  // The 'Not checked' section header below still counts items, because
+  // it labels the list of not-checked checks under it.
   const notCheckedCount = report.notChecked.length;
   const cannotProveCount = report.cannotProve.length;
 
@@ -337,11 +345,11 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Counts at the foot of the verdict: the answer and its composition in
   // one glance. The separate summary strip is gone; these chips are it.
   html += `<div class="counts">`;
-  html += `<span class="chip"><span class="dot green"></span><b>${passedCheckCount}</b> Passed</span>`;
-  if (flaggedChecks.length > 0) {
-    html += `<span class="chip"><span class="dot amber"></span><b>${flaggedChecks.length}</b> Needs attention</span>`;
+  html += `<span class="chip"><span class="dot green"></span><b>${passedStepCount}</b> Passed</span>`;
+  if (attentionStepCount > 0) {
+    html += `<span class="chip"><span class="dot amber"></span><b>${attentionStepCount}</b> Needs attention</span>`;
   }
-  html += `<span class="chip"><span class="dot amber"></span><b>${notCheckedCount}</b> Not checked</span>`;
+  html += `<span class="chip"><span class="dot amber"></span><b>${notCheckedStepCount}</b> Not checked</span>`;
   html += `<span class="chip"><span class="dot blue"></span><b>${cannotProveCount}</b> Cannot prove</span>`;
   html += `</div>`;
   html += `</div>`;
@@ -393,7 +401,6 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Passed steps start closed, a flagged step starts open, and the
   // collision diagram sits inside the flagged residue step.
   const collision = extractCollision(report);
-  const steps = groupIntoPipeline(report);
   const renderStep = (step: PipelineStep): string => {
     const status = pipelineStepStatus(step);
     const value = pipelineStepValue(step, options);
