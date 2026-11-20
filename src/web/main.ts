@@ -264,12 +264,16 @@ function loadSample(key: string, autoRun = true): void {
 
 function clearForm(): void {
   const tokenBox = document.getElementById('token') as HTMLTextAreaElement | null;
+  const knownBox = document.getElementById('known') as HTMLInputElement | null;
   const consentBox = document.getElementById('consent') as HTMLInputElement | null;
   const reportContainer = document.getElementById('report');
   const copyBtn = document.getElementById('copy-btn');
   if (tokenBox) {
     tokenBox.value = '';
     tokenBox.focus();
+  }
+  if (knownBox) {
+    knownBox.value = '';
   }
   if (consentBox) {
     consentBox.checked = false;
@@ -295,12 +299,17 @@ export function initApp(): void {
   const tokenBox = document.getElementById('token') as HTMLTextAreaElement | null;
   const consentBox = document.getElementById('consent') as HTMLInputElement | null;
   const checkBtn = document.getElementById('check-btn');
+  const clearBtn = document.getElementById('clear-btn');
   const consentDialog = document.getElementById('consent-dialog') as HTMLDialogElement | null;
   const consentConfirm = document.getElementById('consent-confirm');
   const consentCancel = document.getElementById('consent-cancel');
 
   if (checkBtn) {
     checkBtn.addEventListener('click', () => runCheck(true));
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => clearForm());
   }
 
   const knownBox = document.getElementById('known') as HTMLInputElement | null;
