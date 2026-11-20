@@ -37,7 +37,7 @@ async function acceptToken(token: string, walletKeysets: string[]) {
   }
 
   // "No known issues found." Nothing in the checks that ran turned up
-  // a finding. This is not a guarantee. Read LIMITS.md.
+  // a finding. A clean headline means no known issues were found in the checks that ran. Read LIMITS.md.
   return { accepted: true, report };
 }
 ```
@@ -51,7 +51,7 @@ Get the IDs from your wallet's keyset store. They are the 16-character hex IDs f
 ## What not to do
 
 - Do not call `diagnoseToken` with `consent: true` by default. Asking the mint sends the proofs' secret hashes (Ys) to the mint, and the mint learns what the user holds. Ask the user first, every time.
-- Do not treat "No known issues found." as a guarantee. It means nothing was found in the checks that ran. Show the user the Not checked and Cannot prove sections alongside the headline.
+- Do not treat "No known issues found." as more than it is. It means nothing was found in the checks that ran. Show the user the Not checked and Cannot prove sections alongside the headline.
 - Do not swallow a Hold. If the headline is "Hold, here is why.", surface the finding. Silently accepting a flagged token defeats the check.
 
 ## The report shape

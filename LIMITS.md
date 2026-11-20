@@ -16,7 +16,7 @@ The screen covers only the keyset lists you supply: the token's keysets, the min
 
 A proof with no DLEQ is still valid spendable ecash. DLEQ proves the mint owns its key. It never proves the mint is honest. A proof with a partial DLEQ is treated as having no DLEQ.
 
-V3 proofs use pairing-based verification, not DLEQ. Their signatures are not checked by this tool.
+Keysets with prefix 02 are V3 keysets. Their BLS12-381 signatures use pairing verification, not secp256k1 DLEQ, and this tool does not check them. A cashuA token is a token encoding format and may contain keysets of different keyset versions.
 
 ## The mint's answer is a snapshot
 

@@ -22,7 +22,7 @@ A NutCheck report has three sections: Checked, Not checked, Cannot prove. The he
 - "Hold, here is why." A check found something. Do not swap the token.
 - "Not fully checked." The only open items are checks that did not run, such as the mint check without consent.
 
-A clean headline is not a guarantee. It means nothing was found in the checks that ran. The report always lists what did not run and what this tool can never prove: that the mint is honest, that the mint is solvent, that the proofs stay unspent after the check, and that no collision exists outside the lists supplied.
+A clean headline means no known issues were found in the checks that ran. The report always lists what did not run and what this tool can never prove: that the mint is honest, that the mint is solvent, that the proofs stay unspent after the check, and that no collision exists outside the lists supplied.
 
 ## Scope
 

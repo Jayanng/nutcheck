@@ -703,6 +703,14 @@ describe('web checker: premium instrument panel', () => {
     expect(appHtml).toContain('Local checks run on your device.');
   });
 
+  it('README states the correct token formats, never bech32 for v3', () => {
+    const readme = readFileSync(path.join(root, 'README.md'), 'utf8');
+    expect(readme).not.toContain('v3 token is bech32');
+    expect(readme).toContain('A v3 token is base64url JSON');
+    expect(readme).toContain('A v4 token is CBOR plus base64url');
+    expect(readme).toContain('Bech32m is used for NUT-26 payment requests, not tokens');
+  });
+
   it('app.html has the samples as one row of pills with all 8 cases', () => {
     expect(appHtml).toContain('class="samples"');
     for (const key of ['clean', 'evil', 'spent', 'partial', 'pending', 'unreachable', 'auth', 'v3']) {

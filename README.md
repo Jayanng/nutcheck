@@ -56,7 +56,7 @@ if (report.headline === 'Hold, here is why.') {
 
 The report has three sections. `checked` lists what ran and its result. `notChecked` lists what did not run and why. `cannotProve` lists what this tool can never prove, whatever the result. The headline is one of three: "No known issues found.", "Hold, here is why.", or "Not fully checked." (the last when the only open items are checks that did not run, such as the mint check without consent).
 
-A v4 token is CBOR plus base64url, never bech32. A v3 token is bech32. NutCheck decodes both locally, in your browser or in your process, before anything is judged.
+A v4 token is CBOR plus base64url, never bech32. A v3 token is base64url JSON. Bech32m is used for NUT-26 payment requests, not tokens. NutCheck decodes both locally, in your browser or in your process, before anything is judged.
 
 ## What it checks
 
