@@ -10,6 +10,7 @@ export interface RenderOptions {
   sampleName?: string;
   sampleDescription?: string;
   isSample?: boolean;
+  isLiveSample?: boolean;
   knownKeysets?: readonly string[];
   rawToken?: RawToken;
 }
@@ -161,6 +162,7 @@ function groupIntoPipeline(report: NutCheckReport): PipelineStep[] {
 function simulatedLabel(check: ReportCheck, options: RenderOptions): string {
   if (
     options.isSample &&
+    !options.isLiveSample &&
     (check.checkId === 'checkstate' || check.checkId === 'mint') &&
     !check.result.includes('Consent not given')
   ) {
@@ -257,7 +259,11 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
           : 'No findings';
 
   const headline = report.headline;
-  const sampleNotice = options.isSample ? ' (sample demo: mint results are simulated)' : '';
+  const sampleNotice = options.isLiveSample
+    ? ' (real token from a live test mint, checked live)'
+    : options.isSample
+      ? ' (sample demo: mint results are simulated)'
+      : '';
 
   // Only claim signatures match when every eligible proof was verified and
   // passed. The proof count comes from the parsed token, not from report
@@ -395,10 +401,12 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Mint facts always derive from checks that actually ran, never from a
   // sample description. The sample description goes in its own labelled field.
   // When the mint facts came from a sample mock, label them simulated on this line.
-  const mintSimulated = options.isSample ? ' (simulated)' : '';
+  const mintSimulated = options.isSample && !options.isLiveSample ? ' (simulated)' : '';
   html += `<p style="margin:12px 0 0;font-size:13px;color:var(--muted)">Mint facts: ${escapeHtml(defaultFacts)}${escapeHtml(mintSimulated)}</p>`;
   if (options.isSample && options.sampleDescription) {
-    html += `<p style="margin:8px 0 0;font-size:13px;color:var(--muted)">Example scenario: ${escapeHtml(options.sampleDescription)} (example only, not a live mint answer)</p>`;
+    const scenarioLabel = options.isLiveSample ? 'Token' : 'Example scenario';
+    const scenarioSuffix = options.isLiveSample ? '' : ' (example only, not a live mint answer)';
+    html += `<p style="margin:8px 0 0;font-size:13px;color:var(--muted)">${scenarioLabel}: ${escapeHtml(options.sampleDescription)}${scenarioSuffix}</p>`;
   }
   html += `</div>`;
 
@@ -521,7 +529,9 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
   const mintDisplay = rawMint !== undefined ? mintFingerprint(rawMint) : '(unknown)';
 
   lines.push(`NutCheck report: ${sampleName}`);
-  if (options.isSample) {
+  if (options.isLiveSample) {
+    lines.push('(real token from a live test mint, checked live)');
+  } else if (options.isSample) {
     lines.push('(sample demo: mint and proof-state results below are simulated, not live mint answers)');
   }
   lines.push(`Mint: ${mintDisplay}`);
@@ -546,7 +556,7 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
     lines.push('  (nothing)');
   } else {
     for (const c of report.checked) {
-      const simulated = options.isSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
+      const simulated = options.isSample && !options.isLiveSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
       lines.push(`  - ${c.name} [${c.checkId}]: ${c.result}${simulated} - ${c.message}`);
     }
   }

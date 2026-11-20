@@ -177,7 +177,7 @@ async function runCheck(scrollIntoView = false): Promise<void> {
   const isSample = activeSampleKey !== null && SAMPLES[activeSampleKey]?.token === rawInput;
   const sampleObj = isSample && activeSampleKey ? SAMPLES[activeSampleKey] : undefined;
 
-  const sampleNameForReport = sampleObj ? `${sampleObj.name} (sample demo)` : 'Custom token';
+  const sampleNameForReport = sampleObj ? `${sampleObj.name} ${sampleObj.live ? '(live token)' : '(sample demo)'}` : 'Custom token';
 
   try {
     // Attempt raw parsing first for UI token facts. Keep the result in a
@@ -189,8 +189,9 @@ async function runCheck(scrollIntoView = false): Promise<void> {
       rawTokenParsed = undefined;
     }
 
-    // Pick mock fetch ONLY if user actually clicked a sample button and token is untouched
-    const fetchFn = sampleObj ? getSampleFetchFn(sampleObj.key) : undefined;
+    // Pick mock fetch ONLY if user actually clicked a sample button and token is untouched.
+    // A live sample (a real token) uses the real fetch and hits its mint.
+    const fetchFn = sampleObj && !sampleObj.live ? getSampleFetchFn(sampleObj.key) : undefined;
 
     const report = await diagnoseToken(rawInput, {
       fetchFn,
@@ -213,6 +214,7 @@ async function runCheck(scrollIntoView = false): Promise<void> {
       sampleName: lastSampleName,
       sampleDescription: sampleObj?.description,
       isSample: isSample,
+      isLiveSample: sampleObj?.live === true,
       knownKeysets,
       rawToken: lastRawToken,
     });

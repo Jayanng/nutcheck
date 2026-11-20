@@ -10,6 +10,7 @@ export interface SampleToken {
   knownKeysets: string[];
   consent: boolean;
   mint: string;
+  live?: boolean;
   expectedState: 'green' | 'amber' | 'red';
   expectedStateWord: string;
   expectedHeadline: string;
@@ -22,11 +23,12 @@ export const SAMPLES: Record<string, SampleToken> = {
     key: 'clean',
     name: 'Clean token',
     shortLabel: 'clean',
-    description: 'Decodes cleanly, valid keysets, valid signatures, unspent.',
-    token: 'cashuBo2FteBtodHRwczovL3Rlc3RudXQuY2FzaHUuc3BhY2VhdWNzYXRhdIKiYWlIAOFXdwDhJ_FhcIGjYWEBYXN4QDAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDFhY1ghAhERERERERERERERERERERERERERERERERERERERERERomFpSAFhILMSZvIYYXCBo2FhFGFzeEAwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyMDIwMjAyYWNYIQIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg',
-    knownKeysets: ['00e1577700e127f1'],
+    description: 'A real 21-sat token minted on the live testnut.cashu.exchange mint. Checked live, not simulated.',
+    token: 'cashuBo2FteB5odHRwczovL3Rlc3RudXQuY2FzaHUuZXhjaGFuZ2VhdWNzYXRhdIGiYWlIAQEyc0FGdbhhcIOkYWEQYXN4QDNmMWMyNmNmZWYwNDYwODI4NzUxNDdkY2Q4Nzk4ZDljNjRmOWY0ZDZhOWYyZjg0MDIwZWVjZWViMTc2MzA3NGFhY1ghAvpNkfyL0Fa_WTES42EbCDX9GJtSC8L8on-e1C8RmZzzYWSjYWVYIMt9zLit1_OPxFCSa5xq7B9b2akvq7KWHG47JyvGzP06YXNYINdbhNIFg3xP3oHkO_bo9whJ3KC98jljiiwIGUmmIWaYYXJYIIKTwV3aVvnzA2H4hoNiH272uk-4_EHOKIO_shRaDnrJpGFhBGFzeEBkYzdhOTM3OGY5M2RlYjJhOWI2NjhhNjM1ZWM2MGMzZjRkODVhYjNmZmJjYjY3ZmU1NjQzY2E4YWY2ZjI3MjU3YWNYIQKy88ggqV-chQ8_rGM1qk6yOvFAVCr5yF6bx9HgdJjQg2Fko2FlWCDAfRYngNoywBWj2iBM8I5OVRu2Xs0mwFw_ZcqHvdznV2FzWCCX0Qb9Cxpe76PDRnoqH39x7_9hEyOReTWrbEYqxr-vy2FyWCDzRICdw-QJLEUBoCxeDMM3fPLA7c7LcK60718TANI3GqRhYQFhc3hAYzMxYTI2MDJkYjY1OTEzMjA0ZTM2YTEzM2MyYjRkN2EzMzIzOTVlN2I4Mjc3YjM5ZDIzMGIwYzVkMDI4YmFkM2FjWCEDH29teWtDlMo5fS4ScjOMhVjP02MmfTDqUbJavCx-RORhZKNhZVgg1CfVep6SaL8aRlnpEY-kZRoxO9U49GMiFZJAcDl8QRhhc1ggw8HVtqXcGrRo5fNQV_hUofwk6UgZvDWl9aOrKDINIKJhclggKSGbKXghJIzWWQCARTLnDLKIaAYTw2Pb2hchgMpqB-U',
+    knownKeysets: [],
     consent: false,
-    mint: 'https://testnut.cashu.space',
+    mint: 'https://testnut.cashu.exchange',
+    live: true,
     expectedState: 'amber',
     expectedStateWord: 'Incomplete',
     expectedHeadline: 'Not fully checked.',

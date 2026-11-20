@@ -29,9 +29,12 @@ describe('browser decode with only the polyfill Buffer', () => {
   it('runs the full check on all 8 samples without a decode failure', async () => {
     const { diagnoseToken } = await import('../src/report.js');
     const { SAMPLES, getSampleFetchFn } = await import('../src/web/samples.js');
+    const { cleanExchangeFetchFn } = await import('./cleanExchangeFixture.js');
     for (const [key, sample] of Object.entries(SAMPLES)) {
+      // The Clean sample is a real token on a live mint, so its check
+      // replays the recorded mint responses instead of hitting the network.
       const report = await diagnoseToken(sample.token, {
-        fetchFn: getSampleFetchFn(key),
+        fetchFn: key === 'clean' ? cleanExchangeFetchFn() : getSampleFetchFn(key),
         consent: sample.consent,
         knownKeysets: sample.knownKeysets,
       });

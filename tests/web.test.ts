@@ -10,14 +10,16 @@ import { parseTokenRaw } from '../src/rawParser.js';
 import { classifyKeysetVersion } from '../src/keysetVersion.js';
 import { SAMPLES, getSampleFetchFn } from '../src/web/samples.js';
 import { renderReportHtml, reportToPlainText } from '../src/web/render.js';
+import { cleanExchangeFetchFn } from './cleanExchangeFixture.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 
 describe('web report: real output across fixture states', () => {
   it('clean sample is incomplete without consent and clean after the mint check runs', async () => {
     const sample = SAMPLES.clean;
     const rawToken = await parseTokenRaw(sample.token);
-    const fetchFn = getSampleFetchFn('clean');
+    const fetchFn = cleanExchangeFetchFn();
 
     const report = await diagnoseToken(sample.token, {
       fetchFn,
@@ -32,6 +34,7 @@ describe('web report: real output across fixture states', () => {
       sampleName: sample.name,
       sampleDescription: sample.description,
       isSample: true,
+      isLiveSample: true,
       rawToken,
     });
 
@@ -39,10 +42,17 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('verdict amber');
     expect(html).toContain('Incomplete');
     // Verdict foot counts pipeline steps, not individual checks, so the
-    // chips add up to the seven steps the user sees.
-    expect(html).toContain('<b>5</b> Passed');
+    // chips add up to the seven steps the user sees. The real token carries
+    // DLEQ on all three proofs, so DLEQ passes. Only Checkstate is not
+    // run before consent, and consent-not-given is amber, so that step
+    // reads as Needs attention: 6 Passed, 1 Needs attention, 0 Not checked.
+    expect(html).toContain('<b>6</b> Passed');
     expect(html).toContain('<b>1</b> Needs attention');
-    expect(html).toContain('<b>1</b> Not checked');
+    expect(html).toContain('<b>0</b> Not checked');
+    // A live sample is checked against its real mint, so nothing is
+    // labelled simulated.
+    expect(html).not.toContain('(simulated)');
+    expect(html).toContain('real token from a live test mint');
     // The foot holds only the step chips: no 'Cannot prove' chip, which
     // is not a step outcome and is listed in its own section below.
     const countsDiv = html.match(/<div class="counts">([\s\S]*?)<\/div>/);
@@ -78,6 +88,7 @@ describe('web report: real output across fixture states', () => {
       sampleName: sample.name,
       sampleDescription: sample.description,
       isSample: true,
+      isLiveSample: true,
       rawToken,
     });
     expect(cleanHtml).toContain('verdict green');
@@ -326,7 +337,7 @@ describe('web report: real output across fixture states', () => {
   it('pipeline groups derivation and DLEQ into steps with sub-steps', async () => {
     const sample = SAMPLES.clean;
     const rawToken = await parseTokenRaw(sample.token);
-    const fetchFn = getSampleFetchFn('clean');
+    const fetchFn = cleanExchangeFetchFn();
 
     const report = await diagnoseToken(sample.token, {
       fetchFn,
@@ -338,6 +349,7 @@ describe('web report: real output across fixture states', () => {
       sampleName: sample.name,
       sampleDescription: sample.description,
       isSample: true,
+      isLiveSample: true,
       rawToken,
     });
 
@@ -353,11 +365,13 @@ describe('web report: real output across fixture states', () => {
       'DLEQ',
       'Checkstate',
     ]);
-    // Grouped steps show a count, with the per-keyset results as sub-steps
-    expect(html).toContain('2 mint keysets recomputed, both match');
-    expect(html).toContain('Keyset 00e1577700e127f1 recomputes to 00e1577700e127f1');
-    expect(html).toContain('DLEQ absent on 2 proofs');
-    expect(html).toContain('Proof 0: DLEQ absent');
+    // Grouped steps show a count, with the per-keyset results as sub-steps.
+    // The real mint lists 14 keysets and the real token carries DLEQ on
+    // all three proofs.
+    expect(html).toContain('14 mint keysets recomputed, all match');
+    expect(html).toContain('Keyset 01013273414675b852858d4d65d596d28a5217126a58656eaabc824d30085b859d recomputes to 01013273414675b852858d4d65d596d28a5217126a58656eaabc824d30085b859d');
+    expect(html).toContain('DLEQ valid on 3 proofs');
+    expect(html).toContain('Proof 0: DLEQ valid');
     // The residue full result is in the expanded detail, not lost
     expect(html).toContain('V2 keysets are excluded because the NUT-13 residue collision applies');
     // Verdict counts live in the verdict card, the separate strip is gone
@@ -440,6 +454,7 @@ describe('web report: real output across fixture states', () => {
 describe('web report: consent dialog and privacy guarantees', () => {
   it('checkstate request never fires without explicit consent', async () => {
     let checkstateCalls = 0;
+    const replayFetch = cleanExchangeFetchFn();
     const countingFetch: typeof fetch = async (input, init) => {
       const url =
         typeof input === 'string'
@@ -449,9 +464,8 @@ describe('web report: consent dialog and privacy guarantees', () => {
             : (input as Request).url;
       if (url.endsWith('/v1/checkstate')) {
         checkstateCalls++;
-        return getSampleFetchFn('clean')(url, init);
       }
-      return getSampleFetchFn('clean')(url, init);
+      return replayFetch(url, init);
     };
 
     // Run without consent
@@ -562,7 +576,7 @@ describe('web report: static index.html and accessibility checks', () => {
     const residueCheck = report.checked.find((c) => c.checkId === 'residue');
     expect(residueCheck).toBeDefined();
     expect(residueCheck?.outcome).toBe('pass');
-    expect(residueCheck?.result).toMatch(/No collision found across \d+ V1 keysets/);
+    expect(residueCheck?.result).toMatch(/No collision found across \d+ V1 keysets?/);
     expect(residueCheck?.result).toContain('excluded');
 
     // Proof state is reported under not checked when offline
@@ -580,7 +594,7 @@ describe('web report: static index.html and accessibility checks', () => {
   it('plain-text report export prints mint fingerprint, never raw mint URL', async () => {
     const rawToken = await parseTokenRaw(SAMPLES.clean.token);
     const report = await diagnoseToken(SAMPLES.clean.token, {
-      fetchFn: getSampleFetchFn('clean'),
+      fetchFn: cleanExchangeFetchFn(),
       consent: false,
     });
 
@@ -592,7 +606,7 @@ describe('web report: static index.html and accessibility checks', () => {
     // Contains 8-char hex fingerprint
     expect(text).toMatch(/^Mint: [0-9a-f]{8}$/m);
     // Never contains the raw URL
-    expect(text).not.toContain('https://testnut.cashu.space');
+    expect(text).not.toContain('https://testnut.cashu.exchange');
     expect(scanReportCopy(text)).toEqual([]);
   });
 
@@ -626,12 +640,29 @@ describe('web report: static index.html and accessibility checks', () => {
     expect(spentText).toContain(`Headline: ${spentReport.headline}`);
   });
 
-  it('clean sample without DLEQ does not claim signatures match', async () => {
+  it('a clean report with DLEQ absent does not claim signatures match', async () => {
+    // No sample now carries a token without DLEQ (the Clean sample is a
+    // real token with DLEQ on all proofs), so the render behaviour is
+    // tested directly with a report shaped like one: mint checked, no
+    // DLEQ passed, severity clean.
     const rawToken = await parseTokenRaw(SAMPLES.clean.token);
-    const report = await diagnoseToken(SAMPLES.clean.token, {
-      fetchFn: getSampleFetchFn('clean'),
-      consent: true,
-    });
+    const report: NutCheckReport = {
+      headline: 'No known issues found.',
+      severity: 'none',
+      mint: 'https://testnut.cashu.exchange',
+      unit: 'sat',
+      checked: [
+        { name: 'Token decode', checkId: 'decode', result: 'Decoded 3 proofs, unit sat', outcome: 'pass', severity: 'none', message: 'The token parsed cleanly' },
+        { name: 'Mint facts', checkId: 'mint', result: 'The mint answered, 14 keysets listed', outcome: 'pass', severity: 'none', message: 'The mint metadata read cleanly' },
+        { name: 'Checkstate', checkId: 'checkstate', result: 'Proof 0: The mint reports this proof as unspent', outcome: 'pass', severity: 'none', message: 'The mint reports this proof as unspent' },
+      ],
+      notChecked: [
+        { name: 'DLEQ', checkId: 'dleq', result: 'Proof 0: DLEQ absent', outcome: 'not-checked', severity: 'none', message: 'No DLEQ present, signatures cannot be verified offline' },
+        { name: 'DLEQ', checkId: 'dleq', result: 'Proof 1: DLEQ absent', outcome: 'not-checked', severity: 'none', message: 'No DLEQ present, signatures cannot be verified offline' },
+        { name: 'DLEQ', checkId: 'dleq', result: 'Proof 2: DLEQ absent', outcome: 'not-checked', severity: 'none', message: 'No DLEQ present, signatures cannot be verified offline' },
+      ],
+      cannotProve: [],
+    };
     const html = renderReportHtml(report, { rawToken });
     expect(html).toContain('DLEQ is absent on the proofs');
     expect(html).not.toContain('the signature check did not run');
@@ -749,12 +780,10 @@ describe('web checker: premium instrument panel', () => {
     expect(raw.format).toBe('cashuB');
     const total = raw.proofs.reduce((sum, p) => sum + p.amount, 0);
     expect(total).toBe(21);
-    expect(raw.proofs.length).toBe(2);
-    expect(raw.mints[0]).toBe('https://testnut.cashu.space');
-    expect(raw.keysetIds).toContain('00e1577700e127f1');
-    expect(raw.keysetIds).toContain('016120b31266f218');
-    expect(classifyKeysetVersion('00e1577700e127f1')).toBe('v1');
-    expect(classifyKeysetVersion('016120b31266f218')).toBe('v2');
+    expect(raw.proofs.length).toBe(3);
+    expect(raw.mints[0]).toBe('https://testnut.cashu.exchange');
+    expect(raw.keysetIds).toContain('01013273414675b8');
+    expect(classifyKeysetVersion('01013273414675b8')).toBe('v2');
   });
 
   it('token facts match the real evil token', async () => {
