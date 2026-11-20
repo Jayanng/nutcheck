@@ -141,6 +141,9 @@ describe('report: three sections and headline', () => {
     const report = await diagnoseToken(evilmintToken, { fetchFn, consent: true });
     expect(report.headline).toBe('No known issues found.');
     expect(report.severity).toBe('none');
+    // One keyset served, so the Mint facts line is singular.
+    const mintFacts = report.checked.find((c) => c.checkId === 'mint');
+    expect(mintFacts?.result).toBe('The mint answered, 1 keyset listed');
     const text = reportToText(report);
     expect(scanReportCopy(text)).toEqual([]);
     for (const word of BANNED_WORDS) {

@@ -404,7 +404,7 @@ export async function diagnoseToken(
     checked.push({
       name: 'Mint facts',
       checkId: 'mint',
-      result: `The mint answered, ${facts.keysets.length} keysets listed`,
+      result: `The mint answered, ${facts.keysets.length} keyset${facts.keysets.length === 1 ? '' : 's'} listed`,
       outcome: 'pass',
       severity: 'none',
       message: facts.findings.length > 0 ? `Note: ${facts.findings.join('; ')}` : 'The mint metadata read cleanly',
