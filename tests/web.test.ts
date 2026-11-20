@@ -631,7 +631,8 @@ describe('web report: static index.html and accessibility checks', () => {
       consent: true,
     });
     const html = renderReportHtml(report, { rawToken });
-    expect(html).toContain('the signature check did not run');
+    expect(html).toContain('DLEQ is absent on the proofs');
+    expect(html).not.toContain('the signature check did not run');
     expect(html).not.toContain('the signatures match');
   });
 

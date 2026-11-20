@@ -293,7 +293,9 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
           : isV3Only
             ? 'The token decodes and the keysets check out. V3 proofs use pairing-based verification, not DLEQ. The report below shows exactly what ran and what did not.'
             : mintChecked
-              ? 'The token decodes and the keysets check out; the signature check did not run on all proofs. The report below shows exactly what ran and what did not.'
+              ? passedCount === 0
+                ? 'The token decodes and the keysets check out. DLEQ is absent on the proofs, so no DLEQ check ran. The report below shows exactly what ran and what did not.'
+                : `The token decodes and the keysets check out; DLEQ passed on ${passedCount} of ${eligibleCount} proofs, the rest carry no DLEQ. The report below shows exactly what ran and what did not.`
               : 'The token decodes; keyset verification was not completed. The report below shows exactly what ran and what did not.';
 
   // Determine what to do line if any
