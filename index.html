@@ -58,7 +58,7 @@
 <main>
   <section class="section" id="does">
     <h2>What it checks</h2>
-    <p class="sub">Five checks, each one named in the report.</p>
+    <p class="sub">Five checks, each one named in the report. The report shows seven steps in all, the mint's facts and the keysets' age alongside the five checks.</p>
     <div class="feature-grid">
       <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">C</div><h3>Check the decode</h3><p>Any Cashu token, v3 or v4, decoded in your browser before anything is judged.</p></div>
       <div class="feature-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><div class="feature-letter">H</div><h3>Hash the keyset</h3><p>Each keyset ID is recomputed from the mint's public keys. A mismatch means the keyset is not what it claims.</p></div>
@@ -75,19 +75,19 @@
       <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
         <div class="stat-top"><span class="stat-label">Tries to find two colliding keysets</span><span class="trend">Mod 2^31 - 1</span></div>
         <div class="stat-value">2,929</div>
-        <p>Birthday-bound tries across V1 keyset IDs.</p>
+        <p>Birthday-bound tries across V1 keyset IDs, found by a birthday search in November 2026.</p>
         <div class="spark"><i style="height:30%"></i><i style="height:45%"></i><i style="height:40%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:75%"></i><i class="hot" style="height:100%"></i></div>
       </div>
       <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
         <div class="stat-top"><span class="stat-label">Collisions caught</span><span class="trend">1 flagged</span></div>
         <div class="stat-value">1</div>
-        <p>An evil mint keyset sharing residue 1138537334 with a trusted one.</p>
+        <p>An evil mint keyset sharing residue 1138537334 with a trusted one. Filed as cashu.me issue 629, November 2026.</p>
         <div class="spark"><i style="height:15%"></i><i style="height:15%"></i><i style="height:15%"></i><i style="height:20%"></i><i style="height:15%"></i><i style="height:15%"></i><i class="hot" style="height:90%"></i></div>
       </div>
       <div class="stat-card"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
         <div class="stat-top"><span class="stat-label">Tokens spent</span><span class="trend flat">Always zero</span></div>
         <div class="stat-value">0</div>
-        <p>The checker never spends, signs, or holds proofs.</p>
+        <p>The checker never spends, signs, or holds proofs. Zero by design, in every run.</p>
         <div class="spark"><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i><i style="height:10%"></i></div>
       </div>
     </div>
@@ -95,7 +95,7 @@
 
   <section class="section" id="feed">
     <h2>Example checks</h2>
-    <p class="sub">Representative tokens showing how different findings are reported. Your tokens are not shown in these example checks.</p>
+    <p class="sub">Representative tokens showing how different findings are reported. Spent and pending show once you turn on 'Ask the mint'. Your tokens are not shown in these example checks.</p>
     <div class="feed">
       <div class="feed-row"><span class="av g">C</span><span class="who">Clean token</span><span class="lbl g">No issues</span><span class="ref">Residue 864559728</span><span class="time">12m ago</span></div>
       <div class="feed-row"><span class="av a">E</span><span class="who">Evil mint token</span><span class="lbl a">Collision</span><span class="ref">Residue 1138537334</span><span class="time">26m ago</span></div>

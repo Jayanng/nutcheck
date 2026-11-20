@@ -485,6 +485,20 @@ describe('web report: static index.html and accessibility checks', () => {
     expect(appHtml).toContain('role="note"');
   });
 
+  it('landing copy agrees with the checker: seven steps, consent note, dated numbers', () => {
+    // The checker runs seven pipeline steps, so the landing must not
+    // claim five checks without naming the other two.
+    expect(indexHtml).toContain('seven steps in all');
+    expect(indexHtml).toContain("the mint's facts and the keysets' age");
+    // The example feed shows spent and pending as they read once the
+    // mint is asked, not as the no-consent default.
+    expect(indexHtml).toContain("Spent and pending show once you turn on 'Ask the mint'");
+    // The stat numbers carry their period, source, and date.
+    expect(indexHtml).toContain('found by a birthday search in November 2026');
+    expect(indexHtml).toContain('Filed as cashu.me issue 629, November 2026');
+    expect(indexHtml).toContain('Zero by design, in every run');
+  });
+
   it('landing page links to the checker app and keeps the faq', () => {
     expect(indexHtml).toContain('href="/app.html"');
     expect(indexHtml).toContain('aria-expanded');
