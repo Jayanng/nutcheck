@@ -1280,6 +1280,9 @@ describe('evilmint', () => {
     // with the known trusted keyset A.
     expect(collision?.result).toContain('00102821c3bc6333 (token)');
     expect(collision?.result).toContain('00206785c39be46b (known)');
+    // The mint lists the keyset the token uses, so that ID must appear
+    // once, not twice as (token) and (mint).
+    expect(collision?.result).not.toContain('00102821c3bc6333 (mint)');
     expect(collision?.message).toContain('A token keyset collides with a known keyset');
     // Keyset age shown. The age is honestly unknown (trust signal
     // only) unless a first-seen time is supplied; the entry must say

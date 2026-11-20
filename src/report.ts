@@ -326,7 +326,9 @@ export async function diagnoseToken(
         : '';
     if (residueResult.collisions.length > 0) {
       for (const c of residueResult.collisions) {
-        const collidingIds = c.keysets.map((k) => k.id).join(', ');
+        const collidingIds = [...new Set(c.keysets.map((k) => k.id.toLowerCase()))]
+          .map((lower) => c.keysets.find((k) => k.id.toLowerCase() === lower)?.id ?? lower)
+          .join(', ');
         checked.push({
           name: 'Residue screen',
           checkId: 'residue',
@@ -587,7 +589,19 @@ export async function diagnoseToken(
     });
   } else {
     for (const collision of residue.collisions) {
-      const ids = collision.keysets.map((k) => `${k.id} (${k.source})`).join(', ');
+      // Each distinct keyset ID once: the mint lists the keyset the token
+      // uses, so one ID appears as both (token) and (mint), and listing it
+      // twice reads as two colliding IDs when it is one.
+      const seenIds = new Set<string>();
+      const ids = collision.keysets
+        .filter((k) => {
+          const lower = k.id.toLowerCase();
+          if (seenIds.has(lower)) return false;
+          seenIds.add(lower);
+          return true;
+        })
+        .map((k) => `${k.id} (${k.source})`)
+        .join(', ');
       const rel = collision.relationships.includes('token-known')
         ? 'A token keyset collides with a known keyset'
         : collision.relationships.includes('token-mint')
