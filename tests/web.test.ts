@@ -242,6 +242,18 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('verdict amber');
     expect(html).toContain('The mint did not answer');
     expect(html).toContain('Turn on');
+    // Seven steps even offline: Keyset age is present as not-checked,
+    // not dropped when the mint does not answer.
+    const stepNames = [...html.matchAll(/<span class="step-name">([^<]+)<\/span>/g)].map((m) => m[1]);
+    expect(stepNames).toEqual([
+      'Token decode',
+      'Mint facts',
+      'Keyset ID derivation',
+      'Residue screen',
+      'Keyset age',
+      'DLEQ',
+      'Checkstate',
+    ]);
     expect(scanReportCopy(html)).toEqual([]);
   });
 
@@ -330,7 +342,7 @@ describe('web report: real output across fixture states', () => {
       'Checkstate',
     ]);
     // Grouped steps show a count, with the per-keyset results as sub-steps
-    expect(html).toContain('2 keysets recomputed, both match');
+    expect(html).toContain('2 mint keysets recomputed, both match');
     expect(html).toContain('Keyset 00e1577700e127f1 recomputes to 00e1577700e127f1');
     expect(html).toContain('DLEQ absent on 2 proofs');
     expect(html).toContain('Proof 0: DLEQ absent');

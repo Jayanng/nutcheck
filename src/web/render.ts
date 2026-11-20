@@ -215,9 +215,9 @@ function pipelineStepValue(step: PipelineStep, options: RenderOptions): string {
   if (step.name === 'Keyset ID derivation') {
     const passed = checks.filter((c) => c.outcome === 'pass').length;
     if (passed === checks.length) {
-      return `${checks.length} keysets recomputed, ${checks.length === 2 ? 'both' : 'all'} match`;
+      return `${checks.length} mint keysets recomputed, ${checks.length === 2 ? 'both' : 'all'} match`;
     }
-    return `${passed} of ${checks.length} keysets recomputed`;
+    return `${passed} of ${checks.length} mint keysets recomputed`;
   }
   if (step.name === 'DLEQ') {
     const valid = checks.filter((c) => c.outcome === 'pass').length;

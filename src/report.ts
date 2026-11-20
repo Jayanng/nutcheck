@@ -380,6 +380,18 @@ export async function diagnoseToken(
       severity: 'amber',
       message: 'The mint keys could not be fetched',
     });
+
+    // Keyset age is a trust signal from the mint keyset list, which was
+    // not available. Record it as not-checked so the pipeline always
+    // shows all seven steps, even offline.
+    notChecked.push({
+      name: 'Keyset age',
+      checkId: 'mint',
+      result: 'Keyset age could not be shown: the mint did not answer',
+      outcome: 'not-checked',
+      severity: 'amber',
+      message: 'Keyset age is a trust signal from the mint keyset list, which was not available',
+    });
   }
 
   if (facts.status === 'ok') {
@@ -825,7 +837,7 @@ export async function diagnoseToken(
     checked.push({
       name: 'Keyset age',
       checkId: 'mint',
-      result: `Keyset age shown for ${ages} of ${facts.keysets.length} keysets; the rest are unknown, trust signal only`,
+      result: `Age shown for ${ages} of the mint's ${facts.keysets.length} keysets; the rest are unknown, trust signal only`,
       outcome: 'pass',
       severity: 'none',
       message: 'The keysets response carries no creation timestamp, so age is a trust signal only when a first-seen time is known',
