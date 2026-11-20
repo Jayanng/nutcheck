@@ -43,6 +43,11 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('<b>5</b> Passed');
     expect(html).toContain('<b>1</b> Needs attention');
     expect(html).toContain('<b>1</b> Not checked');
+    // The foot holds only the step chips: no 'Cannot prove' chip, which
+    // is not a step outcome and is listed in its own section below.
+    const countsDiv = html.match(/<div class="counts">([\s\S]*?)<\/div>/);
+    expect(countsDiv).not.toBeNull();
+    expect(countsDiv?.[1]).not.toContain('Cannot prove');
     expect(html).toContain(report.headline);
     expect(html).toContain('Checked');
     expect(html).toContain('Not checked');

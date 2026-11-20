@@ -350,7 +350,10 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
     html += `<span class="chip"><span class="dot amber"></span><b>${attentionStepCount}</b> Needs attention</span>`;
   }
   html += `<span class="chip"><span class="dot amber"></span><b>${notCheckedStepCount}</b> Not checked</span>`;
-  html += `<span class="chip"><span class="dot blue"></span><b>${cannotProveCount}</b> Cannot prove</span>`;
+  // No 'Cannot prove' chip here: it is not a step outcome, it is a fixed
+  // list of limitations, and it is already listed in its own section
+  // below with its own count. Adding it would make the foot add up to
+  // more than the steps the user sees.
   html += `</div>`;
   html += `</div>`;
 
