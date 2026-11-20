@@ -74,8 +74,8 @@ export const SAMPLES: Record<string, SampleToken> = {
     consent: false,
     mint: 'https://testnut.cashu.space',
     expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedStateWord: 'Incomplete',
+    expectedHeadline: 'Not fully checked.',
   },
   pending: {
     key: 'pending',

@@ -745,7 +745,7 @@ describe('adversarial suite', () => {
     );
     expect(incomplete).toBeDefined();
     expect(incomplete!.severity).toBe('amber');
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
   });
 
   it('a V3 token lands on AMBER: its signature was not verified, and that is an unknown state', async () => {

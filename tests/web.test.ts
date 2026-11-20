@@ -185,7 +185,7 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Not fully checked.');
     expect(report.severity).toBe('amber');
 
     const html = renderReportHtml(report, {
@@ -196,7 +196,7 @@ describe('web report: real output across fixture states', () => {
     });
 
     expect(html).toContain('verdict amber');
-    expect(html).toContain('Hold');
+    expect(html).toContain('Not fully checked.');
     expect(html).toContain('Incomplete');
     expect(html).toContain('A proof carries an incomplete DLEQ');
     expect(scanReportCopy(html)).toEqual([]);

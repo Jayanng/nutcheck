@@ -471,14 +471,15 @@ export async function diagnoseToken(
     // when they mean a check could not run.
     for (const finding of decode.findings) {
       if (finding.code === 'dleq-incomplete') {
-        // An incomplete DLEQ is a finding about the token, not a check
-        // that did not run: the raw parser already detected the stripped
-        // field. It is a flag, so the headline is Hold.
+        // A partial DLEQ is treated as no DLEQ: cashu-ts strips it and a
+        // proof with no DLEQ can still be valid spendable ecash, so the
+        // DLEQ check could not run on that proof. It lands in Not checked,
+        // never Hold.
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
           result: 'A proof carries an incomplete DLEQ',
-          outcome: 'flag',
+          outcome: 'not-checked',
           severity: 'amber',
           message: finding.message,
         });
@@ -503,14 +504,15 @@ export async function diagnoseToken(
     // silently dropped.
     for (const finding of decode.findings) {
       if (finding.code === 'dleq-incomplete') {
-        // An incomplete DLEQ is a finding about the token, not a check
-        // that did not run: the raw parser already detected the stripped
-        // field. It is a flag, so the headline is Hold.
+        // A partial DLEQ is treated as no DLEQ: cashu-ts strips it and a
+        // proof with no DLEQ can still be valid spendable ecash, so the
+        // DLEQ check could not run on that proof. It lands in Not checked,
+        // never Hold.
         notChecked.push({
           name: 'DLEQ',
           checkId: 'dleq',
           result: 'A proof carries an incomplete DLEQ',
-          outcome: 'flag',
+          outcome: 'not-checked',
           severity: 'amber',
           message: finding.message,
         });
