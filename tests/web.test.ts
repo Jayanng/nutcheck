@@ -697,6 +697,17 @@ describe('web checker: premium instrument panel', () => {
     expect(appHtml).toContain('V3 keyset');
   });
 
+  it('the scrolled header pill is fully opaque, never translucent', () => {
+    const styleCss = readFileSync(path.join(root, 'src/web/style.css'), 'utf8');
+    const scrolled = styleCss.match(/\.header-pill\.scrolled \{([\s\S]*?)\}/);
+    expect(scrolled).not.toBeNull();
+    // No translucent background and no backdrop blur on the scrolled pill:
+    // page text scrolling underneath must not show through it.
+    expect(scrolled?.[1]).not.toContain('rgba(');
+    expect(scrolled?.[1]).not.toContain('backdrop-filter');
+    expect(scrolled?.[1]).toContain('background: var(--bg)');
+  });
+
   it('app.html no longer carries the rejected three-step checker', () => {
     expect(appHtml).not.toContain('paste-card');
     expect(appHtml).not.toContain('id="token-summary"');

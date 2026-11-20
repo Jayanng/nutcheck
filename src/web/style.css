@@ -51,9 +51,9 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
 .header-pill.scrolled {
   max-width: 56rem;
   border-color: var(--border);
-  background: rgba(246, 244, 239, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* Fully opaque: a translucent pill lets page text show through and
+     clip headings as it scrolls underneath. */
+  background: var(--bg);
   padding: 0 20px;
 }
 .header-inner {
