@@ -19,7 +19,7 @@ Every claim NutCheck makes, with the proof beside it. Run the commands yourself.
 | Keyset derivation matches the NUT-02 vectors. | The V1 vector derives to `00456a94ab4e1c46`. The V2 vector derives to `015ba18a8adcd02e715a58358eb618da4a4b3791151a4bee5e968bb88406ccf76a`. Both are pinned in tests. |
 | The checker runs live on a real token from a real mint. | https://nutcheck.vercel.app. The Clean sample is a real 21-sat token from the live testnut.cashu.exchange mint (V2 keyset `01013273414675b8`, 3 proofs, all with DLEQ). With consent on, the headline is "No known issues found.", 7 Passed, and the mint reports all three proofs unspent. |
 | The mint lists 14 keysets. | The live site's Mint facts step reads "The mint answered, 14 keysets listed" for the Clean token. |
-| 292 tests pass. | Run `npm test` in the repo. 14 files, 292 tests, typecheck clean. |
+| 292 tests pass, and every headline number reproduces in one command. | Run `npm test` in the repo. 14 files, 292 tests, typecheck clean. Run `npm run prove` to recompute every headline number with its limit beside it. |
 | The tool never spends, signs, or holds proofs. | It only reads tokens and mint metadata. The report's Cannot prove section states what it can never prove. See `src/report.ts`. |
 | A proof without DLEQ is still valid spendable ecash. | The cashu.me maintainer's comment on [issue 629](https://github.com/cashubtc/cashu.me/issues/629#issuecomment-7021368774). DLEQ proves the mint owns its key, never that the mint is honest. |
 | The limits are disclosed up front. | `LIMITS.md` in the repo. The residue screen is V1 only, DLEQ is optional, the mint's answer is a snapshot, and the tool cannot prove a mint is honest or solvent. |

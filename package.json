@@ -21,7 +21,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:core": "tsc"
+    "build:core": "tsc",
+    "prove": "npm run build:core && node scripts/prove.mjs"
   },
   "type": "module",
   "version": "0.1.0",

@@ -23,6 +23,7 @@ git clone https://github.com/Jayanng/nutcheck.git
 cd nutcheck
 npm install
 npm test
+npm run prove
 ```
 
 Run the web checker locally:
