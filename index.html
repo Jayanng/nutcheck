@@ -16,6 +16,7 @@
         <li><a href="/app.html">Checker</a></li>
         <li><a href="#does">What it does</a></li>
         <li><a href="#feed">Example checks</a></li>
+        <li><a href="#install">Install</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
       <div class="header-actions">
@@ -166,6 +167,29 @@
     <div class="feed-foot"><a class="link-arrow blue" href="/app.html">Check a token &rarr;</a></div>
   </section>
 
+  <section class="section" id="install">
+    <div class="install-card">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="install-grid">
+        <div class="install-copy">
+          <p class="install-eyebrow">For wallet developers</p>
+          <h2>Put the checker in your wallet</h2>
+          <p>The same checks as this page, as a library. One call takes a token string and returns a report: decode, residue screen, keyset derivation, DLEQ, and the verdict. It never spends, signs, or holds proofs.</p>
+          <a class="install-link" href="https://www.npmjs.com/package/@nutcheck/core">@nutcheck/core 0.1.0 on npm &rarr;</a>
+        </div>
+        <div class="install-code">
+          <pre class="install-cmd">npm install @nutcheck/core</pre>
+          <pre class="install-snippet">import { diagnoseToken } from '@nutcheck/core';
+
+const report = await diagnoseToken(token);
+if (report.headline === 'Reject, here is why.') {
+  // do not accept the token
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="faq">
     <h2>Questions, answered</h2>
     <p class="sub">The short version of what the tool does and does not do.</p>
@@ -201,6 +225,7 @@
       <li><a href="/app.html">Checker</a></li>
       <li><a href="#does">What it does</a></li>
       <li><a href="#feed">Example checks</a></li>
+      <li><a href="#install">Install</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="https://github.com/Jayanng/nutcheck">GitHub</a></li>
     </ul>

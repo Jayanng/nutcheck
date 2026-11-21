@@ -526,3 +526,22 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
 .consent-dialog .btn-confirm:hover {
   opacity: 0.92;
 }
+
+/* Install the library */
+.install-card { position: relative; background: var(--card); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(10, 10, 10, 0.05); padding: 28px 30px; }
+.install-card .corner { position: absolute; width: 8px; height: 8px; border: 0 solid var(--primary); pointer-events: none; }
+.install-card .corner.tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+.install-card .corner.tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+.install-card .corner.bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+.install-card .corner.br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+.install-grid { display: flex; gap: 28px; align-items: flex-start; }
+.install-copy { flex: 1; min-width: 0; }
+.install-eyebrow { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); font-weight: 700; }
+.install-copy h2 { margin: 0 0 10px; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -0.01em; }
+.install-copy p { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.install-link { font-size: 14px; font-weight: 700; color: var(--blue); text-decoration: none; }
+.install-link:hover { text-decoration: underline; }
+.install-code { flex: 1; min-width: 0; }
+.install-cmd { margin: 0 0 10px; background: var(--paper); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.6; color: var(--ink); overflow-x: auto; white-space: pre; }
+.install-snippet { margin: 0; background: #111; border-radius: 6px; padding: 14px 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; color: #e5e0d8; overflow-x: auto; white-space: pre; }
+@media (max-width: 760px) { .install-grid { flex-direction: column; } }
