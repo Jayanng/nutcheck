@@ -1,7 +1,7 @@
 // Report tests: the verdict report and the adversarial suite. Every
 // adversarial case is a named vitest test. The evilmint token produces
 // DLEQ passes, COLLISION flagged, keyset age shown, and headline
-// "Hold, here is why", with the report naming the residue screen as the
+// "Reject, here is why", with the report naming the residue screen as the
 // check that did the work. Report copy never uses the banned words.
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -237,8 +237,8 @@ describe('report: three sections and headline', () => {
       knownKeysets: ['00206785c39be46b'],
     });
     const text = reportToText(report);
-    expect(text).toContain('Headline: Hold, here is why.');
-    expect(text).toContain('Severity: amber');
+    expect(text).toContain('Headline: Reject, here is why.');
+    expect(text).toContain('Severity: red');
     expect(text).toContain('Unit: sat');
     // The mint is identified by a fingerprint of its URL, never the
     // raw URL: the URL is token-supplied data and could contain a
@@ -1061,7 +1061,7 @@ describe('adversarial suite', () => {
       return new Response('not found', { status: 404 });
     };
     const report = await diagnoseToken(evilmintToken, { fetchFn, consent: true });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Reject, here is why.');
     expect(report.severity).toBe('red');
     const spent = report.checked.find(
       (c) => c.checkId === 'checkstate' && c.outcome === 'flag',
@@ -1253,7 +1253,7 @@ describe('evilmint', () => {
     }
   });
 
-  it('the evilmint token produces DLEQ passes, COLLISION flagged, keyset age shown, headline Hold', async () => {
+  it('the evilmint token produces DLEQ passes, COLLISION flagged, keyset age shown, headline Reject', async () => {
     // Keyset A is the known trusted keyset, supplied through
     // knownKeysets. The evilmint token is for keyset B, the evilmint's
     // own keyset, which shares residue 1138537334 with A. The report
@@ -1262,8 +1262,8 @@ describe('evilmint', () => {
       fetchFn: stubFetchForEvilmint(),
       knownKeysets: ['00206785c39be46b'],
     });
-    expect(report.headline).toBe('Hold, here is why.');
-    expect(report.severity).toBe('amber');
+    expect(report.headline).toBe('Reject, here is why.');
+    expect(report.severity).toBe('red');
     // DLEQ passes.
     const dleq = report.checked.find((c) => c.checkId === 'dleq');
     expect(dleq).toBeDefined();

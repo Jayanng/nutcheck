@@ -19,7 +19,8 @@ NutCheck screens a token against that failure before the wallet swaps it. The co
 A NutCheck report has three sections: Checked, Not checked, Cannot prove. The headline is one of three:
 
 - "No known issues found." Nothing in the checks that ran turned up a finding.
-- "Hold, here is why." A check found something. Do not swap the token.
+- "Reject, here is why." A check proved something is wrong (a residue collision, a spent proof, an invalid DLEQ). Do not swap the token.
+- "Hold, here is why." A check found something that is not a proven hard failure. Look at the finding before you decide.
 - "Not fully checked." The only open items are checks that did not run, such as the mint check without consent.
 
 A clean headline means no known issues were found in the checks that ran. The report always lists what did not run and what this tool can never prove: that the mint is honest, that the mint is solvent, that the proofs stay unspent after the check, and that no collision exists outside the lists supplied.

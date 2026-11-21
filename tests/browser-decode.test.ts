@@ -68,6 +68,6 @@ describe('browser decode with only the polyfill Buffer', () => {
       knownKeysets: SAMPLES.spent.knownKeysets,
     });
     expect(spent.severity).toBe('red');
-    expect(spent.headline).toBe('Hold, here is why.');
+    expect(spent.headline).toBe('Reject, here is why.');
   });
 });

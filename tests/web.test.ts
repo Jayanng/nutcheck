@@ -107,8 +107,8 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
-    expect(report.severity).toBe('amber');
+    expect(report.headline).toBe('Reject, here is why.');
+    expect(report.severity).toBe('red');
 
     const html = renderReportHtml(report, {
       sampleName: sample.name,
@@ -117,9 +117,9 @@ describe('web report: real output across fixture states', () => {
       rawToken,
     });
 
-    expect(html).toContain('verdict amber');
-    expect(html).toContain('Hold');
-    expect(html).toContain('Hold, here is why');
+    expect(html).toContain('verdict red');
+    expect(html).toContain('Reject');
+    expect(html).toContain('Reject, here is why');
     // The demo label says what is real and what is simulated: the checker
     // ran its real checks, only the mint answers are simulated. The old
     // wording read as if the whole thing were fake.
@@ -132,7 +132,7 @@ describe('web report: real output across fixture states', () => {
 
     // Plain text export includes collision
     const text = reportToPlainText(report, { sampleName: sample.name, rawToken });
-    expect(text).toContain('Headline: Hold, here is why.');
+    expect(text).toContain('Headline: Reject, here is why.');
     expect(text).toContain('1138537334');
     expect(scanReportCopy(text)).toEqual([]);
   });
@@ -148,7 +148,7 @@ describe('web report: real output across fixture states', () => {
       knownKeysets: sample.knownKeysets,
     });
 
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Reject, here is why.');
     expect(report.severity).toBe('red');
 
     const html = renderReportHtml(report, {
@@ -413,7 +413,7 @@ describe('web report: real output across fixture states', () => {
     const openSteps = [...html.matchAll(/<details class="step" open/g)].length;
     expect(openSteps).toBe(2);
     expect(html).toContain('COLLISION: residue 1138537334');
-    expect(html).toContain('status hold');
+    expect(html).toContain('status fail');
     expect(html).toContain('Collision');
     // The diagram sits inside the residue step, not as its own section
     const diagramPos = html.indexOf('The collision, drawn out');
@@ -639,7 +639,7 @@ describe('web report: static index.html and accessibility checks', () => {
     });
     // Assert the spent headline matches the expected literal after consent.
     expect(spentReport.headline).toBe(SAMPLES.spent.expectedHeadlineAfterConsent);
-    expect(spentReport.headline).toBe('Hold, here is why.');
+    expect(spentReport.headline).toBe('Reject, here is why.');
     const spentHtml = renderReportHtml(spentReport, { rawToken: spentRaw });
     const spentText = reportToPlainText(spentReport, { rawToken: spentRaw });
     expect(spentHtml).toContain(`<h2>${spentReport.headline}</h2>`);

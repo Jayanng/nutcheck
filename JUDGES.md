@@ -5,7 +5,7 @@ Every claim NutCheck makes, with the proof beside it. Run the commands yourself.
 ## Try it in one minute
 
 1. Open https://nutcheck.vercel.app/app.html. The Clean sample loads by default. It is a real 21-sat token from the live testnut.cashu.exchange mint, checked live.
-2. Click the "collision" sample (Evil mint token). The report reads "Hold, here is why." and the residue step shows two different V1 keyset IDs sharing one residue. That is the failure this tool catches.
+2. Click the "collision" sample (Evil mint token). The report reads "Reject, here is why." and the residue step shows two different V1 keyset IDs sharing one residue. That is the failure this tool catches.
 3. Click the Clean sample again and turn on "Ask the mint". The headline becomes "No known issues found.", 7 Passed, and the mint reports all three proofs unspent.
 
 ## Claims

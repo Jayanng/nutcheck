@@ -1,7 +1,9 @@
 // Verdict report. Runs the full diagnostic on a pasted token and assembles
 // the result into three sections on every run: Checked, Not checked, and
-// Cannot prove. The headline is "No known issues found.", "Hold, here is
-// why.", or "Not fully checked." Any error or unknown state lands on AMBER,
+// Cannot prove. The headline is "No known issues found.", "Reject, here is
+// why." (a proven problem: collision, spent proof, invalid DLEQ), "Hold, here
+// is why." (a finding that is not a proven hard failure), or "Not fully
+// checked." Any error or unknown state lands on AMBER,
 // never the clean headline. A clean headline is never the default when
 // something errors, and a check that did not run never earns it either:
 // when the only amber entries are checks that did not run, the headline
@@ -51,7 +53,7 @@ export interface ReportCheck {
 }
 
 export interface NutCheckReport {
-  headline: 'No known issues found.' | 'Hold, here is why.' | 'Not fully checked.';
+  headline: 'No known issues found.' | 'Reject, here is why.' | 'Hold, here is why.' | 'Not fully checked.';
   severity: ReportSeverity;
   mint: string | undefined;
   unit: string | undefined;
@@ -151,7 +153,10 @@ function headlineFor(checks: ReportCheck[]): {
   if (severity === 'none') {
     return { headline: 'No known issues found.', severity: 'none' };
   }
-  if (severity === 'red' || hasFlag) {
+  if (severity === 'red') {
+    return { headline: 'Reject, here is why.', severity };
+  }
+  if (hasFlag) {
     return { headline: 'Hold, here is why.', severity };
   }
   // AMBER with no flag: every amber entry is a check that did not run
@@ -334,7 +339,7 @@ export async function diagnoseToken(
           checkId: 'residue',
           result: `COLLISION: residue ${c.residue} shared by ${collidingIds}${excludedNote}`,
           outcome: 'flag',
-          severity: 'amber',
+          severity: 'red',
           message: 'Two different V1 keyset IDs produce the same residue',
         });
       }
@@ -620,7 +625,7 @@ export async function diagnoseToken(
         checkId: 'residue',
         result: `COLLISION: residue ${collision.residue} shared by ${ids}`,
         outcome: 'flag',
-        severity: 'amber',
+        severity: 'red',
         message: `${rel}.${excludedNote} ${RESIDUE_COVERAGE}`,
       });
     }

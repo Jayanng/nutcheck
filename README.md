@@ -50,12 +50,12 @@ const report = await diagnoseToken(token, {
   knownKeysets: ['00206785c39be46b'], // keysets you already trust
 });
 
-if (report.headline === 'Hold, here is why.') {
+if (report.headline === 'Reject, here is why.') {
   // Do not swap this token. Read report.checked for the finding.
 }
 ```
 
-The report has three sections. `checked` lists what ran and its result. `notChecked` lists what did not run and why. `cannotProve` lists what this tool can never prove, whatever the result. The headline is one of three: "No known issues found.", "Hold, here is why.", or "Not fully checked." (the last when the only open items are checks that did not run, such as the mint check without consent).
+The report has three sections. `checked` lists what ran and its result. `notChecked` lists what did not run and why. `cannotProve` lists what this tool can never prove, whatever the result. The headline is one of four: "No known issues found.", "Reject, here is why." (a proven problem: a residue collision, a spent proof, an invalid DLEQ), "Hold, here is why." (a finding that is not a proven hard failure), or "Not fully checked." (the last when the only open items are checks that did not run, such as the mint check without consent).
 
 A v4 token is CBOR plus base64url, never bech32. A v3 token is base64url JSON. Bech32m is used for NUT-26 payment requests, not tokens. NutCheck decodes both locally, in your browser or in your process, before anything is judged.
 

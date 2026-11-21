@@ -44,9 +44,9 @@ export const SAMPLES: Record<string, SampleToken> = {
     knownKeysets: ['00206785c39be46b'],
     consent: false,
     mint: 'http://localhost:3338',
-    expectedState: 'amber',
-    expectedStateWord: 'Hold',
-    expectedHeadline: 'Hold, here is why.',
+    expectedState: 'red',
+    expectedStateWord: 'Hard fail',
+    expectedHeadline: 'Reject, here is why.',
   },
   spent: {
     key: 'spent',
@@ -64,7 +64,7 @@ export const SAMPLES: Record<string, SampleToken> = {
     expectedStateWord: 'Incomplete',
     expectedHeadline: 'Not fully checked.',
     expectedStateAfterConsent: 'red',
-    expectedHeadlineAfterConsent: 'Hold, here is why.',
+    expectedHeadlineAfterConsent: 'Reject, here is why.',
   },
   partial: {
     key: 'partial',

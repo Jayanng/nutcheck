@@ -187,18 +187,18 @@ describe('evilmint checkstate', () => {
 });
 
 describe('nutcheck findings on the evilmint tokens', () => {
-  it('the colliding token is Hold with residue 1138537334, AMBER severity', async () => {
+  it('the colliding token is Reject with residue 1138537334, RED severity', async () => {
     const report = await diagnoseToken(EVIL_TOKEN, {
       knownKeysets: [KEYSET_A.id],
       consent: false,
     });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Reject, here is why.');
     const residue = report.checked.find((c) => c.name === 'Residue screen');
     expect(residue).toBeDefined();
     expect(residue!.result).toMatch(/1138537334/);
     expect(residue!.result).toMatch(/00102821c3bc6333/);
     expect(residue!.result).toMatch(/00206785c39be46b/);
-    expect(residue!.severity).toBe('amber');
+    expect(residue!.severity).toBe('red');
   });
 
   it('the partial-DLEQ token differs from the colliding token only by r', async () => {
@@ -224,7 +224,7 @@ describe('nutcheck findings on the evilmint tokens', () => {
       knownKeysets: [KEYSET_A.id],
       consent: false,
     });
-    expect(report.headline).toBe('Hold, here is why.');
+    expect(report.headline).toBe('Reject, here is why.');
     const dleq = [...report.checked, ...report.notChecked].find((c) => c.name === 'DLEQ');
     expect(dleq).toBeDefined();
     expect(dleq!.result).toMatch(/incomplete/);
@@ -232,13 +232,13 @@ describe('nutcheck findings on the evilmint tokens', () => {
     expect(dleq!.severity).toBe('amber');
   });
 
-  it('the receive check blocks both Hold cases', async () => {
+  it('the receive check blocks both Reject cases', async () => {
     for (const token of [EVIL_TOKEN, PARTIAL_TOKEN]) {
       const report = await diagnoseToken(token, {
         knownKeysets: [KEYSET_A.id],
         consent: false,
       });
-      const blocked = report.headline === 'Hold, here is why.';
+      const blocked = report.headline === 'Reject, here is why.';
       expect(blocked).toBe(true);
     }
   });
@@ -263,7 +263,7 @@ describe('nutcheck findings on the evilmint tokens', () => {
         knownKeysets: [KEYSET_A.id],
         consent: false,
       });
-      if (report.headline === 'Hold, here is why.') {
+      if (report.headline === 'Reject, here is why.') {
         // Check throws, redeem never runs.
         expect(() => {
           throw new Error(`NutCheck hold: ${report.checked.map((c) => c.name).join(', ')}`);

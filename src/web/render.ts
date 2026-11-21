@@ -60,7 +60,7 @@ interface CollisionInfo {
 }
 
 function extractCollision(report: NutCheckReport): CollisionInfo | null {
-  const residueCheck = report.checked.find((c) => c.checkId === 'residue' && c.severity === 'amber');
+  const residueCheck = report.checked.find((c) => c.checkId === 'residue' && c.result.includes('COLLISION'));
   if (!residueCheck) return null;
 
   const residueMatch = residueCheck.result.match(/residue (\d+) shared by/i);
