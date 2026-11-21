@@ -22,7 +22,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build:core": "tsc",
-    "prove": "npm run build:core && node scripts/prove.mjs"
+    "prove": "npm run build:core && node scripts/prove.mjs",
+    "prepack": "npm run build:core"
   },
   "type": "module",
   "version": "0.1.0",
@@ -31,5 +32,14 @@
     "npm": "10.9.4"
   },
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts"
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "LIMITS.md",
+    "WALLET-INTEGRATION.md",
+    "JUDGES.md"
+  ]
 }
