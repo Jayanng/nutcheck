@@ -100,8 +100,6 @@ Real: the checker runs on real tokens against real mints. The Clean sample is a 
 
 Demo only: the other seven samples are synthetic tokens with simulated mint answers. Each one is labeled as a demo on the page. They show states (collision, spent, unreachable, partial DLEQ) that cannot be reproduced on demand from a live mint.
 
-Cut: QR upload is not built.
-
 ## License
 
 MIT. See LICENSE.
