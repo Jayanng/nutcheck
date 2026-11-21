@@ -46,6 +46,10 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
   max-width: 72rem;
   border-radius: 1rem;
   padding: 0 24px;
+  /* Always opaque: without this the pill is transparent until the
+     scroll handler adds .scrolled, and the background fade makes it
+     semi-transparent while scrolling, so page text shows through. */
+  background: var(--bg);
   transition: background-color 0.3s, border-color 0.3s, max-width 0.3s;
   border: 1px solid transparent;
 }
