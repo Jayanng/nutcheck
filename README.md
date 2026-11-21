@@ -86,6 +86,14 @@ If you find a vulnerability in NutCheck itself, report it privately to jayanng30
 
 See LIMITS.md for the full list. In short: the residue screen is V1 only (V2 and V3 keysets use different derivations and are excluded); DLEQ is optional in Cashu, so a proof without it is still valid; the mint's answer is a snapshot that can change the moment after; and this tool cannot prove a mint is honest or solvent. Read LIMITS.md before you rely on a report.
 
+## What's honest
+
+Real: the checker runs on real tokens against real mints. The Clean sample is a real 21-sat token from the live testnut.cashu.exchange mint, checked live. The colliding-residue finding is real and filed as cashu.me issue 629, which is open. The NUT-13 vulnerability was disclosed on 10 January 2026. 292 tests pass. Run `npm run prove` to recompute every headline number with its limit beside it.
+
+Demo only: the other seven samples are synthetic tokens with simulated mint answers. Each one is labeled as a demo on the page. They show states (collision, spent, unreachable, partial DLEQ) that cannot be reproduced on demand from a live mint.
+
+Cut: @nutcheck/core is built but not published to npm yet, so wallets cannot install it today. QR upload is not built. Fixing the cashu.me wallet is not this project, it is the maintainers' work.
+
 ## License
 
 MIT. See LICENSE.
