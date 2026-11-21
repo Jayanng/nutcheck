@@ -41,5 +41,8 @@
     "LIMITS.md",
     "WALLET-INTEGRATION.md",
     "JUDGES.md"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
