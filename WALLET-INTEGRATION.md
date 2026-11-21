@@ -23,6 +23,12 @@ async function acceptToken(token: string, walletKeysets: string[]) {
     knownKeysets: walletKeysets,
   });
 
+  if (report.headline === 'Reject, here is why.') {
+    // A proven problem: a residue collision, a spent proof, an invalid
+    // DLEQ. Do not swap. Show the user the finding in report.checked.
+    return { accepted: false, report };
+  }
+
   if (report.headline === 'Hold, here is why.') {
     // A check found something. Do not swap. Show the user the finding
     // in report.checked, and let them decide.
@@ -58,7 +64,7 @@ Get the IDs from your wallet's keyset store. They are the 16-character hex IDs f
 
 `diagnoseToken` returns a `NutCheckReport`:
 
-- `headline`: "No known issues found.", "Hold, here is why.", or "Not fully checked."
+- `headline`: "No known issues found.", "Reject, here is why.", "Hold, here is why.", or "Not fully checked."
 - `severity`: "none", "amber", or "red".
 - `checked`: what ran, each with a result, an outcome, and a severity.
 - `notChecked`: what did not run, and why.

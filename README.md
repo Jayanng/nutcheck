@@ -16,7 +16,7 @@ The collision it catches is real: an evil mint keyset sharing residue 1138537334
 
 ## Install and run
 
-Node 24.22.1 or later.
+Node 22.4.0 or later.
 
 ```sh
 git clone https://github.com/Jayanng/nutcheck.git
@@ -39,6 +39,12 @@ npm run build:core
 ```
 
 ## Use it in a wallet
+
+Install it:
+
+```sh
+npm install @nutcheck/core
+```
 
 `@nutcheck/core` exposes one entry point, `diagnoseToken`. It takes a token string and returns a report. Nothing is spent, signed, or held.
 
@@ -88,11 +94,11 @@ See LIMITS.md for the full list. In short: the residue screen is V1 only (V2 and
 
 ## What's honest
 
-Real: the checker runs on real tokens against real mints. The Clean sample is a real 21-sat token from the live testnut.cashu.exchange mint, checked live. The colliding-residue finding is real and filed as cashu.me issue 629, which is open. The NUT-13 vulnerability was disclosed on 10 January 2026. 292 tests pass. Run `npm run prove` to recompute every headline number with its limit beside it.
+Real: the checker runs on real tokens against real mints. The Clean sample is a real 21-sat token from the live testnut.cashu.exchange mint, checked live. The colliding-residue finding is real and filed as cashu.me issue 629, which is open. The NUT-13 vulnerability was disclosed on 10 January 2026. 292 tests pass. Run `npm run prove` to recompute every headline number with its limit beside it. `@nutcheck/core` 0.1.0 is published on npm, install it with `npm install @nutcheck/core`.
 
 Demo only: the other seven samples are synthetic tokens with simulated mint answers. Each one is labeled as a demo on the page. They show states (collision, spent, unreachable, partial DLEQ) that cannot be reproduced on demand from a live mint.
 
-Cut: @nutcheck/core is built but not published to npm yet, so wallets cannot install it today. QR upload is not built. Fixing the cashu.me wallet is not this project, it is the maintainers' work.
+Cut: QR upload is not built. Fixing the cashu.me wallet is not this project, it is the maintainers' work.
 
 ## License
 
