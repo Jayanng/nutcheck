@@ -344,8 +344,8 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   // 2. Verdict
   html += `<div class="verdict ${stateClass}" role="region" aria-label="verdict">`;
-  html += `<div class="state">${escapeHtml(stateWord)}</div>`;
-  html += `<h2>${escapeHtml(headline)}${escapeHtml(sampleNotice)}</h2>`;
+  html += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
+  html += `<div class="verdict-top"><h2>${escapeHtml(headline)}${escapeHtml(sampleNotice)}</h2><span class="state">${escapeHtml(stateWord)}</span></div>`;
   html += `<p>${escapeHtml(summaryLine)}</p>`;
   if (todoLine) {
     html += `<div class="todo"><b>What to do:</b> ${escapeHtml(todoLine)}</div>`;
@@ -353,11 +353,11 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Counts at the foot of the verdict: the answer and its composition in
   // one glance. The separate summary strip is gone; these chips are it.
   html += `<div class="counts">`;
-  html += `<span class="chip"><span class="dot green"></span><b>${passedStepCount}</b> Passed</span>`;
+  html += `<span class="chip"><b>${passedStepCount}</b> Passed</span>`;
   if (attentionStepCount > 0) {
-    html += `<span class="chip"><span class="dot amber"></span><b>${attentionStepCount}</b> Needs attention</span>`;
+    html += `<span class="chip attention"><b>${attentionStepCount}</b> Needs attention</span>`;
   }
-  html += `<span class="chip"><span class="dot amber"></span><b>${notCheckedStepCount}</b> Not checked</span>`;
+  html += `<span class="chip"><b>${notCheckedStepCount}</b> Not checked</span>`;
   // No 'Cannot prove' chip here: it is not a step outcome, it is a fixed
   // list of limitations, and it is already listed in its own section
   // below with its own count. Adding it would make the foot add up to
@@ -367,6 +367,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   // 3. Decoded Token Facts
   html += `<div class="decoded" role="region" aria-label="Decoded token">`;
+  html += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
   html += `<div class="label">Decoded token</div>`;
   html += `<div class="grid">`;
   html += `<div class="fact"><div class="k">Mint</div><div class="v mono">${escapeHtml(mintDisplay)}</div></div>`;
@@ -414,7 +415,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Passed steps start closed, a flagged step starts open, and the
   // collision diagram sits inside the flagged residue step.
   const collision = extractCollision(report);
-  const renderStep = (step: PipelineStep): string => {
+  const renderStep = (step: PipelineStep, index: number): string => {
     const status = pipelineStepStatus(step);
     const value = pipelineStepValue(step, options);
     const open = status.open ? ' open' : '';
@@ -430,10 +431,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
       const messages = step.checks.map((c) => c.message);
       const sharedMessage = messages.every((m) => m === messages[0]) ? messages[0] : null;
       for (const check of step.checks) {
-        const badge = statusBadgeClass(check);
-        const miniDot =
-          badge.css === 'pass' ? 'green' : badge.css === 'fail' ? 'red' : badge.css === 'hold' ? 'amber' : 'grey';
-        body += `<div class="substep"><span class="mini ${miniDot}"></span><span class="r">${escapeHtml(check.result)}${simulatedLabel(check, options)}</span></div>`;
+        body += `<div class="substep"><span class="mini"></span><span class="r">${escapeHtml(check.result)}${simulatedLabel(check, options)}</span></div>`;
         if (sharedMessage === null) {
           body += `<p class="msg">${escapeHtml(check.message)}</p>`;
         }
@@ -454,18 +452,19 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
       body += `</div>`;
       body += `</div>`;
     }
-    return `<details class="step"${open} role="listitem"><summary><span class="rail-dot ${status.dot}"></span><span class="step-name">${escapeHtml(step.name)}</span><span class="step-val">${escapeHtml(value)}</span><span class="status ${status.css}">${escapeHtml(status.text)}</span><span class="chev">&#8250;</span></summary><div class="step-body">${body}</div></details>`;
+    return `<details class="step"${open} role="listitem"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><summary><span class="step-num">${index}</span><span class="step-name">${escapeHtml(step.name)}</span><span class="step-val">${escapeHtml(value)}</span><span class="status ${status.css}">${escapeHtml(status.text)}</span><span class="chev">&#8250;</span></summary><div class="step-body">${body}</div></details>`;
   };
   html += `<p class="section-title">Verification pipeline</p>`;
   html += `<p class="section-sub">Each step ran in order. Open a step to see what it measured.</p>`;
   html += `<div class="pipeline" role="list">`;
-  for (const step of steps) html += renderStep(step);
+  for (let i = 0; i < steps.length; i++) html += renderStep(steps[i], i + 1);
   html += `</div>`;
 
   // 5. What this report can and cannot say, as one panel with three columns
   html += `<p class="section-title" id="limits">What this report can and cannot say</p>`;
   html += `<p class="section-sub">The same report, shortened. This is what copies as text.</p>`;
   html += `<div class="limits-panel">`;
+  html += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
 
   // Checked column
   html += `<div class="limit-col c-checked">`;
@@ -509,6 +508,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
 
   // 6. Copy bar
   html += `<div class="copybar-card">`;
+  html += `<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>`;
   html += `<button class="copybtn" id="copy-btn" type="button" aria-label="Copy diagnostic report to clipboard">Copy report as text</button>`;
   html += `<span class="note">Pastes as plain text, with the same three sections.</span>`;
   html += `</div>`;
