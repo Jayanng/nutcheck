@@ -166,7 +166,7 @@ function simulatedLabel(check: ReportCheck, options: RenderOptions): string {
     (check.checkId === 'checkstate' || check.checkId === 'mint') &&
     !check.result.includes('Consent not given')
   ) {
-    return ' (simulated)';
+    return ' (simulated mint answer)';
   }
   return '';
 }
@@ -262,7 +262,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   const sampleNotice = options.isLiveSample
     ? ' (real token from a live test mint, checked live)'
     : options.isSample
-      ? ' (sample demo: mint results are simulated)'
+      ? ' (demo token: the checker ran its real checks, the mint answers are simulated)'
       : '';
 
   // Only claim signatures match when every eligible proof was verified and
@@ -401,7 +401,7 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   // Mint facts always derive from checks that actually ran, never from a
   // sample description. The sample description goes in its own labelled field.
   // When the mint facts came from a sample mock, label them simulated on this line.
-  const mintSimulated = options.isSample && !options.isLiveSample ? ' (simulated)' : '';
+  const mintSimulated = options.isSample && !options.isLiveSample ? ' (simulated mint answer)' : '';
   html += `<p style="margin:12px 0 0;font-size:13px;color:var(--muted)">Mint facts: ${escapeHtml(defaultFacts)}${escapeHtml(mintSimulated)}</p>`;
   if (options.isSample && options.sampleDescription) {
     const scenarioLabel = options.isLiveSample ? 'Token' : 'Example scenario';
@@ -532,7 +532,7 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
   if (options.isLiveSample) {
     lines.push('(real token from a live test mint, checked live)');
   } else if (options.isSample) {
-    lines.push('(sample demo: mint and proof-state results below are simulated, not live mint answers)');
+    lines.push('(demo token: the checker ran its real checks, the mint answers below are simulated, not live mint answers)');
   }
   lines.push(`Mint: ${mintDisplay}`);
   lines.push(`Unit: ${report.unit || '(unknown)'}`);
@@ -556,7 +556,7 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
     lines.push('  (nothing)');
   } else {
     for (const c of report.checked) {
-      const simulated = options.isSample && !options.isLiveSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated)' : '';
+      const simulated = options.isSample && !options.isLiveSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated mint answer)' : '';
       lines.push(`  - ${c.name} [${c.checkId}]: ${c.result}${simulated} - ${c.message}`);
     }
   }

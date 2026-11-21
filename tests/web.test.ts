@@ -120,6 +120,12 @@ describe('web report: real output across fixture states', () => {
     expect(html).toContain('verdict amber');
     expect(html).toContain('Hold');
     expect(html).toContain('Hold, here is why');
+    // The demo label says what is real and what is simulated: the checker
+    // ran its real checks, only the mint answers are simulated. The old
+    // wording read as if the whole thing were fake.
+    expect(html).toContain('demo token: the checker ran its real checks, the mint answers are simulated');
+    expect(html).not.toContain('sample demo: mint results are simulated');
+    expect(html).toContain('simulated mint answer');
     expect(html).toContain('The collision, drawn out');
     expect(html).toContain('1138537334');
     expect(html).toContain('Two keysets, one residue. That is the attack.');
