@@ -748,14 +748,14 @@ describe('web checker: premium instrument panel', () => {
     expect(readme).toContain('Bech32m is used for NUT-26 payment requests, not tokens');
   });
 
-  it('app.html has the samples as one row of pills with all 8 cases', () => {
+  it('app.html has the samples as a grid of buttons with all 8 cases', () => {
     expect(appHtml).toContain('class="samples"');
     for (const key of ['clean', 'evil', 'spent', 'partial', 'pending', 'unreachable', 'auth', 'v3']) {
       expect(appHtml).toContain(`data-which="${key}"`);
     }
     expect(appHtml).toContain('Clean token');
-    expect(appHtml).toContain('Evil mint token');
-    expect(appHtml).toContain('Spent token');
+    expect(appHtml).toContain('Evil mint');
+    expect(appHtml).toContain('Spent');
     expect(appHtml).toContain('V3 keyset');
   });
 
