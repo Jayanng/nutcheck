@@ -98,6 +98,27 @@ function stubFetchForTestnut(checkstateBody?: Record<string, unknown>) {
 }
 
 describe('report: three sections and headline', () => {
+  it('residue screen with zero V1 keysets is not checked, not a pass', async () => {
+    // A V2 token, the mint never answers, no V1 known keysets: the
+    // screened list has zero V1 keysets. The screen had nothing to
+    // screen, so it must read not checked, never a pass over nothing.
+    const offlineFetch: typeof fetch = async () => {
+      throw new Error('network down: offline');
+    };
+    const report = await diagnoseToken(SAMPLES.clean.token, {
+      fetchFn: offlineFetch,
+      consent: false,
+    });
+    const residueChecked = report.checked.find((c) => c.checkId === 'residue');
+    expect(residueChecked).toBeUndefined();
+    const residueNotChecked = report.notChecked.find((c) => c.checkId === 'residue');
+    expect(residueNotChecked).toBeDefined();
+    expect(residueNotChecked?.outcome).toBe('not-checked');
+    expect(residueNotChecked?.severity).toBe('amber');
+    expect(residueNotChecked?.result).toBe('Not checked, no V1 keysets in the screened list');
+    expect(report.headline).toBe('Not fully checked.');
+  });
+
   it('a clean run produces the clean headline and its copy has no banned words', async () => {
     // Serve only keyset B, so there is no collision. DLEQ passes, the
     // derivation matches, and checkstate is consented with the mock mint

@@ -343,6 +343,18 @@ export async function diagnoseToken(
           message: 'Two different V1 keyset IDs produce the same residue',
         });
       }
+    } else if (v1Count === 0) {
+      // A pass over zero V1 keysets is a pass over nothing. The screen
+      // only applies to V1 keysets, and the screened list had none, so
+      // it did not run. Say so instead of claiming a clean result.
+      notChecked.push({
+        name: 'Residue screen',
+        checkId: 'residue',
+        result: 'Not checked, no V1 keysets in the screened list',
+        outcome: 'not-checked',
+        severity: 'amber',
+        message: 'The residue screen only applies to V1 keysets. No V1 keysets were in the screened list, so the screen had nothing to screen.',
+      });
     } else {
       checked.push({
         name: 'Residue screen',
