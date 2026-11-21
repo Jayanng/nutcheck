@@ -96,12 +96,72 @@
   <section class="section" id="feed">
     <h2>Example checks</h2>
     <p class="sub">Representative tokens showing how different findings are reported. Spent and pending show once you turn on 'Ask the mint'. Your tokens are not shown in these example checks.</p>
-    <div class="feed">
-      <div class="feed-row"><span class="av g">C</span><span class="who">Clean token</span><span class="lbl g">No issues</span><span class="ref">Residue 864559728</span><span class="time">12m ago</span></div>
-      <div class="feed-row"><span class="av a">E</span><span class="who">Evil mint token</span><span class="lbl a">Collision</span><span class="ref">Residue 1138537334</span><span class="time">26m ago</span></div>
-      <div class="feed-row"><span class="av r">S</span><span class="who">Spent token</span><span class="lbl r">Spent</span><span class="ref">1 of 1 proof</span><span class="time">41m ago</span></div>
-      <div class="feed-row"><span class="av a">P</span><span class="who">Partial DLEQ token</span><span class="lbl a">Incomplete</span><span class="ref">0 of 1 complete</span><span class="time">1h ago</span></div>
-      <div class="feed-row"><span class="av b">V</span><span class="who">V3 keyset token</span><span class="lbl a">V3 keyset</span><span class="ref">ID 02000000&hellip;0000</span><span class="time">1h ago</span></div>
+    <div class="feed-cards">
+      <div class="feed-card">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="feed-letter">C</div>
+        <div class="feed-body">
+          <h3>Clean token</h3>
+          <p>A real 21-sat token from the live testnut.cashu.exchange mint. Checked live, not simulated.</p>
+        </div>
+        <div class="feed-side">
+          <span class="feed-badge">No issues</span>
+          <span class="feed-ref">Residue 864559728</span>
+          <span class="feed-time">12m ago</span>
+        </div>
+      </div>
+      <div class="feed-card">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="feed-letter">E</div>
+        <div class="feed-body">
+          <h3>Evil mint token</h3>
+          <p>A V1 keyset residue that collides with a keyset you already trust. The failure this tool catches.</p>
+        </div>
+        <div class="feed-side">
+          <span class="feed-badge">Collision</span>
+          <span class="feed-ref">Residue 1138537334</span>
+          <span class="feed-time">26m ago</span>
+        </div>
+      </div>
+      <div class="feed-card">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="feed-letter">S</div>
+        <div class="feed-body">
+          <h3>Spent token</h3>
+          <p>The mint already spent this proof. A wallet that swaps it loses the money.</p>
+        </div>
+        <div class="feed-side">
+          <span class="feed-badge">Spent</span>
+          <span class="feed-ref">1 of 1 proof</span>
+          <span class="feed-time">41m ago</span>
+        </div>
+      </div>
+      <div class="feed-card">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="feed-letter">P</div>
+        <div class="feed-body">
+          <h3>Partial DLEQ token</h3>
+          <p>The DLEQ field was stripped from the proof. It can still be valid ecash, but it is not checked.</p>
+        </div>
+        <div class="feed-side">
+          <span class="feed-badge">Incomplete</span>
+          <span class="feed-ref">0 of 1 complete</span>
+          <span class="feed-time">1h ago</span>
+        </div>
+      </div>
+      <div class="feed-card">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="feed-letter">V</div>
+        <div class="feed-body">
+          <h3>V3 keyset token</h3>
+          <p>A V3 keyset, prefix 02. Secp DLEQ does not apply here, so that check is skipped.</p>
+        </div>
+        <div class="feed-side">
+          <span class="feed-badge">V3 keyset</span>
+          <span class="feed-ref">ID 02000000&hellip;0000</span>
+          <span class="feed-time">1h ago</span>
+        </div>
+      </div>
     </div>
     <div class="feed-foot"><a class="link-arrow blue" href="/app.html">Check a token &rarr;</a></div>
   </section>
