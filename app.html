@@ -60,16 +60,68 @@
           </details>
         </div>
       </div>
+    </div>
+    <div class="samples-block">
+      <p class="samples-eyebrow">Try a sample</p>
+      <h3 class="samples-title">Eight tokens, eight different answers</h3>
+      <p class="samples-intro">Click one to load it into the checker. Only the Clean token is live, checked against a real mint. The other seven are demos with simulated mint answers, each one showing a state a wallet has to handle.</p>
       <div class="samples" aria-label="sample tokens">
-        <span class="try">Try:</span>
-        <button type="button" data-which="clean" class="sample active"><span class="sw green"></span>Clean token</button>
-        <button type="button" data-which="evil" class="sample"><span class="sw amber"></span>Evil mint token</button>
-        <button type="button" data-which="spent" class="sample"><span class="sw red"></span>Spent token</button>
-        <button type="button" data-which="partial" class="sample"><span class="sw amber"></span>Partial DLEQ</button>
-        <button type="button" data-which="pending" class="sample"><span class="sw amber"></span>Pending</button>
-        <button type="button" data-which="unreachable" class="sample"><span class="sw grey"></span>Unreachable</button>
-        <button type="button" data-which="auth" class="sample"><span class="sw amber"></span>Auth required</button>
-        <button type="button" data-which="v3" class="sample"><span class="sw blue"></span>V3 keyset</button>
+        <button type="button" data-which="clean" class="sample active">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">C</span>
+          <span class="sample-name">Clean token</span>
+          <span class="sample-desc">A real 21-sat token from the live testnut.cashu.exchange mint. Checked live, not simulated.</span>
+          <span class="sample-foot"><span class="badge badge-live">Live</span><span class="fact">Residue 864559728</span></span>
+        </button>
+        <button type="button" data-which="evil" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">E</span>
+          <span class="sample-name">Evil mint token</span>
+          <span class="sample-desc">A V1 keyset residue that collides with a keyset you already trust. The failure this tool catches.</span>
+          <span class="sample-foot"><span class="badge">Collision</span><span class="fact">Residue 1138537334</span></span>
+        </button>
+        <button type="button" data-which="spent" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">S</span>
+          <span class="sample-name">Spent token</span>
+          <span class="sample-desc">The mint already spent this proof. A wallet that swaps it loses the money.</span>
+          <span class="sample-foot"><span class="badge">Spent</span><span class="fact">1 of 1 proof spent</span></span>
+        </button>
+        <button type="button" data-which="partial" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">P</span>
+          <span class="sample-name">Partial DLEQ token</span>
+          <span class="sample-desc">The DLEQ field was stripped from the proof. It can still be valid ecash, but it is not checked.</span>
+          <span class="sample-foot"><span class="badge">Incomplete</span><span class="fact">0 of 1 DLEQ complete</span></span>
+        </button>
+        <button type="button" data-which="pending" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">P</span>
+          <span class="sample-name">Pending proof token</span>
+          <span class="sample-desc">The mint says this proof is pending, a melt in flight. Wait, do not swap yet.</span>
+          <span class="sample-foot"><span class="badge">Pending</span><span class="fact">Proof pending</span></span>
+        </button>
+        <button type="button" data-which="unreachable" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">U</span>
+          <span class="sample-name">Unreachable mint token</span>
+          <span class="sample-desc">The mint cannot be reached. Nothing can be confirmed, so verify it yourself.</span>
+          <span class="sample-foot"><span class="badge">Unreachable</span><span class="fact">Mint unreachable</span></span>
+        </button>
+        <button type="button" data-which="auth" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">A</span>
+          <span class="sample-name">Auth required token</span>
+          <span class="sample-desc">The mint wants blind auth before it answers. The check stops here.</span>
+          <span class="sample-foot"><span class="badge">Auth required</span><span class="fact">Checkstate 401 / 403</span></span>
+        </button>
+        <button type="button" data-which="v3" class="sample">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="letter">V</span>
+          <span class="sample-name">V3 BLS12-381 token</span>
+          <span class="sample-desc">A V3 keyset, prefix 02. Secp DLEQ does not apply here, so that check is skipped.</span>
+          <span class="sample-foot"><span class="badge">V3 keyset</span><span class="fact">ID 02000000&hellip;0000</span></span>
+        </button>
       </div>
     </div>
     <p class="privacy-line">Local checks run on your device. Mint info and public keys are fetched from the token's mint; proof state is only checked when you turn on the mint check.</p>
