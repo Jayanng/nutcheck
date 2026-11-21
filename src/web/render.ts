@@ -245,6 +245,74 @@ function pipelineStepValue(step: PipelineStep, options: RenderOptions): string {
   return `${primary.result}${simulatedLabel(primary, options)}`;
 }
 
+// Group a flat check list by check name, keeping first-appearance order.
+// The limits panel shows one short line per group instead of every check.
+function groupChecksByName(checks: ReportCheck[]): { name: string; checks: ReportCheck[] }[] {
+  const groups: { name: string; checks: ReportCheck[] }[] = [];
+  for (const c of checks) {
+    const g = groups.find((x) => x.name === c.name);
+    if (g) {
+      g.checks.push(c);
+    } else {
+      groups.push({ name: c.name, checks: [c] });
+    }
+  }
+  return groups;
+}
+
+// Shorten a result to its first clause (before ':' or ';' or '. '), capped
+// at 80 chars. Used for single-check groups so a long result does not
+// dominate the panel.
+function shortenResult(result: string): string {
+  const first = result.split(/[:;]/)[0].trim();
+  const sentence = first.split(/\.\s/)[0].trim();
+  const short = sentence.length > 0 ? sentence : first;
+  if (short.length <= 80) return short;
+  return short.slice(0, 77) + '...';
+}
+
+// One short line per check-name group.
+function shortGroupSummary(name: string, checks: ReportCheck[]): string {
+  if (name === 'Keyset ID derivation') {
+    const passed = checks.filter((c) => c.outcome === 'pass').length;
+    if (passed === checks.length) return `${checks.length} keysets recomputed, all match`;
+    return `${passed} of ${checks.length} keysets recomputed`;
+  }
+  if (name === 'DLEQ') {
+    const valid = checks.filter((c) => c.outcome === 'pass').length;
+    const absent = checks.filter((c) => c.result.includes('DLEQ absent')).length;
+    const incomplete = checks.filter((c) => c.result.includes('incomplete')).length;
+    if (valid === checks.length) return `Valid on all ${checks.length} proof${checks.length === 1 ? '' : 's'}`;
+    const parts: string[] = [];
+    if (valid > 0) parts.push(`${valid} valid`);
+    if (absent > 0) parts.push(`${absent} absent`);
+    if (incomplete > 0) parts.push(`${incomplete} incomplete`);
+    const other = checks.length - valid - absent - incomplete;
+    if (other > 0) parts.push(`${other} not checked`);
+    return parts.join(', ');
+  }
+  if (name === 'Residue screen') {
+    const first = checks[0].result;
+    if (first.startsWith('No two different')) return 'No collisions in the supplied lists';
+    if (first.includes('COLLISION')) {
+      const residue = first.match(/\d{6,}/);
+      return residue ? `Collision: two keysets share residue ${residue[0]}` : 'Collision: two keysets share a residue';
+    }
+    return shortenResult(first);
+  }
+  return shortenResult(checks[0].result);
+}
+
+// Split a "Cannot prove" item on its first ": " into a bold label and the
+// rest, so the column scans the same way as the grouped columns.
+function splitCannotProveLabel(item: string): { label: string; text: string } {
+  const idx = item.indexOf(': ');
+  if (idx > 0 && idx < 60) {
+    return { label: item.slice(0, idx), text: item.slice(idx + 2) };
+  }
+  return { label: '', text: item };
+}
+
 export function renderReportHtml(report: NutCheckReport, options: RenderOptions = {}): string {
   const stateClass =
     report.severity === 'red' ? 'red' : report.severity === 'amber' ? 'amber' : 'green';
@@ -473,8 +541,10 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   if (report.checked.length === 0) {
     html += `<li>No local checks could complete</li>`;
   } else {
-    for (const c of report.checked) {
-      html += `<li>${escapeHtml(c.name)}: ${escapeHtml(c.result)}${simulatedLabel(c, options)}</li>`;
+    for (const g of groupChecksByName(report.checked)) {
+      const n = g.checks.length;
+      const count = n > 1 ? ` <span class="limit-n">&middot; ${n}</span>` : '';
+      html += `<li><b>${escapeHtml(g.name)}${count}</b>${escapeHtml(shortGroupSummary(g.name, g.checks))}</li>`;
     }
   }
   html += `</ul>`;
@@ -487,8 +557,10 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   if (report.notChecked.length === 0) {
     html += `<li>All scheduled checks ran</li>`;
   } else {
-    for (const c of report.notChecked) {
-      html += `<li>${escapeHtml(c.name)}: ${escapeHtml(c.result)}</li>`;
+    for (const g of groupChecksByName(report.notChecked)) {
+      const n = g.checks.length;
+      const count = n > 1 ? ` <span class="limit-n">&middot; ${n}</span>` : '';
+      html += `<li><b>${escapeHtml(g.name)}${count}</b>${escapeHtml(shortGroupSummary(g.name, g.checks))}</li>`;
     }
   }
   html += `</ul>`;
@@ -499,7 +571,12 @@ export function renderReportHtml(report: NutCheckReport, options: RenderOptions 
   html += `<h3><span class="b" aria-hidden="true"></span>Cannot prove<span class="count">${cannotProveCount}</span></h3>`;
   html += `<ul>`;
   for (const item of report.cannotProve) {
-    html += `<li>${escapeHtml(item)}</li>`;
+    const split = splitCannotProveLabel(item);
+    if (split.label) {
+      html += `<li><b>${escapeHtml(split.label)}</b>${escapeHtml(split.text)}</li>`;
+    } else {
+      html += `<li>${escapeHtml(item)}</li>`;
+    }
   }
   html += `</ul>`;
   html += `</div>`;
@@ -555,9 +632,10 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
   if (report.checked.length === 0) {
     lines.push('  (nothing)');
   } else {
-    for (const c of report.checked) {
-      const simulated = options.isSample && !options.isLiveSample && (c.checkId === 'checkstate' || c.checkId === 'mint') && !c.result.includes('Consent not given') ? ' (simulated mint answer)' : '';
-      lines.push(`  - ${c.name} [${c.checkId}]: ${c.result}${simulated} - ${c.message}`);
+    for (const g of groupChecksByName(report.checked)) {
+      const n = g.checks.length;
+      const count = n > 1 ? ` (${n})` : '';
+      lines.push(`  - ${g.name}${count}: ${shortGroupSummary(g.name, g.checks)}`);
     }
   }
   lines.push('');
@@ -566,8 +644,10 @@ export function reportToPlainText(report: NutCheckReport, options: RenderOptions
   if (report.notChecked.length === 0) {
     lines.push('  (nothing)');
   } else {
-    for (const c of report.notChecked) {
-      lines.push(`  - ${c.name} [${c.checkId}]: ${c.result} - ${c.message}`);
+    for (const g of groupChecksByName(report.notChecked)) {
+      const n = g.checks.length;
+      const count = n > 1 ? ` (${n})` : '';
+      lines.push(`  - ${g.name}${count}: ${shortGroupSummary(g.name, g.checks)}`);
     }
   }
   lines.push('');
