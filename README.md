@@ -1,10 +1,14 @@
 # NutCheck
 
-The pre-flight check for ecash, with its limits on the label.
+**The pre-flight check for ecash, with its limits on the label.**
+
+[![npm version](https://img.shields.io/npm/v/@nutcheck/core)](https://www.npmjs.com/package/@nutcheck/core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Paste a Cashu token, get a report of what can be verified about it before your wallet swaps it. The report has three sections: Checked, Not checked, Cannot prove. When nothing turns up, the headline is "No known issues found.", never anything stronger.
 
-Try it live: https://nutcheck.vercel.app
+**Live:** https://nutcheck.vercel.app
+**Package:** `npm install @nutcheck/core`
 
 ## The problem
 
@@ -14,7 +18,7 @@ NutCheck screens a token against that failure before the wallet swaps it. It dec
 
 The collision it catches is real: an evil mint keyset sharing residue 1138537334 with a trusted one, filed as [cashu.me issue 629](https://github.com/cashubtc/cashu.me/issues/629) in November 2026.
 
-## Install and run
+## Quick start
 
 Node 22.4.0 or later.
 
@@ -39,8 +43,6 @@ npm run build:core
 ```
 
 ## Use it in a wallet
-
-Install it:
 
 ```sh
 npm install @nutcheck/core
@@ -98,7 +100,7 @@ Real: the checker runs on real tokens against real mints. The Clean sample is a 
 
 Demo only: the other seven samples are synthetic tokens with simulated mint answers. Each one is labeled as a demo on the page. They show states (collision, spent, unreachable, partial DLEQ) that cannot be reproduced on demand from a live mint.
 
-Cut: QR upload is not built. Fixing the cashu.me wallet is not this project, it is the maintainers' work.
+Cut: QR upload is not built.
 
 ## License
 
