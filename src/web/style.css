@@ -300,7 +300,7 @@ h2 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.02em; font-weight: 800
 .chev { flex: none; color: var(--muted); font-size: 19px; line-height: 1; transition: transform 0.2s ease; }
 .step[open] .chev { transform: rotate(90deg); }
 .step-body { padding: 0 20px 16px 68px; }
-.step-body .msg { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
+.step-body .msg { display: block; margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
 .step-body .full { font-family: var(--mono); font-size: 13px; color: var(--blue); margin: 0 0 8px; overflow-wrap: break-word; line-height: 1.6; }
 .substep { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; }
 .substep:last-child { margin-bottom: 0; }
